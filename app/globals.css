@@ -1,0 +1,136 @@
+@import "tailwindcss";
+@config "../tailwind.config.ts";
+
+@layer base {
+  :root {
+    --background: 36 38% 97%;
+    --foreground: 240 10% 8%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 8%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 8%;
+    --primary: 240 10% 8%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 30 20% 95%;
+    --secondary-foreground: 240 10% 8%;
+    --muted: 32 24% 94%;
+    --muted-foreground: 240 4% 46%;
+    --accent: 32 30% 92%;
+    --accent-foreground: 240 10% 8%;
+    --destructive: 0 76% 54%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 8% 88%;
+    --input: 240 8% 88%;
+    --ring: 240 8% 70%;
+    --radius: 0.85rem;
+  }
+
+  * {
+    box-sizing: border-box;
+    border-color: hsl(var(--border));
+  }
+
+  html {
+    min-height: 100%;
+  }
+
+  body {
+    min-height: 100vh;
+    color: hsl(var(--foreground));
+    font-family: "Avenir Next", "Segoe UI", sans-serif;
+    background:
+      radial-gradient(circle at top left, rgba(205, 175, 135, 0.16), transparent 28%),
+      radial-gradient(circle at top right, rgba(222, 228, 240, 0.24), transparent 26%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.55)),
+      hsl(var(--background));
+  }
+
+  button,
+  input,
+  textarea {
+    font: inherit;
+  }
+}
+
+@layer utilities {
+  .surface-shell {
+    border-radius: 0.75rem;
+    border: 1px solid hsl(var(--border));
+    background: rgba(255, 255, 255, 0.88);
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.055);
+    backdrop-filter: blur(8px);
+  }
+
+  .surface-muted {
+    border-radius: 0.625rem;
+    border: 1px solid hsl(var(--border));
+    background: rgba(248, 248, 247, 0.84);
+  }
+
+  .eyebrow {
+    font-size: 10px;
+    font-weight: 650;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: rgb(113 113 122);
+  }
+
+  .app-frame {
+    width: min(1480px, calc(100vw - 32px));
+    margin-inline: auto;
+  }
+
+  .workbench-layout {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: 1fr;
+  }
+
+  .workbench-layout > *,
+  .stats-layout > * {
+    min-width: 0;
+  }
+
+  .stats-layout {
+    display: grid;
+    gap: 0.875rem;
+    grid-template-columns: 1fr;
+  }
+
+  .center-stack {
+    display: grid;
+    gap: 0.875rem;
+  }
+
+  .sidebar-scroll {
+    max-height: none;
+  }
+
+  @media (min-width: 768px) {
+    .stats-layout {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1180px) {
+    .workbench-layout {
+      grid-template-columns: 300px minmax(0, 1fr) 320px;
+      align-items: start;
+    }
+
+    .workbench-layout--start {
+      grid-template-columns: 320px minmax(0, 820px);
+      justify-content: center;
+    }
+
+    .stats-layout {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1180px) and (min-height: 760px) {
+    .sidebar-scroll {
+      max-height: calc(100vh - 142px);
+    }
+  }
+}

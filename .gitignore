@@ -1,0 +1,17 @@
+.next
+coverage
+node_modules
+.DS_Store
+.playwright-mcp
+.vscode
+tmp
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+dist
+*.tsbuildinfo
+*.log
+/*.png
+/support-sample.pdf
