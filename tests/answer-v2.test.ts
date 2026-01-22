@@ -1,0 +1,78 @@
+import { validateInvestigationAnswerV2 } from "@/lib/answer";
+
+describe("validateInvestigationAnswerV2", () => {
+  const docEvidence = [
+    {
+      id: "S1" as const,
+      sourceType: "doc" as const,
+      documentId: "doc-1",
+      filename: "feature-permissions.md",
+      sectionTitle: "Exports",
+      excerpt: "Exports are available on Growth and Enterprise plans.",
+      score: 0.82,
+      chunkIndex: 0
+    }
+  ];
+
+  const toolEvidence = [
+    {
+      id: "T1" as const,
+      sourceType: "tool" as const,
+      toolName: "getAccountContext" as const,
+      title: "Acme Starter",
+      excerpt: "Plan: Starter. Status: active. Enabled modules: imports.",
+      raw: {
+        planTier: "Starter"
+      }
+    }
+  ];
+
+  it("accepts mixed doc and tool citations", () => {
+    const result = validateInvestigationAnswerV2({
+      answer: {
+        customerReplyClaims: [
+          {
+            text: "Exports are not available on this Starter account.",
+            citations: ["S1", "T1"]
+          }
+        ],
+        internalDiagnosisClaims: [
+          {
+            text: "The docs restrict exports to Growth and Enterprise, and the selected account is Starter.",
+            citations: ["S1", "T1"]
+          }
+        ],
+        openQuestions: [],
+        insufficientSupport: false
+      },
+      docEvidence,
+      toolEvidence
+    });
+
+    expect(result.valid).toBe(true);
+    if (!result.valid) {
+      throw new Error("Expected mixed evidence answer to validate.");
+    }
+    expect(result.answer.customerReply.claims[0]?.citations).toEqual(["S1", "T1"]);
+  });
+
+  it("rejects claims with unknown citations", () => {
+    const result = validateInvestigationAnswerV2({
+      answer: {
+        customerReplyClaims: [
+          {
+            text: "Exports are blocked for this account.",
+            citations: ["T9"]
+          }
+        ],
+        internalDiagnosisClaims: [],
+        openQuestions: [],
+        insufficientSupport: false
+      },
+      docEvidence,
+      toolEvidence
+    });
+
+    expect(result.valid).toBe(false);
+  });
+});
