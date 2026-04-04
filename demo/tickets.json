@@ -1,0 +1,73 @@
+[
+  {
+    "id": "ticket-1",
+    "label": "Happy path",
+    "bucket": "docs_only",
+    "rawText": "Our export keeps failing right after setup. What should I check first?"
+  },
+  {
+    "id": "ticket-2",
+    "label": "Plan gate",
+    "bucket": "docs_plus_tools",
+    "rawText": "A Starter customer says exports are missing. Is that supported on their plan?",
+    "investigationContext": "Plan: Starter. Exports UI hidden. Support note: billing setup already completed. Recent note: customer expects exports because onboarding is done.",
+    "selectedAccountId": "11111111-1111-4111-8111-111111111111"
+  },
+  {
+    "id": "ticket-3",
+    "label": "Procedural docs answer",
+    "bucket": "docs_only",
+    "rawText": "The CRM integration install page rejects our redirect URL. What should I tell the customer?"
+  },
+  {
+    "id": "ticket-4",
+    "label": "Import failure",
+    "bucket": "docs_plus_tools",
+    "rawText": "An import with 80,000 rows stalled. What is the most likely first check?",
+    "investigationContext": "Plan: Growth. Import size: 80,000 rows. Recent note: upload completed but validation appears stalled.",
+    "selectedAccountId": "55555555-5555-4555-8555-555555555555"
+  },
+  {
+    "id": "ticket-5",
+    "label": "Error-assisted answer",
+    "bucket": "docs_plus_tools",
+    "rawText": "A workspace is seeing ERR-219 while running exports. What does that indicate?",
+    "investigationContext": "Plan: Growth. Recent error: ERR-219 during exports. Support note: exports were visible before the error appeared.",
+    "selectedAccountId": "22222222-2222-4222-8222-222222222222"
+  },
+  {
+    "id": "ticket-6",
+    "label": "Plan entitlement",
+    "bucket": "docs_plus_tools",
+    "rawText": "Can this Starter workspace use audit logs?",
+    "investigationContext": "Plan: Starter. Customer is asking whether audit logs should be available in the current workspace.",
+    "selectedAccountId": "11111111-1111-4111-8111-111111111111"
+  },
+  {
+    "id": "ticket-7",
+    "label": "Billing + exports",
+    "bucket": "docs_plus_tools",
+    "rawText": "The payment failed yesterday. Could that block new exports today?",
+    "investigationContext": "Plan: Growth. Billing note: payment failed yesterday. Customer wants to know whether billing hold could affect exports today.",
+    "selectedAccountId": "44444444-4444-4444-8444-444444444444"
+  },
+  {
+    "id": "ticket-8",
+    "label": "Unsupported",
+    "bucket": "needs_human_review",
+    "rawText": "How do I rotate the product's encryption keys?"
+  },
+  {
+    "id": "ticket-9",
+    "label": "Permissions",
+    "bucket": "docs_only",
+    "rawText": "What permissions are required to install the CRM integration?"
+  },
+  {
+    "id": "ticket-10",
+    "label": "Needs human review",
+    "bucket": "needs_human_review",
+    "rawText": "Why can't this customer access exports even though the docs say Growth should support it?",
+    "investigationContext": "Plan: Growth. Customer says exports should be enabled. No known recent errors. Support note: docs suggest the feature should work, but the issue remains unresolved."
+  }
+]

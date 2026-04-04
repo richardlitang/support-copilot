@@ -1,0 +1,160 @@
+[
+  {
+    "id": "eval-1",
+    "bucket": "docs_only",
+    "ticket": "Our export keeps failing after setup. What should I check first?",
+    "expectation": "Should cite export setup and permission prerequisites.",
+    "expectedMode": "docs_only",
+    "expectedReviewStatus": "ready",
+    "expectedEvidenceKeywords": ["export"],
+    "minDocEvidence": 1
+  },
+  {
+    "id": "eval-2",
+    "bucket": "docs_plus_tools",
+    "ticket": "Why can't this customer access exports?",
+    "selectedAccountId": "11111111-1111-4111-8111-111111111111",
+    "expectation": "Should combine plan docs with Starter account context and disabled export UI flag.",
+    "expectedMode": "docs_plus_tools",
+    "expectedReviewStatus": "ready",
+    "expectedEvidenceKeywords": ["export"],
+    "minDocEvidence": 1,
+    "requireToolEvidence": true
+  },
+  {
+    "id": "eval-3",
+    "bucket": "docs_only",
+    "ticket": "The CRM integration install page rejects our redirect URL. What should support tell the customer?",
+    "expectation": "Should cite the exact redirect URL requirement.",
+    "expectedMode": "docs_only",
+    "expectedReviewStatus": "ready",
+    "expectedEvidenceKeywords": ["redirect"],
+    "minDocEvidence": 1
+  },
+  {
+    "id": "eval-4",
+    "bucket": "docs_plus_tools",
+    "ticket": "Can a Starter workspace use audit logs?",
+    "selectedAccountId": "11111111-1111-4111-8111-111111111111",
+    "expectation": "Should cite Enterprise-only availability and confirm the selected Starter account is not entitled.",
+    "expectedMode": "docs_plus_tools",
+    "expectedReviewStatus": "ready",
+    "expectedEvidenceKeywords": ["audit"],
+    "minDocEvidence": 1,
+    "requireToolEvidence": true
+  },
+  {
+    "id": "eval-5",
+    "bucket": "docs_plus_tools",
+    "ticket": "The payment failed yesterday. Could that block new exports today?",
+    "selectedAccountId": "44444444-4444-4444-8444-444444444444",
+    "expectation": "Should connect failed payment grace period with the account billing hold error state.",
+    "expectedMode": "docs_plus_tools",
+    "expectedReviewStatus": "ready",
+    "expectedEvidenceKeywords": ["payment"],
+    "minDocEvidence": 1,
+    "requireToolEvidence": true
+  },
+  {
+    "id": "eval-6",
+    "bucket": "docs_plus_tools",
+    "ticket": "An import with 80,000 rows stalled. What should I check first?",
+    "selectedAccountId": "55555555-5555-4555-8555-555555555555",
+    "expectation": "Should cite row-count guidance and recent validation failure context.",
+    "expectedMode": "docs_plus_tools",
+    "expectedReviewStatus": "ready",
+    "expectedEvidenceKeywords": ["row"],
+    "minDocEvidence": 1,
+    "requireToolEvidence": true
+  },
+  {
+    "id": "eval-7",
+    "bucket": "docs_only",
+    "ticket": "If the docs suggest both plan and permissions issues, which should support resolve first?",
+    "expectation": "Should prefer plan entitlement first.",
+    "expectedMode": "docs_only",
+    "expectedReviewStatus": "ready",
+    "expectedEvidenceKeywords": ["plan"],
+    "minDocEvidence": 1
+  },
+  {
+    "id": "eval-8",
+    "bucket": "docs_only",
+    "ticket": "What permissions are required to install the CRM integration?",
+    "expectation": "Should cite admin access in both systems.",
+    "expectedMode": "docs_only",
+    "expectedReviewStatus": "ready",
+    "expectedEvidenceKeywords": ["admin"],
+    "minDocEvidence": 1
+  },
+  {
+    "id": "eval-9",
+    "bucket": "missing_account",
+    "ticket": "Why is our workspace missing exports even though the customer says they should have them?",
+    "expectation": "Should route directly to needs human review because account context is required but not provided.",
+    "expectedMode": "needs_human_review",
+    "expectedReviewStatus": "needs_human_review"
+  },
+  {
+    "id": "eval-10",
+    "bucket": "partial_support",
+    "ticket": "If exports fail right after onboarding, should support check billing or the export pipeline first?",
+    "expectation": "Should prioritize billing setup before export pipeline troubleshooting.",
+    "expectedMode": "docs_only",
+    "expectedReviewStatus": "ready",
+    "expectedEvidenceKeywords": ["billing"],
+    "minDocEvidence": 1
+  },
+  {
+    "id": "eval-11",
+    "bucket": "unsupported",
+    "ticket": "How do I rotate the product's encryption keys?",
+    "expectation": "Should return insufficient support.",
+    "expectedMode": "needs_human_review",
+    "expectedReviewStatus": "needs_human_review"
+  },
+  {
+    "id": "eval-12",
+    "bucket": "conflict",
+    "ticket": "Why can't this Growth customer run exports if the docs say Growth supports exports?",
+    "selectedAccountId": "22222222-2222-4222-8222-222222222222",
+    "expectation": "Should explain the ERR-219 permission issue rather than falling back to a plan restriction.",
+    "expectedMode": "docs_plus_tools",
+    "expectedReviewStatus": "ready",
+    "expectedEvidenceKeywords": ["growth"],
+    "minDocEvidence": 1,
+    "requireToolEvidence": true
+  },
+  {
+    "id": "eval-13",
+    "bucket": "misleading_wording",
+    "ticket": "Exports are dead on arrival after billing is done. Could Starter be the hidden blocker?",
+    "expectation": "Should ground on plan entitlement and export prerequisites.",
+    "expectedMode": "docs_only",
+    "expectedReviewStatus": "ready",
+    "expectedEvidenceKeywords": ["starter"],
+    "minDocEvidence": 1
+  },
+  {
+    "id": "eval-14",
+    "bucket": "misleading_wording",
+    "ticket": "My import froze somewhere north of fifty thousand rows. What is the first boring check?",
+    "expectation": "Should still retrieve row-count and plan-support guidance.",
+    "expectedMode": "docs_only",
+    "expectedReviewStatus": "ready",
+    "expectedEvidenceKeywords": ["row"],
+    "minDocEvidence": 1
+  },
+  {
+    "id": "eval-15",
+    "bucket": "needs_human_review",
+    "ticket": "This Enterprise workspace says exports are enabled, there are no recent errors, and the docs say it should work. What is wrong?",
+    "selectedAccountId": "33333333-3333-4333-8333-333333333333",
+    "expectation": "Should end in needs human review because docs and tool state do not explain the failure.",
+    "expectedMode": "needs_human_review",
+    "expectedReviewStatus": "needs_human_review",
+    "expectedEvidenceKeywords": ["export"],
+    "minDocEvidence": 1,
+    "requireToolEvidence": true
+  }
+]

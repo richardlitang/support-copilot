@@ -1,0 +1,135 @@
+{
+  "accounts": [
+    {
+      "id": "11111111-1111-4111-8111-111111111111",
+      "name": "Acme Starter",
+      "planTier": "Starter",
+      "status": "active",
+      "enabledModules": ["imports", "integrations"],
+      "limits": {
+        "contacts": 5000,
+        "csvImportRows": 10000
+      }
+    },
+    {
+      "id": "22222222-2222-4222-8222-222222222222",
+      "name": "Northstar Growth",
+      "planTier": "Growth",
+      "status": "active",
+      "enabledModules": ["exports", "imports", "integrations"],
+      "limits": {
+        "contacts": 100000,
+        "csvImportRows": 250000
+      }
+    },
+    {
+      "id": "33333333-3333-4333-8333-333333333333",
+      "name": "Beacon Enterprise",
+      "planTier": "Enterprise",
+      "status": "active",
+      "enabledModules": ["exports", "imports", "audit_logs", "integrations"],
+      "limits": {
+        "contacts": "contract",
+        "csvImportRows": "contract"
+      }
+    },
+    {
+      "id": "44444444-4444-4444-8444-444444444444",
+      "name": "Delta Growth Billing Hold",
+      "planTier": "Growth",
+      "status": "past_due",
+      "enabledModules": ["exports", "imports"],
+      "limits": {
+        "contacts": 100000,
+        "csvImportRows": 250000
+      }
+    },
+    {
+      "id": "55555555-5555-4555-8555-555555555555",
+      "name": "Ember Growth Imports",
+      "planTier": "Growth",
+      "status": "active",
+      "enabledModules": ["exports", "imports", "integrations"],
+      "limits": {
+        "contacts": 100000,
+        "csvImportRows": 250000
+      }
+    }
+  ],
+  "featureFlags": [
+    {
+      "id": "aaaaaaa1-aaaa-4aaa-8aaa-aaaaaaaaaaa1",
+      "accountId": "11111111-1111-4111-8111-111111111111",
+      "flagKey": "exports_ui_visible",
+      "flagValue": false,
+      "description": "Controls whether export actions are visible in the workspace UI.",
+      "rolloutNotes": "Disabled for Starter workspaces."
+    },
+    {
+      "id": "aaaaaaa2-aaaa-4aaa-8aaa-aaaaaaaaaaa2",
+      "accountId": "22222222-2222-4222-8222-222222222222",
+      "flagKey": "exports_ui_visible",
+      "flagValue": true,
+      "description": "Controls whether export actions are visible in the workspace UI.",
+      "rolloutNotes": "Enabled for Growth."
+    },
+    {
+      "id": "aaaaaaa3-aaaa-4aaa-8aaa-aaaaaaaaaaa3",
+      "accountId": "22222222-2222-4222-8222-222222222222",
+      "flagKey": "bulk_import_rollout",
+      "flagValue": true,
+      "description": "Enables large-import batching improvements.",
+      "rolloutNotes": "Enabled."
+    },
+    {
+      "id": "aaaaaaa4-aaaa-4aaa-8aaa-aaaaaaaaaaa4",
+      "accountId": "33333333-3333-4333-8333-333333333333",
+      "flagKey": "audit_logs_ui",
+      "flagValue": true,
+      "description": "Audit log screen visibility.",
+      "rolloutNotes": "Enterprise default."
+    },
+    {
+      "id": "aaaaaaa5-aaaa-4aaa-8aaa-aaaaaaaaaaa5",
+      "accountId": "44444444-4444-4444-8444-444444444444",
+      "flagKey": "exports_ui_visible",
+      "flagValue": true,
+      "description": "Controls whether export actions are visible in the workspace UI.",
+      "rolloutNotes": "Visible, but billing may still block execution."
+    },
+    {
+      "id": "aaaaaaa6-aaaa-4aaa-8aaa-aaaaaaaaaaa6",
+      "accountId": "55555555-5555-4555-8555-555555555555",
+      "flagKey": "bulk_import_rollout",
+      "flagValue": false,
+      "description": "Enables large-import batching improvements.",
+      "rolloutNotes": "Disabled pending rollout approval."
+    }
+  ],
+  "errorEvents": [
+    {
+      "id": "eeeeeee1-eeee-4eee-8eee-eeeeeeeeeee1",
+      "accountId": "22222222-2222-4222-8222-222222222222",
+      "productArea": "exports",
+      "errorCode": "ERR-219",
+      "summary": "Export actor had read access but lacked Exports: Write.",
+      "occurredAt": "2026-04-15T08:20:00.000Z"
+    },
+    {
+      "id": "eeeeeee2-eeee-4eee-8eee-eeeeeeeeeee2",
+      "accountId": "44444444-4444-4444-8444-444444444444",
+      "productArea": "exports",
+      "errorCode": "BILLING-PREFLIGHT",
+      "summary": "Export job creation blocked because billing is not current.",
+      "occurredAt": "2026-04-15T07:05:00.000Z"
+    },
+    {
+      "id": "eeeeeee3-eeee-4eee-8eee-eeeeeeeeeee3",
+      "accountId": "55555555-5555-4555-8555-555555555555",
+      "productArea": "imports",
+      "errorCode": "VALIDATION-422",
+      "summary": "Large import paused after validation failure in batch three.",
+      "occurredAt": "2026-04-15T09:45:00.000Z"
+    }
+  ]
+}

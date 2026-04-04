@@ -1,0 +1,130 @@
+# Support Copilot
+
+Support Copilot is a single-app Next.js support investigation workspace built to show real retrieval and grounding instead of hiding it behind chat UI. Users upload support docs, paste a ticket, optionally add structured investigation context, inspect retrieved chunks and tool outputs, and receive grounded customer-facing and internal outputs with citations or an explicit human-review fallback.
+
+## What This Project Demonstrates
+
+- A real RAG pipeline over uploaded support documentation
+- Deterministic routing between docs-only, docs-plus-context, and human-review modes
+- Structured outputs with claim-level citations instead of freeform answer blobs
+- A debug surface that makes retrieval, evidence, and fallback behavior inspectable
+
+## Portfolio Angle
+
+This project is strongest when presented as a trust-first support copilot rather than a generic "chat with files" demo.
+
+- The app makes retrieval visible in the UI instead of hiding it inside one answer box.
+- Customer-facing output and internal diagnosis are separated so support reasoning stays inspectable.
+- Weak or conflicting evidence routes to `needs_human_review` instead of bluffing.
+- The demo path is repeatable through canonical scenarios and a seeded eval suite.
+
+## Stack
+
+- Next.js App Router
+- TypeScript
+- Tailwind CSS
+- Supabase Postgres with pgvector
+- OpenAI embeddings and structured answer generation
+- Vitest for unit and pipeline tests
+
+## Architecture
+
+For a fuller walkthrough, see [`docs/architecture.md`](docs/architecture.md).
+
+- `app/api/upload/route.ts`: upload, parse, chunk, embed, and persist documents
+- `app/api/investigate/route.ts`: retrieve docs, deterministically decide whether tools are needed, run tool-backed investigation, and store structured investigation metadata
+- `lib/parse.ts`: text extraction and heading-aware parsing
+- `lib/chunk.ts`: deterministic chunking for retrieval
+- `lib/retrieve.ts`: semantic retrieval against `match_document_chunks`
+- `lib/answer.ts`: chunk-1 grounded answer generation plus chunk-2 mixed-evidence structured claim generation
+- `lib/classify.ts`: deterministic routing for docs-only vs docs-plus-tools vs human-review
+- `lib/tools/*`: Postgres-backed read-only investigation tools for account context, feature flags, and recent errors
+- `lib/ingest.ts` and `lib/investigate.ts`: orchestration boundaries that keep adapters testable and LangGraph-ready later
+
+## Retrieval Surfacing
+
+- Customer-facing output and internal diagnosis both render as cited structured claims instead of freeform prose.
+- The evidence panel shows retrieved document chunks separately from product-context tool evidence and raw tool calls.
+- Citation labels such as `[S1]` and `[T1]` map directly from claims to document and tool evidence.
+- A grounding validator rejects unsupported or uncited claim output and falls back to human review instead of bluffing.
+- If retrieval is weak, account context is missing, or docs and tools do not explain the issue, the app routes to `needs_human_review`.
+
+## Setup
+
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Copy `.env.example` to `.env.local` and fill in:
+
+- `OPENAI_API_KEY`
+- `SUPABASE_URL`
+- either `SUPABASE_SERVICE_ROLE_KEY` or `SUPABASE_SECRET_KEY`
+
+`SUPABASE_URL` should be the project HTTP URL such as `https://<project-ref>.supabase.co`. If you only have the Postgres connection string, the app will derive the HTTP project URL from it.
+
+If investigation inserts fail with missing `mode`, `review_status`, `account_id`, `customer_reply_json`, or `internal_diagnosis_json`, apply the chunk 2 migration. Temporary legacy inserts can be enabled with `ALLOW_LEGACY_INVESTIGATION_INSERT=true`, but that drops structured investigation persistence and should not be used for the portfolio demo.
+
+3. Apply the SQL migrations in `supabase/migrations/` to your Supabase project.
+
+4. Start the app:
+
+```bash
+npm run dev
+```
+
+5. Optional: seed the demo corpus and seeded support context:
+
+```bash
+npm run seed:demo
+```
+
+## Demo Data
+
+- `demo/docs`: 8 seeded support documents
+- `demo/support-context.json`: 5 seeded accounts, feature flags, and recent error events
+- `demo/tickets.json`: canonical demo scenarios for live walkthroughs
+- `demo/evals.json`: eval tickets spanning docs-only, docs-plus-tools, unsupported, missing-account, and unresolved-conflict cases
+
+## Canonical Demo Flow
+
+For a 3-minute interview walkthrough, see [`docs/demo-script.md`](docs/demo-script.md).
+
+Use these in the UI before a live walkthrough:
+
+1. `Happy path`: procedural docs-only answer with visible citations
+2. `Plan gate`: docs plus structured context showing a plan restriction
+3. `Error-assisted answer`: docs plus context evidence tied to a specific error
+4. `Unsupported`: deliberate fallback into insufficient support / human review
+5. `Needs human review`: unresolved case where docs suggest support but evidence stays incomplete
+
+## Eval Loop
+
+Run the seeded eval suite after seeding the corpus:
+
+```bash
+npm run eval:demo
+```
+
+For restricted/offline environments, use:
+
+```bash
+npm run eval:demo:offline
+```
+
+The offline eval uses mocked retrieved evidence and tool outputs. It is useful for validating routing/reporting code, but the live eval is still the real retrieval-quality gate.
+
+The eval runner now reports route correctness, review status, retrieval evidence keywords, tool evidence, and top retrieved docs. It exits non-zero if the grounded behavior drifts.
+
+## Verification
+
+Run these before claiming the slice is ready:
+
+```bash
+npm run lint
+npm run test
+npm run build
+npm run eval:demo
+```
