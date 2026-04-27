@@ -32,6 +32,7 @@ Support Copilot is a trust-first RAG support workbench. The core design goal is 
 
 7. **Persist and inspect**
    - `lib/db.ts` stores tickets, investigations, sources, tool calls, and structured JSON outputs.
+   - Current-schema deployments use `create_investigation_run` to write the ticket, investigation, source links, and tool-call rows in one database transaction.
    - The UI shows document evidence, tool evidence, and tool-call records separately.
 
 ## Key Boundaries
@@ -57,7 +58,7 @@ The project relies on explicit artifacts instead of hidden reasoning:
 ## Current Limitations
 
 - The eval suite is useful but still shallow. It checks route shape and evidence presence more than semantic answer quality.
-- DB writes are not yet transactional across all investigation rows.
+- Atomic investigation persistence depends on applying the latest Supabase migration; older schemas still use the compatibility path.
 - PDF parsing is best effort and should not be the primary demo path.
 - Chunking has basic table preservation but is not a full layout-aware document parser.
 - LangGraph is not implemented yet. The current architecture is prepared for it but intentionally stays direct until evals prove stability.

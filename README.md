@@ -48,6 +48,7 @@ For a fuller walkthrough, see [`docs/architecture.md`](docs/architecture.md).
 - Citation labels such as `[S1]` and `[T1]` map directly from claims to document and tool evidence.
 - A grounding validator rejects unsupported or uncited claim output and falls back to human review instead of bluffing.
 - If retrieval is weak, account context is missing, or docs and tools do not explain the issue, the app routes to `needs_human_review`.
+- Current-schema deployments can persist the ticket, investigation record, source links, and tool-call records through a single database function so the UI does not land on a half-saved investigation.
 
 ## Setup
 
@@ -65,7 +66,7 @@ npm install
 
 `SUPABASE_URL` should be the project HTTP URL such as `https://<project-ref>.supabase.co`. If you only have the Postgres connection string, the app will derive the HTTP project URL from it.
 
-If investigation inserts fail with missing `mode`, `review_status`, `account_id`, `customer_reply_json`, or `internal_diagnosis_json`, apply the chunk 2 migration. Temporary legacy inserts can be enabled with `ALLOW_LEGACY_INVESTIGATION_INSERT=true`, but that drops structured investigation persistence and should not be used for the portfolio demo.
+If investigation inserts fail with missing `mode`, `review_status`, `account_id`, `customer_reply_json`, or `internal_diagnosis_json`, apply the chunk 2 migration. Apply the atomic investigation-run migration as well so ticket, investigation, source, and tool-call rows are written in one database transaction. Temporary legacy inserts can be enabled with `ALLOW_LEGACY_INVESTIGATION_INSERT=true`, but that drops structured investigation persistence and should not be used for the portfolio demo.
 
 3. Apply the SQL migrations in `supabase/migrations/` to your Supabase project.
 

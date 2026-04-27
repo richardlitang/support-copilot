@@ -18,7 +18,11 @@ describe("investigateTicket v2", () => {
     createTicket: async () => "ticket-v2",
     createInvestigation: async () => "investigation-v2",
     insertInvestigationSources: async () => undefined,
-    insertInvestigationToolCalls: async () => undefined
+    insertInvestigationToolCalls: async () => undefined,
+    persistInvestigationRun: async () => ({
+      ticketId: "ticket-v2",
+      investigationId: "investigation-v2"
+    })
   };
 
   it("returns docs plus tools when account context is selected", async () => {
@@ -131,6 +135,94 @@ describe("investigateTicket v2", () => {
 
     expect(result.mode).toBe("docs_plus_tools");
     expect(result.toolEvidence[0]?.toolName).toBe("getProvidedContext");
+  });
+
+  it("persists the ticket, investigation, sources, and tool calls through one adapter boundary", async () => {
+    const persistedPayloads: unknown[] = [];
+    const result = await investigateTicket(
+      {
+        ticket: "Why can't this customer access exports?",
+        ragEnabled: true,
+        sessionId: "session-1",
+        selectedAccountId: "acct-1"
+      },
+      {
+        createTicket: async () => {
+          throw new Error("legacy createTicket should not run when atomic persistence is available");
+        },
+        createInvestigation: async () => {
+          throw new Error("legacy createInvestigation should not run when atomic persistence is available");
+        },
+        insertInvestigationSources: async () => {
+          throw new Error("legacy source insert should not run when atomic persistence is available");
+        },
+        insertInvestigationToolCalls: async () => {
+          throw new Error("legacy tool-call insert should not run when atomic persistence is available");
+        },
+        persistInvestigationRun: async (payload) => {
+          persistedPayloads.push(payload);
+          return {
+            ticketId: "ticket-atomic",
+            investigationId: "investigation-atomic"
+          };
+        },
+        retrieveEvidence: async () => baseEvidence,
+        generateGroundedAnswer: async () => {
+          throw new Error("docs-only generator should not run for docs+tools cases");
+        },
+        generateInvestigationAnswerV2: async () => ({
+          customerReply: {
+            summary: "Exports are not enabled for this account.",
+            claims: [{ text: "Exports are not enabled for this account.", citations: ["S1", "T1", "T2"] }]
+          },
+          internalDiagnosis: {
+            summary: "Starter account with exports disabled.",
+            claims: [{ text: "The account does not meet the export requirement.", citations: ["S1", "T1", "T2"] }],
+            openQuestions: []
+          },
+          insufficientSupport: false
+        }),
+        getAccountContext: async () => ({
+          id: "acct-1",
+          name: "Acme Starter",
+          planTier: "Starter",
+          status: "active",
+          enabledModules: ["imports"],
+          limits: { csvImportRows: 10000 },
+          createdAt: "2026-04-15T00:00:00.000Z"
+        }),
+        getFeatureFlags: async () => [
+          {
+            id: "flag-1",
+            accountId: "acct-1",
+            flagKey: "exports_ui_visible",
+            flagValue: false,
+            description: "Controls export visibility",
+            rolloutNotes: null,
+            createdAt: "2026-04-15T00:00:00.000Z"
+          }
+        ],
+        getRecentErrors: async () => []
+      }
+    );
+
+    expect(result.ticketId).toBe("ticket-atomic");
+    expect(result.investigationId).toBe("investigation-atomic");
+    expect(persistedPayloads).toHaveLength(1);
+    expect(persistedPayloads[0]).toMatchObject({
+      ticketText: "Why can't this customer access exports?",
+      mode: "docs_plus_tools",
+      reviewStatus: "ready",
+      sources: [{ documentChunkId: "chunk-1", rank: 1, score: 0.84 }],
+      toolCalls: expect.arrayContaining([
+        expect.objectContaining({
+          toolName: "getAccountContext"
+        }),
+        expect.objectContaining({
+          toolName: "getFeatureFlags"
+        })
+      ])
+    });
   });
 
   it("returns immediate human review when structured context is required but missing", async () => {

@@ -200,6 +200,18 @@ Verification from this slice:
 - `npm run build` passed.
 - `npm run eval:demo:offline` passed 15/15.
 
+### Batch Progress: 2026-04-27 Review Loop And Atomic Persistence
+- Added a visible human-review queue state with deterministic next-action guidance.
+- Added a staged retry state so the demo path reads as review blocked -> add context -> rerun investigation.
+- Added a local "mark reviewed" action for interview walkthroughs.
+- Added `getReviewAction` coverage for missing context, missing docs, conflict gaps, and ready investigations.
+- Added `create_investigation_run` migration so ticket, investigation, source links, and tool-call rows can be written in one database transaction.
+- Moved investigation orchestration to a single persistence boundary when the atomic adapter is available, with a compatibility path for older schemas/tests.
+
+Verification from this slice:
+- `npm run test -- review-actions` passed with 4 tests.
+- `npm run test -- investigate-v2` passed with 5 tests.
+
 ## Non-Goals
 - Do not add LangChain chains just for keywords.
 - Do not replace working retrieval/answer code with opaque abstractions.

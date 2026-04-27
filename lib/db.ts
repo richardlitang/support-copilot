@@ -476,6 +476,109 @@ export async function insertInvestigationToolCalls(
   }
 }
 
+export async function persistInvestigationRun(input: {
+  ticketText: string;
+  status: string;
+  answerMarkdown: string;
+  supportLevel: SupportLevel;
+  mode: InvestigationMode;
+  reviewStatus: ReviewStatus;
+  routingReason: string;
+  accountId?: string | null;
+  customerReplyJson: StructuredClaimSet;
+  internalDiagnosisJson: StructuredClaimSetWithOpenQuestions;
+  sources: Array<{
+    documentChunkId: string;
+    rank: number;
+    score: number;
+  }>;
+  toolCalls: Array<{
+    toolName: ToolCallRecord["toolName"];
+    input: Record<string, unknown>;
+    output: unknown;
+  }>;
+}) {
+  const supabase = getSupabaseAdminClient();
+  const rpcResult = await supabase
+    .rpc("create_investigation_run", {
+      p_ticket_text: input.ticketText,
+      p_status: input.status,
+      p_answer_markdown: input.answerMarkdown,
+      p_support_level: input.supportLevel,
+      p_mode: input.mode,
+      p_review_status: input.reviewStatus,
+      p_routing_reason: input.routingReason,
+      p_account_id: input.accountId ?? null,
+      p_customer_reply_json: input.customerReplyJson as InvestigationJsonPayload,
+      p_internal_diagnosis_json: input.internalDiagnosisJson as InvestigationJsonPayload,
+      p_sources: input.sources.map((source) => ({
+        document_chunk_id: source.documentChunkId,
+        rank: source.rank,
+        score: source.score
+      })),
+      p_tool_calls: input.toolCalls.map((toolCall) => ({
+        tool_name: toolCall.toolName,
+        tool_input_json: toolCall.input,
+        tool_output_json: toolCall.output
+      }))
+    })
+    .single();
+
+  if (!rpcResult.error && rpcResult.data) {
+    const data = rpcResult.data as { ticket_id: string; investigation_id: string };
+
+    return {
+      ticketId: data.ticket_id,
+      investigationId: data.investigation_id
+    };
+  }
+
+  const errorMessage = rpcResult.error?.message ?? "Unknown error";
+
+  if (
+    !rpcResult.error ||
+    (!errorMessage.includes("create_investigation_run") && !errorMessage.toLowerCase().includes("schema cache"))
+  ) {
+    throw new Error(`Failed to persist investigation run: ${errorMessage}`);
+  }
+
+  const ticketId = await createTicket(input.ticketText);
+  const investigationId = await createInvestigation({
+    ticketId,
+    status: input.status,
+    answerMarkdown: input.answerMarkdown,
+    supportLevel: input.supportLevel,
+    mode: input.mode,
+    reviewStatus: input.reviewStatus,
+    routingReason: input.routingReason,
+    accountId: input.accountId ?? null,
+    customerReplyJson: input.customerReplyJson,
+    internalDiagnosisJson: input.internalDiagnosisJson
+  });
+
+  await insertInvestigationSources(
+    input.sources.map((source) => ({
+      investigationId,
+      documentChunkId: source.documentChunkId,
+      rank: source.rank,
+      score: source.score
+    }))
+  );
+  await insertInvestigationToolCalls(
+    input.toolCalls.map((toolCall) => ({
+      investigationId,
+      toolName: toolCall.toolName,
+      input: toolCall.input,
+      output: toolCall.output
+    }))
+  );
+
+  return {
+    ticketId,
+    investigationId
+  };
+}
+
 export async function matchDocumentChunks(input: {
   sessionId: string;
   queryEmbedding: number[];

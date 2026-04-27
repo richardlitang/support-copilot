@@ -12,6 +12,11 @@ describe("investigateTicket", () => {
         createTicket: async () => "ticket-1",
         createInvestigation: async () => "investigation-1",
         insertInvestigationSources: async () => undefined,
+        insertInvestigationToolCalls: async () => undefined,
+        persistInvestigationRun: async () => ({
+          ticketId: "ticket-1",
+          investigationId: "investigation-1"
+        }),
         retrieveEvidence: async () => [
           {
             id: "chunk-1",
@@ -70,6 +75,11 @@ describe("investigateTicket", () => {
         createTicket: async () => "ticket-2",
         createInvestigation: async () => "investigation-2",
         insertInvestigationSources: async () => undefined,
+        insertInvestigationToolCalls: async () => undefined,
+        persistInvestigationRun: async () => ({
+          ticketId: "ticket-2",
+          investigationId: "investigation-2"
+        }),
         retrieveEvidence: async () => [],
         generateGroundedAnswer: async () => {
           throw new Error("This should not be called when RAG is disabled.");

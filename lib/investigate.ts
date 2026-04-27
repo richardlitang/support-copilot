@@ -4,7 +4,8 @@ import {
   createInvestigation as createInvestigationAdapter,
   createTicket as createTicketAdapter,
   insertInvestigationSources as insertInvestigationSourcesAdapter,
-  insertInvestigationToolCalls as insertInvestigationToolCallsAdapter
+  insertInvestigationToolCalls as insertInvestigationToolCallsAdapter,
+  persistInvestigationRun as persistInvestigationRunAdapter
 } from "@/lib/db";
 import {
   buildStructuredHumanReviewFallback,
@@ -34,6 +35,7 @@ type InvestigationDependencies = {
   createTicket: typeof createTicketAdapter;
   insertInvestigationSources: typeof insertInvestigationSourcesAdapter;
   insertInvestigationToolCalls: typeof insertInvestigationToolCallsAdapter;
+  persistInvestigationRun?: typeof persistInvestigationRunAdapter;
   retrieveEvidence: typeof retrieveEvidenceAdapter;
   generateGroundedAnswer: typeof generateGroundedAnswerAdapter;
   generateInvestigationAnswerV2: typeof generateInvestigationAnswerV2Adapter;
@@ -47,6 +49,7 @@ const defaultDependencies: InvestigationDependencies = {
   createTicket: createTicketAdapter,
   insertInvestigationSources: insertInvestigationSourcesAdapter,
   insertInvestigationToolCalls: insertInvestigationToolCallsAdapter,
+  persistInvestigationRun: persistInvestigationRunAdapter,
   retrieveEvidence: retrieveEvidenceAdapter,
   generateGroundedAnswer: generateGroundedAnswerAdapter,
   generateInvestigationAnswerV2: generateInvestigationAnswerV2Adapter,
@@ -70,7 +73,6 @@ export async function investigateTicket(
     ...dependencies
   };
 
-  const ticketId = await deps.createTicket(input.ticket);
   const evidence = input.ragEnabled
     ? await deps.retrieveEvidence({
         question: input.ticket,
@@ -217,8 +219,8 @@ export async function investigateTicket(
       ? "needs_human_review"
       : routing.mode;
   const answerMarkdown = buildLegacyAnswer(generated.customerReply.claims);
-  const investigationId = await deps.createInvestigation({
-    ticketId,
+  const persistenceInput = {
+    ticketText: input.ticket,
     status: reviewStatus === "needs_human_review" ? "needs_human_review" : "complete",
     answerMarkdown,
     supportLevel,
@@ -227,25 +229,24 @@ export async function investigateTicket(
     routingReason: conflict.reason ?? routing.routingReason,
     accountId: input.selectedAccountId ?? null,
     customerReplyJson: generated.customerReply,
-    internalDiagnosisJson: generated.internalDiagnosis
-  });
-
-  await deps.insertInvestigationSources(
-    evidence.map((item: EvidenceChunk) => ({
-      investigationId,
+    internalDiagnosisJson: generated.internalDiagnosis,
+    sources: evidence.map((item: EvidenceChunk) => ({
       documentChunkId: item.id,
       rank: item.rank,
       score: item.score
-    }))
-  );
-  await deps.insertInvestigationToolCalls(
-    toolArtifacts.toolCalls.map((toolCall: ToolCallRecord) => ({
-      investigationId,
+    })),
+    toolCalls: toolArtifacts.toolCalls.map((toolCall: ToolCallRecord) => ({
       toolName: toolCall.toolName,
       input: toolCall.input,
       output: toolCall.output
     }))
-  );
+  };
+  const persisted = deps.persistInvestigationRun
+    ? await deps.persistInvestigationRun(persistenceInput)
+    : await persistInvestigationRunWithLegacyAdapters({
+        input: persistenceInput,
+        dependencies: deps
+      });
 
   const citations = collectCitationIds({
     customerReply: generated.customerReply,
@@ -253,8 +254,8 @@ export async function investigateTicket(
   });
 
   return {
-    investigationId,
-    ticketId,
+    investigationId: persisted.investigationId,
+    ticketId: persisted.ticketId,
     mode: finalMode,
     supportLevel,
     reviewStatus,
@@ -275,5 +276,46 @@ export async function investigateTicket(
     citations: string[];
     evidence: EvidenceChunk[];
     insufficientSupport: boolean;
+  };
+}
+
+async function persistInvestigationRunWithLegacyAdapters(input: {
+  input: Parameters<typeof persistInvestigationRunAdapter>[0];
+  dependencies: InvestigationDependencies;
+}) {
+  const ticketId = await input.dependencies.createTicket(input.input.ticketText);
+  const investigationId = await input.dependencies.createInvestigation({
+    ticketId,
+    status: input.input.status,
+    answerMarkdown: input.input.answerMarkdown,
+    supportLevel: input.input.supportLevel,
+    mode: input.input.mode,
+    reviewStatus: input.input.reviewStatus,
+    routingReason: input.input.routingReason,
+    accountId: input.input.accountId ?? null,
+    customerReplyJson: input.input.customerReplyJson,
+    internalDiagnosisJson: input.input.internalDiagnosisJson
+  });
+
+  await input.dependencies.insertInvestigationSources(
+    input.input.sources.map((source) => ({
+      investigationId,
+      documentChunkId: source.documentChunkId,
+      rank: source.rank,
+      score: source.score
+    }))
+  );
+  await input.dependencies.insertInvestigationToolCalls(
+    input.input.toolCalls.map((toolCall) => ({
+      investigationId,
+      toolName: toolCall.toolName,
+      input: toolCall.input,
+      output: toolCall.output
+    }))
+  );
+
+  return {
+    ticketId,
+    investigationId
   };
 }
