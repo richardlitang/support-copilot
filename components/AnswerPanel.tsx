@@ -1,7 +1,10 @@
 import type { SupportLevel } from "@/lib/types";
 import type { InvestigationResultV2, StructuredClaimV2 } from "@/lib/types/investigation-v2";
+import { AlertTriangle, CheckCircle2, ClipboardCheck, RotateCcw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { getReviewAction } from "@/lib/review-actions";
 
 const supportVariant: Record<SupportLevel, "success" | "warn" | "danger"> = {
   high: "success",
@@ -105,12 +108,18 @@ function ClaimsSection({
 export function AnswerPanel({
   isInvestigating,
   investigationContext,
+  isReviewAcknowledged,
+  onMarkReviewed,
+  onRetryWithContext,
   result,
   ticket,
   showDebugDetails
 }: {
   isInvestigating: boolean;
   investigationContext: string;
+  isReviewAcknowledged: boolean;
+  onMarkReviewed: () => void;
+  onRetryWithContext: () => void;
   result: InvestigationResultV2 | null;
   ticket: string;
   showDebugDetails: boolean;
@@ -162,6 +171,8 @@ export function AnswerPanel({
     );
   }
 
+  const reviewAction = getReviewAction(result);
+
   return (
     <div className="space-y-4">
       <Card className="surface-shell">
@@ -177,7 +188,7 @@ export function AnswerPanel({
             <div className="flex flex-wrap gap-2">
               <Badge variant={supportVariant[result.supportLevel]}>{supportLabel[result.supportLevel]}</Badge>
               <Badge variant={result.reviewStatus === "needs_human_review" ? "danger" : "secondary"}>
-                {result.reviewStatus === "needs_human_review" ? "Needs human review" : "Ready"}
+                {isReviewAcknowledged ? "Reviewed" : result.reviewStatus === "needs_human_review" ? "Needs human review" : "Ready"}
               </Badge>
               <Badge variant="outline">{result.mode.replaceAll("_", " ")}</Badge>
             </div>
@@ -207,6 +218,55 @@ export function AnswerPanel({
           </div>
         </CardContent>
       </Card>
+
+      {reviewAction ? (
+        <Card className={isReviewAcknowledged ? "border-emerald-200 bg-emerald-50/80" : "border-red-200 bg-red-50/80"}>
+          <CardContent className="p-4">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="flex min-w-0 gap-3">
+                <div
+                  className={
+                    isReviewAcknowledged
+                      ? "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-emerald-200 bg-white text-emerald-700"
+                      : "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-red-200 bg-white text-red-700"
+                  }
+                >
+                  {isReviewAcknowledged ? <CheckCircle2 className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
+                </div>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="eyebrow">{isReviewAcknowledged ? "Review acknowledged" : "Human-review queue"}</p>
+                    <Badge variant={isReviewAcknowledged ? "success" : "danger"}>
+                      {isReviewAcknowledged ? "Marked reviewed" : "Reply blocked"}
+                    </Badge>
+                  </div>
+                  <h3 className="mt-2 text-lg font-semibold tracking-[-0.03em] text-zinc-950">{reviewAction.title}</h3>
+                  <p className="mt-2 max-w-3xl text-sm leading-6 text-zinc-700">{reviewAction.description}</p>
+                  {result.internalDiagnosis.openQuestions.length ? (
+                    <div className="mt-3 grid gap-2">
+                      {result.internalDiagnosis.openQuestions.slice(0, 2).map((question) => (
+                        <div key={question} className="rounded-lg border border-white/80 bg-white/65 px-3 py-2 text-sm leading-6 text-zinc-700">
+                          {question}
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+              <div className="flex shrink-0 flex-wrap gap-2 lg:justify-end">
+                <Button type="button" variant="outline" onClick={onRetryWithContext}>
+                  <RotateCcw className="h-4 w-4" />
+                  {reviewAction.primaryActionLabel}
+                </Button>
+                <Button type="button" variant={isReviewAcknowledged ? "secondary" : "default"} onClick={onMarkReviewed}>
+                  <ClipboardCheck className="h-4 w-4" />
+                  {isReviewAcknowledged ? "Reviewed" : "Mark reviewed"}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
 
       <ClaimsSection
         title="Customer-facing draft"

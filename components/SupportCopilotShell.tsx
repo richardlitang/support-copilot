@@ -55,6 +55,8 @@ export function SupportCopilotShell({
   const [ragEnabled, setRagEnabled] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [isInvestigating, setIsInvestigating] = useState(false);
+  const [reviewedInvestigationId, setReviewedInvestigationId] = useState<string | null>(null);
+  const [focusContextToken, setFocusContextToken] = useState(0);
 
   const showDebugToggle = process.env.NEXT_PUBLIC_DEBUG_RAG === "true";
   const hasRunState = Boolean(result) || isInvestigating;
@@ -101,6 +103,10 @@ export function SupportCopilotShell({
       void refreshAccounts({ silent: true });
     }
   }, [refreshAccounts, refreshDocuments, showDebugToggle]);
+
+  useEffect(() => {
+    setReviewedInvestigationId(null);
+  }, [result?.investigationId]);
 
   async function handleDeleteDocument(documentId: string) {
     setError(null);
@@ -227,6 +233,20 @@ export function SupportCopilotShell({
     }
   }
 
+  function handleRetryWithContext() {
+    setFocusContextToken((value) => value + 1);
+
+    if (!investigationContext.trim()) {
+      setInvestigationContext("Add plan, feature state, recent errors, or support notes here before rerunning.");
+    }
+  }
+
+  function handleMarkReviewed() {
+    if (result) {
+      setReviewedInvestigationId(result.investigationId);
+    }
+  }
+
   function handleLoadScenario(scenario: DemoScenario) {
     setTicket(scenario.rawText);
     setInvestigationContext(scenario.investigationContext ?? "");
@@ -287,6 +307,7 @@ export function SupportCopilotShell({
               isActiveStep={activeStep !== "docs" && !hasRunState}
               ragEnabled={ragEnabled}
               showDebugToggle={showDebugToggle}
+              focusContextToken={focusContextToken}
               accountHint={
                 result?.reviewStatus === "needs_human_review" &&
                 result.routingReason.toLowerCase().includes("none was provided")
@@ -305,10 +326,13 @@ export function SupportCopilotShell({
               <AnswerPanel
                 isInvestigating={isInvestigating}
                 investigationContext={investigationContext}
-                result={result}
-                ticket={ticket}
-                showDebugDetails={showDebugToggle}
-              />
+              result={result}
+              ticket={ticket}
+              isReviewAcknowledged={Boolean(result && reviewedInvestigationId === result.investigationId)}
+              onMarkReviewed={handleMarkReviewed}
+              onRetryWithContext={handleRetryWithContext}
+              showDebugDetails={showDebugToggle}
+            />
             ) : null}
           </div>
 

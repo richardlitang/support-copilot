@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronDown, FlaskConical } from "lucide-react";
 import type { DemoScenario } from "@/components/SupportCopilotShell";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +21,7 @@ export function TicketForm({
   ragEnabled,
   showDebugToggle,
   accountHint,
+  focusContextToken,
   onSelectAccount,
   onInvestigationContextChange,
   onLoadScenario,
@@ -38,6 +39,7 @@ export function TicketForm({
   ragEnabled: boolean;
   showDebugToggle: boolean;
   accountHint?: string | null;
+  focusContextToken: number;
   onSelectAccount: (value: string | null) => void;
   onInvestigationContextChange: (value: string) => void;
   onLoadScenario: (scenario: DemoScenario) => void;
@@ -47,6 +49,7 @@ export function TicketForm({
 }) {
   const [showContext, setShowContext] = useState(false);
   const [showDemos, setShowDemos] = useState(false);
+  const contextRef = useRef<HTMLTextAreaElement | null>(null);
   const contextExpanded = showContext || Boolean(investigationContext.trim());
   const lowerTicket = ticket.toLowerCase();
   const likelyNeedsContext = [
@@ -69,6 +72,17 @@ export function TicketForm({
     "stalled",
     "after setup"
   ].some((term) => lowerTicket.includes(term));
+
+  useEffect(() => {
+    if (focusContextToken === 0) {
+      return;
+    }
+
+    window.requestAnimationFrame(() => {
+      contextRef.current?.focus();
+      contextRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  }, [focusContextToken]);
 
   return (
     <Card
@@ -137,6 +151,7 @@ export function TicketForm({
                 </div>
               </div>
               <Textarea
+                ref={contextRef}
                 className="mt-3 min-h-[96px] rounded-lg bg-white"
                 placeholder="Example: Plan: Starter. Exports UI hidden. Recent error: ERR-219 yesterday. Support note: billing setup already completed."
                 value={investigationContext}
