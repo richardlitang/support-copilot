@@ -2,6 +2,13 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { hasDatabaseConfig } from "../lib/db";
+import { createInitialInvestigationGraphState } from "../lib/graph/investigation-state";
+import { applyReviewPolicyNode } from "../lib/graph/nodes/apply-review-policy";
+import { classifyInvestigationNode } from "../lib/graph/nodes/classify-investigation";
+import { generateClaimsNode } from "../lib/graph/nodes/generate-claims";
+import { retrieveDocumentationNode } from "../lib/graph/nodes/retrieve-documentation";
+import { defaultRunContextToolsAdapters, runContextToolsNode } from "../lib/graph/nodes/run-context-tools";
+import { validateGroundingNode } from "../lib/graph/nodes/validate-grounding";
 import { investigateTicket } from "../lib/investigate";
 import type { EvidenceChunk, StructuredAnswer } from "../lib/types";
 import type { AccountRecord, ErrorEventRecord, FeatureFlagRecord } from "../lib/types/investigation-v2";
@@ -43,6 +50,7 @@ type EvalSummary = {
   reviewPassed: boolean;
   retrievalPassed: boolean;
   toolPassed: boolean;
+  graphParityPassed: boolean | null;
   passed: boolean;
   topDocs: Array<{
     id: string;
@@ -306,6 +314,42 @@ function createOfflineDependencies(testCase: EvalCase) {
   };
 }
 
+async function runOfflineGraphParity(input: {
+  testCase: EvalCase;
+  evalSessionId: string;
+  dependencies: ReturnType<typeof createOfflineDependencies>;
+}) {
+  const initialState = createInitialInvestigationGraphState({
+    ticket: input.testCase.ticket,
+    sessionId: input.evalSessionId,
+    ragEnabled: true,
+    selectedAccountId: input.testCase.selectedAccountId ?? null
+  });
+  const retrieved = await retrieveDocumentationNode(initialState, {
+    retrieveEvidence: input.dependencies.retrieveEvidence
+  });
+  const classified = classifyInvestigationNode(retrieved);
+  const withTools = await runContextToolsNode(classified, {
+    ...input.dependencies,
+    ...defaultRunContextToolsAdapters
+  });
+  const generated = await generateClaimsNode(withTools, {
+    generateGroundedAnswer: input.dependencies.generateGroundedAnswer,
+    generateInvestigationAnswerV2: input.dependencies.generateInvestigationAnswerV2
+  });
+  const grounded = validateGroundingNode(generated);
+  const reviewed = applyReviewPolicyNode(grounded);
+
+  if (!reviewed.review) {
+    throw new Error(`Graph parity run did not produce review state for ${input.testCase.id}.`);
+  }
+
+  return {
+    mode: reviewed.review.finalMode,
+    reviewStatus: reviewed.review.reviewStatus
+  };
+}
+
 async function main() {
   if (!offlineMode && !hasDatabaseConfig()) {
     throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY. `npm run eval:demo` requires a reachable seeded Supabase project.");
@@ -318,6 +362,7 @@ async function main() {
   const failures: string[] = [];
 
   for (const testCase of cases) {
+    const offlineDependencies = offlineMode ? createOfflineDependencies(testCase) : null;
     const result = await investigateTicket(
       {
         ticket: testCase.ticket,
@@ -325,10 +370,18 @@ async function main() {
         sessionId: evalSessionId,
         selectedAccountId: testCase.selectedAccountId ?? null
       },
-      offlineMode ? createOfflineDependencies(testCase) : {}
+      offlineDependencies ?? {}
     ).catch((error: unknown) => {
       throw new Error(`Eval case ${testCase.id} failed before assertions:\n${formatRuntimeFailure(error)}`);
     });
+    const graphResult = offlineDependencies
+      ? await runOfflineGraphParity({
+          testCase,
+          evalSessionId,
+          dependencies: offlineDependencies
+        })
+      : null;
+    const graphParityPassed = graphResult ? graphResult.mode === result.mode && graphResult.reviewStatus === result.reviewStatus : null;
     const expectedEvidenceKeywords = testCase.expectedEvidenceKeywords ?? [];
     const evidenceHaystack = result.docEvidence
       .map((item) => `${item.filename} ${item.sectionTitle ?? ""} ${item.excerpt}`)
@@ -362,6 +415,12 @@ async function main() {
       failures.push(`${testCase.id}: expected tool evidence, got none`);
     }
 
+    if (graphParityPassed === false && graphResult) {
+      failures.push(
+        `${testCase.id}: graph parity failed, direct mode/review ${result.mode}/${result.reviewStatus}, graph mode/review ${graphResult.mode}/${graphResult.reviewStatus}`
+      );
+    }
+
     summary.push({
       id: testCase.id,
       bucket: testCase.bucket,
@@ -386,7 +445,8 @@ async function main() {
       reviewPassed,
       retrievalPassed,
       toolPassed,
-      passed: routePassed && reviewPassed && retrievalPassed && toolPassed,
+      graphParityPassed,
+      passed: routePassed && reviewPassed && retrievalPassed && toolPassed && graphParityPassed !== false,
       topDocs: result.docEvidence.slice(0, 3).map((item) => ({
         id: item.id,
         filename: item.filename,
@@ -402,6 +462,8 @@ async function main() {
   const reviewPassed = summary.filter((item) => item.reviewPassed).length;
   const retrievalPassed = summary.filter((item) => item.retrievalPassed).length;
   const toolPassed = summary.filter((item) => item.toolPassed).length;
+  const graphParityItems = summary.filter((item) => item.graphParityPassed !== null);
+  const graphParityPassed = graphParityItems.filter((item) => item.graphParityPassed).length;
 
   console.log("Support Copilot eval summary");
   console.log(`Mode: ${offlineMode ? "offline mock" : "live Supabase/OpenAI"}`);
@@ -410,6 +472,9 @@ async function main() {
   console.log(`Review: ${reviewPassed}/${summary.length} passed`);
   console.log(`Retrieval: ${retrievalPassed}/${summary.length} passed`);
   console.log(`Tool evidence: ${toolPassed}/${summary.length} passed`);
+  if (graphParityItems.length) {
+    console.log(`Graph parity: ${graphParityPassed}/${graphParityItems.length} passed`);
+  }
 
   console.log("\nCase results:");
   for (const item of summary) {

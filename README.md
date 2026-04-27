@@ -115,7 +115,7 @@ For restricted/offline environments, use:
 npm run eval:demo:offline
 ```
 
-The offline eval uses mocked retrieved evidence and tool outputs. It is useful for validating routing/reporting code, but the live eval is still the real retrieval-quality gate.
+The offline eval uses mocked retrieved evidence and tool outputs. It also checks graph-node parity for route and review outcomes. It is useful for validating routing/reporting code, but the live eval is still the real retrieval-quality gate.
 
 The eval runner now reports route correctness, review status, retrieval evidence keywords, tool evidence, and top retrieved docs. It exits non-zero if the grounded behavior drifts.
 

@@ -212,6 +212,14 @@ Verification from this slice:
 - `npm run test -- review-actions` passed with 4 tests.
 - `npm run test -- investigate-v2` passed with 5 tests.
 
+### Batch Progress: 2026-04-27 Graph Parity Eval
+- Extended the offline eval harness to run each case through the direct investigation pipeline and the graph-node pipeline.
+- Added graph parity reporting for mode and review status before wiring any graph runtime path.
+- Kept parity offline-only so it stays deterministic and does not double-call live Supabase/OpenAI dependencies.
+
+Verification from this slice:
+- `npm run eval:demo:offline` passed 15/15 with graph parity 15/15.
+
 ## Non-Goals
 - Do not add LangChain chains just for keywords.
 - Do not replace working retrieval/answer code with opaque abstractions.
