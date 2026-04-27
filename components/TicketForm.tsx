@@ -22,6 +22,7 @@ export function TicketForm({
   showDebugToggle,
   accountHint,
   focusContextToken,
+  isReviewRetryActive,
   onSelectAccount,
   onInvestigationContextChange,
   onLoadScenario,
@@ -40,6 +41,7 @@ export function TicketForm({
   showDebugToggle: boolean;
   accountHint?: string | null;
   focusContextToken: number;
+  isReviewRetryActive: boolean;
   onSelectAccount: (value: string | null) => void;
   onInvestigationContextChange: (value: string) => void;
   onLoadScenario: (scenario: DemoScenario) => void;
@@ -103,6 +105,20 @@ export function TicketForm({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid gap-3">
+          {isReviewRetryActive ? (
+            <div className="rounded-lg border border-amber-200 bg-amber-50/80 p-3">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="eyebrow">Review retry staged</p>
+                  <p className="mt-1.5 text-sm leading-6 text-amber-800">
+                    Add the missing context below, then rerun the same ticket to see whether support becomes ready.
+                  </p>
+                </div>
+                <Badge variant="warn">Needs rerun</Badge>
+              </div>
+            </div>
+          ) : null}
+
           <div className="surface-muted p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -291,7 +307,7 @@ export function TicketForm({
           disabled={!ticket.trim() || isInvestigating}
           onClick={onSubmit}
         >
-          {isInvestigating ? "Retrieving relevant documentation…" : "Investigate"}
+          {isInvestigating ? "Retrieving relevant documentation…" : isReviewRetryActive ? "Rerun investigation" : "Investigate"}
         </Button>
       </CardContent>
     </Card>

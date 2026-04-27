@@ -57,6 +57,7 @@ export function SupportCopilotShell({
   const [isInvestigating, setIsInvestigating] = useState(false);
   const [reviewedInvestigationId, setReviewedInvestigationId] = useState<string | null>(null);
   const [focusContextToken, setFocusContextToken] = useState(0);
+  const [isReviewRetryActive, setIsReviewRetryActive] = useState(false);
 
   const showDebugToggle = process.env.NEXT_PUBLIC_DEBUG_RAG === "true";
   const hasRunState = Boolean(result) || isInvestigating;
@@ -106,6 +107,7 @@ export function SupportCopilotShell({
 
   useEffect(() => {
     setReviewedInvestigationId(null);
+    setIsReviewRetryActive(false);
   }, [result?.investigationId]);
 
   async function handleDeleteDocument(documentId: string) {
@@ -199,6 +201,7 @@ export function SupportCopilotShell({
 
     setError(null);
     setIsInvestigating(true);
+    setIsReviewRetryActive(false);
 
     try {
       const response = await fetch("/api/investigate", {
@@ -235,9 +238,10 @@ export function SupportCopilotShell({
 
   function handleRetryWithContext() {
     setFocusContextToken((value) => value + 1);
+    setIsReviewRetryActive(true);
 
     if (!investigationContext.trim()) {
-      setInvestigationContext("Add plan, feature state, recent errors, or support notes here before rerunning.");
+      setInvestigationContext("Plan:\nFeature state:\nRecent errors:\nSupport notes:");
     }
   }
 
@@ -253,6 +257,7 @@ export function SupportCopilotShell({
     setSelectedAccountId(scenario.selectedAccountId ?? null);
     setResult(null);
     setError(null);
+    setIsReviewRetryActive(false);
   }
 
   return (
@@ -308,6 +313,7 @@ export function SupportCopilotShell({
               ragEnabled={ragEnabled}
               showDebugToggle={showDebugToggle}
               focusContextToken={focusContextToken}
+              isReviewRetryActive={isReviewRetryActive}
               accountHint={
                 result?.reviewStatus === "needs_human_review" &&
                 result.routingReason.toLowerCase().includes("none was provided")
@@ -326,13 +332,14 @@ export function SupportCopilotShell({
               <AnswerPanel
                 isInvestigating={isInvestigating}
                 investigationContext={investigationContext}
-              result={result}
-              ticket={ticket}
-              isReviewAcknowledged={Boolean(result && reviewedInvestigationId === result.investigationId)}
-              onMarkReviewed={handleMarkReviewed}
-              onRetryWithContext={handleRetryWithContext}
-              showDebugDetails={showDebugToggle}
-            />
+                result={result}
+                ticket={ticket}
+                isReviewAcknowledged={Boolean(result && reviewedInvestigationId === result.investigationId)}
+                isReviewRetryActive={isReviewRetryActive}
+                onMarkReviewed={handleMarkReviewed}
+                onRetryWithContext={handleRetryWithContext}
+                showDebugDetails={showDebugToggle}
+              />
             ) : null}
           </div>
 

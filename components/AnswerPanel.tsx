@@ -109,6 +109,7 @@ export function AnswerPanel({
   isInvestigating,
   investigationContext,
   isReviewAcknowledged,
+  isReviewRetryActive,
   onMarkReviewed,
   onRetryWithContext,
   result,
@@ -118,6 +119,7 @@ export function AnswerPanel({
   isInvestigating: boolean;
   investigationContext: string;
   isReviewAcknowledged: boolean;
+  isReviewRetryActive: boolean;
   onMarkReviewed: () => void;
   onRetryWithContext: () => void;
   result: InvestigationResultV2 | null;
@@ -235,9 +237,11 @@ export function AnswerPanel({
                 </div>
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="eyebrow">{isReviewAcknowledged ? "Review acknowledged" : "Human-review queue"}</p>
+                    <p className="eyebrow">
+                      {isReviewAcknowledged ? "Review acknowledged" : isReviewRetryActive ? "Retry staged" : "Human-review queue"}
+                    </p>
                     <Badge variant={isReviewAcknowledged ? "success" : "danger"}>
-                      {isReviewAcknowledged ? "Marked reviewed" : "Reply blocked"}
+                      {isReviewAcknowledged ? "Marked reviewed" : isReviewRetryActive ? "Awaiting rerun" : "Reply blocked"}
                     </Badge>
                   </div>
                   <h3 className="mt-2 text-lg font-semibold tracking-[-0.03em] text-zinc-950">{reviewAction.title}</h3>
@@ -256,7 +260,7 @@ export function AnswerPanel({
               <div className="flex shrink-0 flex-wrap gap-2 lg:justify-end">
                 <Button type="button" variant="outline" onClick={onRetryWithContext}>
                   <RotateCcw className="h-4 w-4" />
-                  {reviewAction.primaryActionLabel}
+                  {isReviewRetryActive ? "Retry staged" : reviewAction.primaryActionLabel}
                 </Button>
                 <Button type="button" variant={isReviewAcknowledged ? "secondary" : "default"} onClick={onMarkReviewed}>
                   <ClipboardCheck className="h-4 w-4" />
