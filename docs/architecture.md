@@ -57,7 +57,8 @@ The project relies on explicit artifacts instead of hidden reasoning:
 
 ## Current Limitations
 
-- The eval suite is useful but still shallow. It checks route shape and evidence presence more than semantic answer quality.
+- The eval suite is useful but still shallow. It checks route shape and evidence presence more than full semantic answer quality.
+- Claim validation now catches uncited output, unknown citation labels, over-broad claims, and claims with no meaningful token overlap with cited evidence. It is a guardrail, not a proof of entailment.
 - Atomic investigation persistence depends on applying the latest Supabase migration; older schemas still use the compatibility path.
 - PDF parsing is best effort and should not be the primary demo path.
 - Chunking has basic table preservation but is not a full layout-aware document parser.

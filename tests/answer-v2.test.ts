@@ -75,4 +75,27 @@ describe("validateInvestigationAnswerV2", () => {
 
     expect(result.valid).toBe(false);
   });
+
+  it("rejects claims that do not overlap with their cited evidence", () => {
+    const result = validateInvestigationAnswerV2({
+      answer: {
+        customerReplyClaims: [
+          {
+            text: "Password rotation requires an owner approval workflow.",
+            citations: ["S1"]
+          }
+        ],
+        internalDiagnosisClaims: [],
+        openQuestions: [],
+        insufficientSupport: false
+      },
+      docEvidence,
+      toolEvidence
+    });
+
+    expect(result).toEqual({
+      valid: false,
+      reason: "Claim does not appear supported by its cited evidence."
+    });
+  });
 });

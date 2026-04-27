@@ -314,6 +314,36 @@ type StructuredInvestigationDraft = {
 
 type EvidenceRegistryItem = DocEvidenceItem | ToolEvidenceItem;
 
+const claimValidationStopwords = new Set([
+  "about",
+  "account",
+  "after",
+  "also",
+  "and",
+  "are",
+  "but",
+  "can",
+  "cannot",
+  "customer",
+  "does",
+  "for",
+  "from",
+  "have",
+  "into",
+  "not",
+  "only",
+  "our",
+  "should",
+  "that",
+  "the",
+  "their",
+  "this",
+  "was",
+  "with",
+  "without",
+  "your"
+]);
+
 function deriveSummary(claims: StructuredClaimV2[]) {
   if (!claims.length) {
     return undefined;
@@ -349,8 +379,43 @@ function normalizeStructuredClaims(
   return normalized;
 }
 
+function tokenizeClaimValidationText(text: string) {
+  return text
+    .toLowerCase()
+    .match(/[a-z0-9]+/g)
+    ?.filter((token) => token.length > 2 && !claimValidationStopwords.has(token)) ?? [];
+}
+
+function validateCitationOverlap(claim: StructuredClaimV2, sources: EvidenceRegistryItem[]) {
+  const claimTokens = Array.from(new Set(tokenizeClaimValidationText(claim.text)));
+
+  if (!claimTokens.length) {
+    return { valid: true } as const;
+  }
+
+  const evidenceTokens = new Set(sources.flatMap((source) => tokenizeClaimValidationText(source.excerpt)));
+
+  if (!evidenceTokens.size) {
+    return { valid: true } as const;
+  }
+
+  const overlapCount = claimTokens.filter((token) => evidenceTokens.has(token)).length;
+  const minimumOverlap = claimTokens.length <= 3 ? 1 : 2;
+  const overlapRatio = overlapCount / claimTokens.length;
+
+  if (overlapCount < minimumOverlap && overlapRatio < 0.25) {
+    return {
+      valid: false,
+      reason: "Claim does not appear supported by its cited evidence."
+    } as const;
+  }
+
+  return { valid: true } as const;
+}
+
 function validateClaimBreadth(claim: StructuredClaimV2, registry: Map<string, EvidenceRegistryItem>) {
   let docWordBudget = 0;
+  const citedSources: EvidenceRegistryItem[] = [];
 
   for (const citation of claim.citations) {
     const source = registry.get(citation);
@@ -361,6 +426,8 @@ function validateClaimBreadth(claim: StructuredClaimV2, registry: Map<string, Ev
         reason: `Unknown citation ${citation}.`
       } as const;
     }
+
+    citedSources.push(source);
 
     if (source.sourceType === "doc") {
       const words = source.excerpt.split(/\s+/).filter(Boolean).length;
@@ -384,6 +451,12 @@ function validateClaimBreadth(claim: StructuredClaimV2, registry: Map<string, Ev
         reason: "Claim appears broader than its cited documentation evidence."
       } as const;
     }
+  }
+
+  const overlapValidation = validateCitationOverlap(claim, citedSources);
+
+  if (!overlapValidation.valid) {
+    return overlapValidation;
   }
 
   return { valid: true } as const;

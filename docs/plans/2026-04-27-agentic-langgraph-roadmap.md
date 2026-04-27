@@ -92,7 +92,7 @@ Before claiming a change is complete, run the narrow relevant check plus `npm ru
 - DB writes are not fully transactional across tickets, investigations, sources, and tool calls.
 - The eval suite exists but is still shallow. It checks routing/evidence counts more than answer correctness, retrieval quality, or unsupported-claim coverage.
 - Chunking is serviceable but still risky for troubleshooting tables and manual-style PDFs.
-- The claim validator checks citation structure better than semantic entailment. It can reject uncited output, but it does not deeply prove every claim is entailed by excerpts.
+- The claim validator checks citation structure, claim length, citation labels, and lightweight evidence overlap. It can reject obvious unsupported citation use, but it does not deeply prove every claim is entailed by excerpts.
 - UI polish has improved, but the user is sensitive to wasted space, oversized chips, and redundant status blocks. Keep UI changes compact and evidence-first.
 
 ### Next Best Implementation Slice
@@ -218,6 +218,19 @@ Verification from this slice:
 - Kept parity offline-only so it stays deterministic and does not double-call live Supabase/OpenAI dependencies.
 
 Verification from this slice:
+- `npm run eval:demo:offline` passed 15/15 with graph parity 15/15.
+
+### Batch Progress: 2026-04-27 Citation Grounding Guard
+- Added a lightweight claim/evidence overlap check to structured answer validation.
+- Claims with known citations can still be rejected when the cited excerpts share no meaningful terms with the claim text.
+- Added regression coverage for unsupported citation attachment.
+
+Verification from this slice:
+- `npm run test -- answer-v2` passed with 3 tests.
+- `npm run test` passed with 51 tests.
+- `npm run typecheck` passed.
+- `npm run lint` passed.
+- `npm run build` passed.
 - `npm run eval:demo:offline` passed 15/15 with graph parity 15/15.
 
 ## Non-Goals

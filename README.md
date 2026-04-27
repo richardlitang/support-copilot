@@ -46,7 +46,7 @@ For a fuller walkthrough, see [`docs/architecture.md`](docs/architecture.md).
 - Customer-facing output and internal diagnosis both render as cited structured claims instead of freeform prose.
 - The evidence panel shows retrieved document chunks separately from product-context tool evidence and raw tool calls.
 - Citation labels such as `[S1]` and `[T1]` map directly from claims to document and tool evidence.
-- A grounding validator rejects unsupported or uncited claim output and falls back to human review instead of bluffing.
+- A grounding validator rejects uncited output, unknown citations, over-broad claims, and claims with no meaningful overlap with cited evidence.
 - If retrieval is weak, account context is missing, or docs and tools do not explain the issue, the app routes to `needs_human_review`.
 - Current-schema deployments can persist the ticket, investigation record, source links, and tool-call records through a single database function so the UI does not land on a half-saved investigation.
 
