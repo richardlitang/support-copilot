@@ -224,6 +224,9 @@ Verification from this slice:
 - Added a lightweight claim/evidence overlap check to structured answer validation.
 - Claims with known citations can still be rejected when the cited excerpts share no meaningful terms with the claim text.
 - Added regression coverage for unsupported citation attachment.
+- Applied the atomic persistence migration to the live Supabase project and reran live eval successfully.
+- Added a public API hardening migration after Supabase advisors flagged exposed public tables and executable `SECURITY DEFINER` RPCs.
+- Locked database access to server-side service-role adapters by enabling RLS, revoking public table grants, revoking public RPC execution, dropping the stale retrieval function overload, and adding missing foreign-key indexes.
 
 Verification from this slice:
 - `npm run test -- answer-v2` passed with 3 tests.
@@ -232,6 +235,9 @@ Verification from this slice:
 - `npm run lint` passed.
 - `npm run build` passed.
 - `npm run eval:demo:offline` passed 15/15 with graph parity 15/15.
+- `npm run eval:demo` passed 15/15 against live Supabase/OpenAI after applying the atomic persistence migration.
+- Supabase function privilege check confirmed `anon=false`, `authenticated=false`, and `service_role=true` for `create_investigation_run` and `match_document_chunks`.
+- Supabase security advisors now report only `RLS Enabled No Policy` info notices for the service-role-only tables.
 
 ## Non-Goals
 - Do not add LangChain chains just for keywords.

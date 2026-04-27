@@ -88,3 +88,48 @@ begin
   return next;
 end;
 $$;
+
+revoke all on function create_investigation_run(
+  text,
+  text,
+  text,
+  text,
+  text,
+  text,
+  text,
+  uuid,
+  jsonb,
+  jsonb,
+  jsonb,
+  jsonb
+) from public;
+
+revoke execute on function create_investigation_run(
+  text,
+  text,
+  text,
+  text,
+  text,
+  text,
+  text,
+  uuid,
+  jsonb,
+  jsonb,
+  jsonb,
+  jsonb
+) from anon, authenticated;
+
+grant execute on function create_investigation_run(
+  text,
+  text,
+  text,
+  text,
+  text,
+  text,
+  text,
+  uuid,
+  jsonb,
+  jsonb,
+  jsonb,
+  jsonb
+) to service_role;

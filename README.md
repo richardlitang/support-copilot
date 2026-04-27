@@ -49,6 +49,7 @@ For a fuller walkthrough, see [`docs/architecture.md`](docs/architecture.md).
 - A grounding validator rejects uncited output, unknown citations, over-broad claims, and claims with no meaningful overlap with cited evidence.
 - If retrieval is weak, account context is missing, or docs and tools do not explain the issue, the app routes to `needs_human_review`.
 - Current-schema deployments can persist the ticket, investigation record, source links, and tool-call records through a single database function so the UI does not land on a half-saved investigation.
+- Supabase access is server-side only; public table access and investigation RPC execution are locked down for `anon` and `authenticated` roles.
 
 ## Setup
 

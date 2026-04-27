@@ -54,6 +54,7 @@ The project relies on explicit artifacts instead of hidden reasoning:
 - Support level is heuristic, not model self-confidence.
 - Missing account/context evidence is a safe review state, not a UI blocker.
 - Eval cases track expected route, review state, tool evidence, and broad retrieved-evidence keywords.
+- Supabase reads and writes happen through server-side service-role adapters; public table access and RPC execution are revoked from `anon` and `authenticated` roles.
 
 ## Current Limitations
 
