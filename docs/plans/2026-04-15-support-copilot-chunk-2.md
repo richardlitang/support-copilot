@@ -4,7 +4,7 @@
 Extend the existing grounded RAG app into a trust-preserving support investigation workflow that combines documentation evidence with seeded account/product context and explicit human-review routing.
 
 ## Architecture Overview
-Chunk 2 is additive. The existing doc retrieval pipeline remains intact, while a new investigation-v2 contract layers on top with deterministic routing, Postgres-backed read-only tools, mixed-citation validation, and separate customer/internal outputs. The UI stays thin and the backend remains modular so LangGraph can be added later without reworking the evidence model.
+Chunk 2 is additive. The existing doc retrieval pipeline remains intact, while a structured investigation contract layers on top with deterministic routing, Postgres-backed read-only tools, mixed-citation validation, and separate customer/internal outputs. The UI stays thin and the backend remains modular so LangGraph can be added later without reworking the evidence model.
 
 ## Tech Stack
 - Next.js App Router
@@ -31,10 +31,10 @@ Related portfolio note: this same MCP shape is especially natural for a StackHun
 
 ## Tasks
 
-### Task 1: Add chunk-2 plan and investigation-v2 type boundary
+### Task 1: Add chunk-2 plan and structured investigation type boundary
 **Files:**
 - Create `docs/plans/2026-04-15-support-copilot-chunk-2.md`
-- Create `lib/types/investigation-v2.ts`
+- Create `lib/types/investigation.ts`
 - Modify `lib/types.ts`
 
 **Action:** Document the additive architecture and introduce dedicated v2 investigation types so chunk-1 answer types are not overloaded.
@@ -84,7 +84,7 @@ npm run test -- classify
 - Modify `lib/investigate.ts`
 - Modify `app/api/investigate/route.ts`
 
-**Action:** Produce `InvestigationResultV2`, validate structured claims against both doc and tool citations, persist structured JSON outputs, and map docs-only runs into the new contract.
+**Action:** Produce `InvestigationResult`, validate structured claims against both doc and tool citations, persist structured JSON outputs, and map docs-only runs into the new contract.
 
 **Verify:**
 ```bash

@@ -1,5 +1,5 @@
 import type { EvidenceChunk } from "@/lib/types";
-import type { InvestigationMode, ToolName } from "@/lib/types/investigation-v2";
+import type { InvestigationMode, ToolName } from "@/lib/types/investigation";
 
 export interface RoutingDecision {
   mode: InvestigationMode;

@@ -1,7 +1,7 @@
 import { markInvestigationGraphStep } from "@/lib/graph/investigation-state";
 import { determineReviewStatus, shouldEscalateToHumanReview } from "@/lib/review-policy";
-import { determineSupportLevelV2 } from "@/lib/support-level";
-import type { InvestigationMode } from "@/lib/types/investigation-v2";
+import { determineSupportLevel } from "@/lib/support-level";
+import type { InvestigationMode } from "@/lib/types/investigation";
 import type { InvestigationGraphState } from "@/lib/graph/investigation-state";
 
 export function applyReviewPolicyNode(state: InvestigationGraphState): InvestigationGraphState {
@@ -14,7 +14,7 @@ export function applyReviewPolicyNode(state: InvestigationGraphState): Investiga
   }
 
   const validationFailed = state.grounding?.validationFailed ?? false;
-  const supportLevel = determineSupportLevelV2({
+  const supportLevel = determineSupportLevel({
     topDocScore: state.docEvidence[0]?.score ?? 0,
     secondDocScore: state.docEvidence[1]?.score ?? 0,
     docEvidenceCount: state.docEvidence.length,

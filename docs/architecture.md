@@ -42,7 +42,7 @@ Support Copilot is a trust-first RAG support workbench. The core design goal is 
 - `lib/evidence-builder.ts`: source registry and legacy compatibility helpers.
 - `lib/tool-runner.ts`: deterministic tool execution and tool evidence construction.
 - `lib/conflict-policy.ts`: policy for unresolved doc/tool state.
-- `lib/types/investigation-v2.ts`: canonical structured investigation contract.
+- `lib/types/investigation.ts`: canonical structured investigation contract.
 
 ## Trust Model
 

@@ -1,6 +1,6 @@
 import type { SupportLevel } from "@/lib/types";
 
-export function determineSupportLevelV2(input: {
+export function determineSupportLevel(input: {
   topDocScore: number;
   secondDocScore: number;
   docEvidenceCount: number;

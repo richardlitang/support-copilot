@@ -1,9 +1,9 @@
 import { determineReviewStatus, shouldEscalateToHumanReview } from "@/lib/review-policy";
-import { determineSupportLevelV2 } from "@/lib/support-level";
+import { determineSupportLevel } from "@/lib/support-level";
 
-describe("determineSupportLevelV2", () => {
+describe("determineSupportLevel", () => {
   it("returns high support for strong cited documentation output", () => {
-    const result = determineSupportLevelV2({
+    const result = determineSupportLevel({
       topDocScore: 0.88,
       secondDocScore: 0.76,
       docEvidenceCount: 2,
@@ -19,7 +19,7 @@ describe("determineSupportLevelV2", () => {
   });
 
   it("returns insufficient support when required context is missing", () => {
-    const result = determineSupportLevelV2({
+    const result = determineSupportLevel({
       topDocScore: 0.74,
       secondDocScore: 0.6,
       docEvidenceCount: 2,
@@ -35,7 +35,7 @@ describe("determineSupportLevelV2", () => {
   });
 
   it("returns low support for usable cited evidence instead of forcing human review", () => {
-    const result = determineSupportLevelV2({
+    const result = determineSupportLevel({
       topDocScore: 0.54,
       secondDocScore: 0.48,
       docEvidenceCount: 2,

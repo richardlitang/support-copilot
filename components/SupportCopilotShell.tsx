@@ -9,7 +9,7 @@ import { UploadPanel } from "@/components/UploadPanel";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import type { DocumentRecord, UploadOutcome } from "@/lib/types";
-import type { AccountRecord, InvestigationResultV2 } from "@/lib/types/investigation-v2";
+import type { AccountRecord, InvestigationResult } from "@/lib/types/investigation";
 
 type UploadResponse = {
   documents: DocumentRecord[];
@@ -50,7 +50,7 @@ export function SupportCopilotShell({
   const [investigationContext, setInvestigationContext] = useState("");
   const [ticket, setTicket] = useState("");
   const [uploadOutcomes, setUploadOutcomes] = useState<UploadOutcome[]>([]);
-  const [result, setResult] = useState<InvestigationResultV2 | null>(null);
+  const [result, setResult] = useState<InvestigationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [ragEnabled, setRagEnabled] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
@@ -216,7 +216,7 @@ export function SupportCopilotShell({
           investigationContext
         })
       });
-      const payload = (await response.json()) as InvestigationResultV2 & { error?: string };
+      const payload = (await response.json()) as InvestigationResult & { error?: string };
       const requestId = response.headers.get("x-request-id");
 
       if (!response.ok) {

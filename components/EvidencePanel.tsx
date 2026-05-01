@@ -5,13 +5,13 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import type { InvestigationResultV2 } from "@/lib/types/investigation-v2";
+import type { InvestigationResult } from "@/lib/types/investigation";
 
 export function EvidencePanel({
   result,
   isInvestigating
 }: {
-  result: InvestigationResultV2 | null;
+  result: InvestigationResult | null;
   isInvestigating: boolean;
 }) {
   const citations = new Set(result?.citations ?? []);

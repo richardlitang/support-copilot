@@ -1,5 +1,5 @@
 import { accountHasModule, detectConflict, findRelevantFlags } from "@/lib/conflict-policy";
-import type { AccountRecord, DocEvidenceItem, FeatureFlagRecord } from "@/lib/types/investigation-v2";
+import type { AccountRecord, DocEvidenceItem, FeatureFlagRecord } from "@/lib/types/investigation";
 
 const account: AccountRecord = {
   id: "acct-1",

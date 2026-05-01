@@ -1,6 +1,6 @@
 import { investigateTicket } from "@/lib/investigate";
 
-describe("investigateTicket v2", () => {
+describe("investigateTicket structured", () => {
   const baseEvidence = [
     {
       id: "chunk-1",
@@ -15,13 +15,13 @@ describe("investigateTicket v2", () => {
   ];
 
   const baseDeps = {
-    createTicket: async () => "ticket-v2",
-    createInvestigation: async () => "investigation-v2",
+    createTicket: async () => "ticket-structured",
+    createInvestigation: async () => "investigation-structured",
     insertInvestigationSources: async () => undefined,
     insertInvestigationToolCalls: async () => undefined,
     persistInvestigationRun: async () => ({
-      ticketId: "ticket-v2",
-      investigationId: "investigation-v2"
+      ticketId: "ticket-structured",
+      investigationId: "investigation-structured"
     })
   };
 
@@ -39,7 +39,7 @@ describe("investigateTicket v2", () => {
         generateGroundedAnswer: async () => {
           throw new Error("docs-only generator should not run for docs+tools cases");
         },
-        generateInvestigationAnswerV2: async () => ({
+        generateInvestigationAnswer: async () => ({
           customerReply: {
             summary: "Exports are not enabled for this account.",
             claims: [
@@ -105,7 +105,7 @@ describe("investigateTicket v2", () => {
         generateGroundedAnswer: async () => {
           throw new Error("docs-only generator should not run for docs+tools cases");
         },
-        generateInvestigationAnswerV2: async () => ({
+        generateInvestigationAnswer: async () => ({
           customerReply: {
             summary: "Exports are not available for the described account state.",
             claims: [
@@ -170,7 +170,7 @@ describe("investigateTicket v2", () => {
         generateGroundedAnswer: async () => {
           throw new Error("docs-only generator should not run for docs+tools cases");
         },
-        generateInvestigationAnswerV2: async () => ({
+        generateInvestigationAnswer: async () => ({
           customerReply: {
             summary: "Exports are not enabled for this account.",
             claims: [{ text: "Exports are not enabled for this account.", citations: ["S1", "T1", "T2"] }]
@@ -239,8 +239,8 @@ describe("investigateTicket v2", () => {
         generateGroundedAnswer: async () => {
           throw new Error("docs-only generator should not run when account context is missing");
         },
-        generateInvestigationAnswerV2: async () => {
-          throw new Error("v2 generator should not run when account context is missing");
+        generateInvestigationAnswer: async () => {
+          throw new Error("structured generator should not run when account context is missing");
         },
         getAccountContext: async () => null,
         getFeatureFlags: async () => [],
@@ -268,8 +268,8 @@ describe("investigateTicket v2", () => {
         generateGroundedAnswer: async () => {
           throw new Error("docs-only generator should not run for docs+tools cases");
         },
-        generateInvestigationAnswerV2: async () => {
-          throw new Error("v2 generator should not run once conflict is detected");
+        generateInvestigationAnswer: async () => {
+          throw new Error("structured generator should not run once conflict is detected");
         },
         getAccountContext: async () => ({
           id: "acct-enterprise",

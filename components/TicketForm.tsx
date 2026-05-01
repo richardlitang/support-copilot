@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import type { AccountRecord } from "@/lib/types/investigation-v2";
+import type { AccountRecord } from "@/lib/types/investigation";
 
 export function TicketForm({
   accounts,

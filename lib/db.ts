@@ -9,7 +9,7 @@ import type {
   StructuredClaimSet,
   StructuredClaimSetWithOpenQuestions,
   ToolCallRecord
-} from "@/lib/types/investigation-v2";
+} from "@/lib/types/investigation";
 import type {
   ChunkCandidate,
   DocumentRecord,

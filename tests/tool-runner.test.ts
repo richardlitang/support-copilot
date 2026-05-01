@@ -1,5 +1,5 @@
 import { collectToolArtifacts, inferProductArea } from "@/lib/tool-runner";
-import type { AccountRecord, ErrorEventRecord, FeatureFlagRecord } from "@/lib/types/investigation-v2";
+import type { AccountRecord, ErrorEventRecord, FeatureFlagRecord } from "@/lib/types/investigation";
 
 const account: AccountRecord = {
   id: "acct-1",

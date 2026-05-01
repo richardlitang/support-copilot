@@ -5,7 +5,7 @@ import type {
   ErrorEventRecord,
   FeatureFlagRecord,
   InvestigationMode
-} from "@/lib/types/investigation-v2";
+} from "@/lib/types/investigation";
 
 export function findRelevantFlags(flags: FeatureFlagRecord[], productArea: string | null) {
   if (!productArea) {

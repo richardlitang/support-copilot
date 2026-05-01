@@ -1,6 +1,6 @@
-import { validateInvestigationAnswerV2 } from "@/lib/answer";
+import { validateInvestigationAnswer } from "@/lib/answer";
 
-describe("validateInvestigationAnswerV2", () => {
+describe("validateInvestigationAnswer", () => {
   const docEvidence = [
     {
       id: "S1" as const,
@@ -28,7 +28,7 @@ describe("validateInvestigationAnswerV2", () => {
   ];
 
   it("accepts mixed doc and tool citations", () => {
-    const result = validateInvestigationAnswerV2({
+    const result = validateInvestigationAnswer({
       answer: {
         customerReplyClaims: [
           {
@@ -57,7 +57,7 @@ describe("validateInvestigationAnswerV2", () => {
   });
 
   it("rejects claims with unknown citations", () => {
-    const result = validateInvestigationAnswerV2({
+    const result = validateInvestigationAnswer({
       answer: {
         customerReplyClaims: [
           {
@@ -77,7 +77,7 @@ describe("validateInvestigationAnswerV2", () => {
   });
 
   it("rejects claims that do not overlap with their cited evidence", () => {
-    const result = validateInvestigationAnswerV2({
+    const result = validateInvestigationAnswer({
       answer: {
         customerReplyClaims: [
           {

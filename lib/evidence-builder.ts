@@ -1,6 +1,6 @@
 import { formatCitationLabel } from "@/lib/citations";
 import type { EvidenceChunk, GroundedClaim } from "@/lib/types";
-import type { DocEvidenceItem, StructuredClaimSet } from "@/lib/types/investigation-v2";
+import type { DocEvidenceItem, StructuredClaimSet } from "@/lib/types/investigation";
 
 export function buildLegacyAnswer(claims: StructuredClaimSet["claims"]) {
   return claims.map((claim) => `${claim.text} [${claim.citations.join("][")}]`).join("\n\n");

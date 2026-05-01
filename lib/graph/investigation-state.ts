@@ -10,7 +10,7 @@ import type {
   StructuredClaimSetWithOpenQuestions,
   ToolCallRecord,
   ToolEvidenceItem
-} from "@/lib/types/investigation-v2";
+} from "@/lib/types/investigation";
 
 export type InvestigationGraphStep =
   | "initialized"

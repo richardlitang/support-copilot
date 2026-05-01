@@ -57,7 +57,7 @@ Use this section first if another conversation picks up the project without chat
 - `lib/review-policy.ts`: review-status policy.
 - `lib/tools/*`: read-only seeded support-context tools.
 - `lib/db.ts`: Supabase persistence adapter.
-- `lib/types/investigation-v2.ts`: chunk-2 structured result contract.
+- `lib/types/investigation.ts`: chunk-2 structured result contract.
 
 ### Current Scripts and Verification
 - `npm run dev`: starts Next with webpack. This was chosen because the local Turbopack path was slow/problematic during UI iteration.
@@ -210,7 +210,7 @@ Verification from this slice:
 
 Verification from this slice:
 - `npm run test -- review-actions` passed with 4 tests.
-- `npm run test -- investigate-v2` passed with 5 tests.
+- `npm run test -- investigate-structured` passed with 5 tests.
 
 ### Batch Progress: 2026-04-27 Graph Parity Eval
 - Extended the offline eval harness to run each case through the direct investigation pipeline and the graph-node pipeline.
@@ -229,7 +229,7 @@ Verification from this slice:
 - Locked database access to server-side service-role adapters by enabling RLS, revoking public table grants, revoking public RPC execution, dropping the stale retrieval function overload, and adding missing foreign-key indexes.
 
 Verification from this slice:
-- `npm run test -- answer-v2` passed with 3 tests.
+- `npm run test -- investigation-answer` passed with 3 tests.
 - `npm run test` passed with 51 tests.
 - `npm run typecheck` passed.
 - `npm run lint` passed.

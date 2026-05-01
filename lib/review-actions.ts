@@ -1,4 +1,4 @@
-import type { InvestigationResultV2 } from "@/lib/types/investigation-v2";
+import type { InvestigationResult } from "@/lib/types/investigation";
 
 export type ReviewActionKind = "add_context" | "add_docs" | "inspect_conflict" | "review_claims";
 
@@ -9,7 +9,7 @@ export interface ReviewAction {
   primaryActionLabel: string;
 }
 
-export function getReviewAction(result: InvestigationResultV2): ReviewAction | null {
+export function getReviewAction(result: InvestigationResult): ReviewAction | null {
   if (result.reviewStatus !== "needs_human_review") {
     return null;
   }

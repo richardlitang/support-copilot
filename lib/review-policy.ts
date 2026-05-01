@@ -1,4 +1,4 @@
-import type { InvestigationMode, ReviewStatus } from "@/lib/types/investigation-v2";
+import type { InvestigationMode, ReviewStatus } from "@/lib/types/investigation";
 import type { SupportLevel } from "@/lib/types";
 
 export function determineReviewStatus(input: {

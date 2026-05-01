@@ -5,9 +5,9 @@ import type {
   DocEvidenceItem,
   StructuredClaimSet,
   StructuredClaimSetWithOpenQuestions,
-  StructuredClaimV2,
+  StructuredClaim,
   ToolEvidenceItem
-} from "@/lib/types/investigation-v2";
+} from "@/lib/types/investigation";
 import type { EvidenceChunk, GroundedClaim, StructuredAnswer } from "@/lib/types";
 
 const answerSchema = {
@@ -256,8 +256,8 @@ export async function generateGroundedAnswer(input: {
   return buildInsufficientSupportAnswer();
 }
 
-const investigationV2Schema = {
-  name: "support_copilot_investigation_v2",
+const investigationAnswerSchema = {
+  name: "support_copilot_investigation",
   strict: true,
   schema: {
     type: "object",
@@ -344,7 +344,7 @@ const claimValidationStopwords = new Set([
   "your"
 ]);
 
-function deriveSummary(claims: StructuredClaimV2[]) {
+function deriveSummary(claims: StructuredClaim[]) {
   if (!claims.length) {
     return undefined;
   }
@@ -359,9 +359,9 @@ function deriveSummary(claims: StructuredClaimV2[]) {
 function normalizeStructuredClaims(
   claims: Array<{ text: string; citations: string[] }>,
   allowedLabels: string[]
-): StructuredClaimV2[] {
+): StructuredClaim[] {
   const seenTexts = new Set<string>();
-  const normalized: StructuredClaimV2[] = [];
+  const normalized: StructuredClaim[] = [];
 
   for (const claim of claims) {
     const text = claim.text.replace(/\s+/g, " ").trim();
@@ -386,7 +386,7 @@ function tokenizeClaimValidationText(text: string) {
     ?.filter((token) => token.length > 2 && !claimValidationStopwords.has(token)) ?? [];
 }
 
-function validateCitationOverlap(claim: StructuredClaimV2, sources: EvidenceRegistryItem[]) {
+function validateCitationOverlap(claim: StructuredClaim, sources: EvidenceRegistryItem[]) {
   const claimTokens = Array.from(new Set(tokenizeClaimValidationText(claim.text)));
 
   if (!claimTokens.length) {
@@ -413,7 +413,7 @@ function validateCitationOverlap(claim: StructuredClaimV2, sources: EvidenceRegi
   return { valid: true } as const;
 }
 
-function validateClaimBreadth(claim: StructuredClaimV2, registry: Map<string, EvidenceRegistryItem>) {
+function validateClaimBreadth(claim: StructuredClaim, registry: Map<string, EvidenceRegistryItem>) {
   let docWordBudget = 0;
   const citedSources: EvidenceRegistryItem[] = [];
 
@@ -487,7 +487,7 @@ export function buildStructuredHumanReviewFallback(input: {
   };
 }
 
-export function validateInvestigationAnswerV2(input: {
+export function validateInvestigationAnswer(input: {
   answer: StructuredInvestigationDraft;
   docEvidence: DocEvidenceItem[];
   toolEvidence: ToolEvidenceItem[];
@@ -548,7 +548,7 @@ export function validateInvestigationAnswerV2(input: {
   } as const;
 }
 
-async function requestInvestigationAnswerV2(input: {
+async function requestInvestigationAnswer(input: {
   ticket: string;
   mode: string;
   routingReason: string;
@@ -602,7 +602,7 @@ async function requestInvestigationAnswerV2(input: {
     text: {
       format: {
         type: "json_schema",
-        ...investigationV2Schema
+        ...investigationAnswerSchema
       }
     }
   });
@@ -616,7 +616,7 @@ async function requestInvestigationAnswerV2(input: {
   return JSON.parse(outputText) as StructuredInvestigationDraft;
 }
 
-export async function generateInvestigationAnswerV2(input: {
+export async function generateInvestigationAnswer(input: {
   ticket: string;
   mode: string;
   routingReason: string;
@@ -629,11 +629,11 @@ export async function generateInvestigationAnswerV2(input: {
     });
   }
 
-  const firstPass = await requestInvestigationAnswerV2({
+  const firstPass = await requestInvestigationAnswer({
     ...input,
     stricterRetry: false
   });
-  const firstValidation = validateInvestigationAnswerV2({
+  const firstValidation = validateInvestigationAnswer({
     answer: firstPass,
     docEvidence: input.docEvidence,
     toolEvidence: input.toolEvidence
@@ -643,11 +643,11 @@ export async function generateInvestigationAnswerV2(input: {
     return firstValidation.answer;
   }
 
-  const secondPass = await requestInvestigationAnswerV2({
+  const secondPass = await requestInvestigationAnswer({
     ...input,
     stricterRetry: true
   });
-  const secondValidation = validateInvestigationAnswerV2({
+  const secondValidation = validateInvestigationAnswer({
     answer: secondPass,
     docEvidence: input.docEvidence,
     toolEvidence: input.toolEvidence

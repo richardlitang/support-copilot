@@ -6,7 +6,7 @@ import type {
   ToolCallRecord,
   ToolEvidenceItem,
   ToolName
-} from "@/lib/types/investigation-v2";
+} from "@/lib/types/investigation";
 
 export type ToolRunnerDependencies = {
   getAccountContext: (accountId: string) => Promise<AccountRecord | null>;

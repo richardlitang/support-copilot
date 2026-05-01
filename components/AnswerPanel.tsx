@@ -1,5 +1,5 @@
 import type { SupportLevel } from "@/lib/types";
-import type { CitationId, InvestigationResultV2, StructuredClaimV2 } from "@/lib/types/investigation-v2";
+import type { CitationId, InvestigationResult, StructuredClaim } from "@/lib/types/investigation";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -27,11 +27,11 @@ const supportLabel: Record<SupportLevel, string> = {
   insufficient_support: "Insufficient support"
 };
 
-function findSource(result: InvestigationResultV2, citation: string) {
+function findSource(result: InvestigationResult, citation: string) {
   return result.docEvidence.find((item) => item.id === citation) ?? result.toolEvidence.find((item) => item.id === citation);
 }
 
-function getSourceTitle(result: InvestigationResultV2, citation: string) {
+function getSourceTitle(result: InvestigationResult, citation: string) {
   const source = findSource(result, citation);
 
   if (!source) {
@@ -45,7 +45,7 @@ function getSourceTitle(result: InvestigationResultV2, citation: string) {
   return `${source.toolName} · ${source.title}`;
 }
 
-function getSourceExcerpt(result: InvestigationResultV2, citation: string) {
+function getSourceExcerpt(result: InvestigationResult, citation: string) {
   const source = findSource(result, citation);
 
   if (!source) {
@@ -55,7 +55,7 @@ function getSourceExcerpt(result: InvestigationResultV2, citation: string) {
   return source.sourceType === "doc" ? source.excerpt : source.excerpt;
 }
 
-function collectCitations(claims: StructuredClaimV2[]) {
+function collectCitations(claims: StructuredClaim[]) {
   return Array.from(new Set(claims.flatMap((claim) => claim.citations)));
 }
 
@@ -63,7 +63,7 @@ function SourceLedger({
   result,
   showDebugDetails
 }: {
-  result: InvestigationResultV2;
+  result: InvestigationResult;
   showDebugDetails: boolean;
 }) {
   const citations = collectCitations([...result.customerReply.claims, ...result.internalDiagnosis.claims]);
@@ -123,7 +123,7 @@ function AnswerSection({
   claims,
   emptyMessage
 }: {
-  claims: StructuredClaimV2[];
+  claims: StructuredClaim[];
   emptyMessage: string;
 }) {
   return (
@@ -162,7 +162,7 @@ function InternalFindings({
   claims,
   emptyMessage
 }: {
-  claims: StructuredClaimV2[];
+  claims: StructuredClaim[];
   emptyMessage: string;
 }) {
   if (!claims.length) {
@@ -217,7 +217,7 @@ export function AnswerPanel({
   isReviewRetryActive: boolean;
   onMarkReviewed: () => void;
   onRetryWithContext: () => void;
-  result: InvestigationResultV2 | null;
+  result: InvestigationResult | null;
   ticket: string;
   showDebugDetails: boolean;
 }) {

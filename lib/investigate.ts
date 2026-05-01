@@ -10,12 +10,12 @@ import {
 import {
   buildStructuredHumanReviewFallback,
   generateGroundedAnswer as generateGroundedAnswerAdapter,
-  generateInvestigationAnswerV2 as generateInvestigationAnswerV2Adapter
+  generateInvestigationAnswer as generateInvestigationAnswerAdapter
 } from "@/lib/answer";
 import { buildLegacyAnswer, collectCitationIds, createDocEvidence, toLegacyClaims } from "@/lib/evidence-builder";
 import { determineReviewStatus, shouldEscalateToHumanReview } from "@/lib/review-policy";
 import { retrieveEvidence as retrieveEvidenceAdapter } from "@/lib/retrieve";
-import { determineSupportLevelV2 } from "@/lib/support-level";
+import { determineSupportLevel } from "@/lib/support-level";
 import { collectToolArtifacts, createSyntheticToolEvidence } from "@/lib/tool-runner";
 import { getAccountContext as getAccountContextAdapter } from "@/lib/tools/account-context";
 import { getFeatureFlags as getFeatureFlagsAdapter } from "@/lib/tools/feature-flags";
@@ -24,11 +24,11 @@ import type { GroundedClaim, SupportLevel, EvidenceChunk } from "@/lib/types";
 import type {
   CitationId,
   InvestigationMode,
-  InvestigationResultV2,
+  InvestigationResult,
   StructuredClaimSet,
   StructuredClaimSetWithOpenQuestions,
   ToolCallRecord
-} from "@/lib/types/investigation-v2";
+} from "@/lib/types/investigation";
 
 type InvestigationDependencies = {
   createInvestigation: typeof createInvestigationAdapter;
@@ -38,7 +38,7 @@ type InvestigationDependencies = {
   persistInvestigationRun?: typeof persistInvestigationRunAdapter;
   retrieveEvidence: typeof retrieveEvidenceAdapter;
   generateGroundedAnswer: typeof generateGroundedAnswerAdapter;
-  generateInvestigationAnswerV2: typeof generateInvestigationAnswerV2Adapter;
+  generateInvestigationAnswer: typeof generateInvestigationAnswerAdapter;
   getAccountContext: typeof getAccountContextAdapter;
   getFeatureFlags: typeof getFeatureFlagsAdapter;
   getRecentErrors: typeof getRecentErrorsAdapter;
@@ -52,7 +52,7 @@ const defaultDependencies: InvestigationDependencies = {
   persistInvestigationRun: persistInvestigationRunAdapter,
   retrieveEvidence: retrieveEvidenceAdapter,
   generateGroundedAnswer: generateGroundedAnswerAdapter,
-  generateInvestigationAnswerV2: generateInvestigationAnswerV2Adapter,
+  generateInvestigationAnswer: generateInvestigationAnswerAdapter,
   getAccountContext: getAccountContextAdapter,
   getFeatureFlags: getFeatureFlagsAdapter,
   getRecentErrors: getRecentErrorsAdapter
@@ -181,7 +181,7 @@ export async function investigateTicket(
             };
     }
   } else {
-    generated = await deps.generateInvestigationAnswerV2({
+    generated = await deps.generateInvestigationAnswer({
       ticket: input.ticket,
       mode: routing.mode,
       routingReason: routing.routingReason,
@@ -191,7 +191,7 @@ export async function investigateTicket(
   }
 
   const validationFailed = "validationFailed" in generated && generated.validationFailed === true;
-  const supportLevel = determineSupportLevelV2({
+  const supportLevel = determineSupportLevel({
     topDocScore: docEvidence[0]?.score ?? 0,
     secondDocScore: docEvidence[1]?.score ?? 0,
     docEvidenceCount: docEvidence.length,
@@ -270,7 +270,7 @@ export async function investigateTicket(
     citations,
     evidence,
     insufficientSupport: supportLevel === "insufficient_support"
-  } satisfies InvestigationResultV2 & {
+  } satisfies InvestigationResult & {
     answer: string;
     claims: GroundedClaim[];
     citations: string[];

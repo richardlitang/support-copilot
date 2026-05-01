@@ -1,7 +1,7 @@
 import { getReviewAction } from "@/lib/review-actions";
-import type { InvestigationResultV2 } from "@/lib/types/investigation-v2";
+import type { InvestigationResult } from "@/lib/types/investigation";
 
-const baseResult: InvestigationResultV2 = {
+const baseResult: InvestigationResult = {
   investigationId: "investigation-1",
   ticketId: "ticket-1",
   mode: "needs_human_review",

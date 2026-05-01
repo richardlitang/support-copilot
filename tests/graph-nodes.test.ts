@@ -6,7 +6,7 @@ import { runContextToolsNode } from "@/lib/graph/nodes/run-context-tools";
 import { validateGroundingNode } from "@/lib/graph/nodes/validate-grounding";
 import { createInitialInvestigationGraphState } from "@/lib/graph/investigation-state";
 import type { EvidenceChunk } from "@/lib/types";
-import type { AccountRecord, FeatureFlagRecord } from "@/lib/types/investigation-v2";
+import type { AccountRecord, FeatureFlagRecord } from "@/lib/types/investigation";
 
 const evidence: EvidenceChunk[] = [
   {
@@ -187,7 +187,7 @@ describe("investigation graph nodes", () => {
       }
     );
     const generated = await generateClaimsNode(withTools, {
-      generateInvestigationAnswerV2: async () => ({
+      generateInvestigationAnswer: async () => ({
         customerReply: {
           claims: [{ text: "Exports require setup and account verification.", citations: ["S1", "T1"] }]
         },

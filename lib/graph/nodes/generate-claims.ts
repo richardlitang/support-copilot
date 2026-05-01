@@ -1,20 +1,20 @@
 import {
   buildStructuredHumanReviewFallback,
   generateGroundedAnswer as generateGroundedAnswerAdapter,
-  generateInvestigationAnswerV2 as generateInvestigationAnswerV2Adapter
+  generateInvestigationAnswer as generateInvestigationAnswerAdapter
 } from "@/lib/answer";
-import type { CitationId } from "@/lib/types/investigation-v2";
+import type { CitationId } from "@/lib/types/investigation";
 import type { ClaimDraftState, InvestigationGraphState } from "@/lib/graph/investigation-state";
 import { markInvestigationGraphStep } from "@/lib/graph/investigation-state";
 
 export type GenerateClaimsDependencies = {
   generateGroundedAnswer: typeof generateGroundedAnswerAdapter;
-  generateInvestigationAnswerV2: typeof generateInvestigationAnswerV2Adapter;
+  generateInvestigationAnswer: typeof generateInvestigationAnswerAdapter;
 };
 
 const defaultDependencies: GenerateClaimsDependencies = {
   generateGroundedAnswer: generateGroundedAnswerAdapter,
-  generateInvestigationAnswerV2: generateInvestigationAnswerV2Adapter
+  generateInvestigationAnswer: generateInvestigationAnswerAdapter
 };
 
 function firstAvailableCitation(state: InvestigationGraphState) {
@@ -86,7 +86,7 @@ export async function generateClaimsNode(
             };
     }
   } else {
-    claimDraft = await deps.generateInvestigationAnswerV2({
+    claimDraft = await deps.generateInvestigationAnswer({
       ticket: state.input.ticket,
       mode: state.routing.mode,
       routingReason: state.routing.routingReason,

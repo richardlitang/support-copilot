@@ -11,7 +11,7 @@ import { defaultRunContextToolsAdapters, runContextToolsNode } from "../lib/grap
 import { validateGroundingNode } from "../lib/graph/nodes/validate-grounding";
 import { investigateTicket } from "../lib/investigate";
 import type { EvidenceChunk, StructuredAnswer } from "../lib/types";
-import type { AccountRecord, ErrorEventRecord, FeatureFlagRecord } from "../lib/types/investigation-v2";
+import type { AccountRecord, ErrorEventRecord, FeatureFlagRecord } from "../lib/types/investigation";
 
 type EvalCase = {
   id: string;
@@ -283,7 +283,7 @@ function createOfflineDependencies(testCase: EvalCase) {
     }),
     retrieveEvidence: async () => evidence,
     generateGroundedAnswer: async () => createOfflineGroundedAnswer(evidence),
-    generateInvestigationAnswerV2: async () => ({
+    generateInvestigationAnswer: async () => ({
       customerReply: {
         summary: "The investigation found cited support for the customer-facing response.",
         claims: [
@@ -335,7 +335,7 @@ async function runOfflineGraphParity(input: {
   });
   const generated = await generateClaimsNode(withTools, {
     generateGroundedAnswer: input.dependencies.generateGroundedAnswer,
-    generateInvestigationAnswerV2: input.dependencies.generateInvestigationAnswerV2
+    generateInvestigationAnswer: input.dependencies.generateInvestigationAnswer
   });
   const grounded = validateGroundingNode(generated);
   const reviewed = applyReviewPolicyNode(grounded);

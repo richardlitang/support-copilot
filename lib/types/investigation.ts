@@ -5,14 +5,14 @@ export type ReviewStatus = "ready" | "needs_human_review";
 export type ToolName = "getAccountContext" | "getFeatureFlags" | "getRecentErrors" | "getProvidedContext";
 export type CitationId = `S${number}` | `T${number}`;
 
-export interface StructuredClaimV2 {
+export interface StructuredClaim {
   text: string;
   citations: CitationId[];
 }
 
 export interface StructuredClaimSet {
   summary?: string;
-  claims: StructuredClaimV2[];
+  claims: StructuredClaim[];
 }
 
 export interface StructuredClaimSetWithOpenQuestions extends StructuredClaimSet {
@@ -45,7 +45,7 @@ export interface ToolCallRecord {
   output: unknown;
 }
 
-export interface InvestigationResultV2 {
+export interface InvestigationResult {
   investigationId: string;
   ticketId: string;
   mode: InvestigationMode;
