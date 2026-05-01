@@ -343,7 +343,7 @@ export function SupportCopilotShell({
             ) : null}
           </div>
 
-          {hasRunState ? <EvidencePanel result={result} isInvestigating={isInvestigating} /> : null}
+          {hasRunState && showDebugToggle ? <EvidencePanel result={result} isInvestigating={isInvestigating} /> : null}
         </section>
       </div>
     </main>

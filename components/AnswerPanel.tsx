@@ -1,6 +1,13 @@
 import type { SupportLevel } from "@/lib/types";
-import type { InvestigationResultV2, StructuredClaimV2 } from "@/lib/types/investigation-v2";
-import { AlertTriangle, CheckCircle2, ClipboardCheck, RotateCcw } from "lucide-react";
+import type { CitationId, InvestigationResultV2, StructuredClaimV2 } from "@/lib/types/investigation-v2";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  ClipboardCheck,
+  MessageSquareText,
+  RotateCcw,
+  Stethoscope
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,84 +31,172 @@ function findSource(result: InvestigationResultV2, citation: string) {
   return result.docEvidence.find((item) => item.id === citation) ?? result.toolEvidence.find((item) => item.id === citation);
 }
 
-function ClaimsSection({
-  claims,
+function getSourceTitle(result: InvestigationResultV2, citation: string) {
+  const source = findSource(result, citation);
+
+  if (!source) {
+    return "Missing source";
+  }
+
+  if (source.sourceType === "doc") {
+    return source.sectionTitle ? `${source.filename} · ${source.sectionTitle}` : source.filename;
+  }
+
+  return `${source.toolName} · ${source.title}`;
+}
+
+function getSourceExcerpt(result: InvestigationResultV2, citation: string) {
+  const source = findSource(result, citation);
+
+  if (!source) {
+    return null;
+  }
+
+  return source.sourceType === "doc" ? source.excerpt : source.excerpt;
+}
+
+function collectCitations(claims: StructuredClaimV2[]) {
+  return Array.from(new Set(claims.flatMap((claim) => claim.citations)));
+}
+
+function SourceLedger({
   result,
-  title,
-  emptyMessage,
   showDebugDetails
 }: {
-  claims: StructuredClaimV2[];
   result: InvestigationResultV2;
-  title: string;
-  emptyMessage: string;
   showDebugDetails: boolean;
 }) {
+  const citations = collectCitations([...result.customerReply.claims, ...result.internalDiagnosis.claims]);
+
+  if (!citations.length) {
+    return null;
+  }
+
   return (
-    <Card className="surface-shell">
-      <CardHeader className="pb-4">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="eyebrow">{title}</p>
-            <CardTitle className="mt-2 text-lg tracking-[-0.03em]">{title}</CardTitle>
-          </div>
-          <Badge variant="outline">{claims.length} claim{claims.length === 1 ? "" : "s"}</Badge>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {claims.length ? (
-          claims.map((claim, index) => (
-            <div key={`${title}-${claim.text}-${index}`} className="surface-muted p-4">
-              <p className="text-sm leading-7 text-zinc-800">{claim.text}</p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {claim.citations.map((citation) => (
-                  <Badge key={`${claim.text}-${citation}`} variant="outline">
+    <section className="rounded-xl border border-zinc-200/80 bg-white/80 p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="eyebrow">Sources used</p>
+        <Badge variant="outline">
+          {citations.length} source{citations.length === 1 ? "" : "s"}
+        </Badge>
+      </div>
+      <div className="mt-4 grid gap-2">
+        {citations.map((citation) => {
+          const source = findSource(result, citation);
+          const title = getSourceTitle(result, citation);
+          const excerpt = getSourceExcerpt(result, citation);
+
+          return (
+            <details
+              key={citation}
+              className="group rounded-lg border border-zinc-200/80 bg-zinc-50/70 px-3 py-2 open:bg-white"
+              open={showDebugDetails || undefined}
+            >
+              <summary className="flex cursor-pointer list-none items-start justify-between gap-3">
+                <span className="flex min-w-0 items-start gap-2">
+                  <Badge variant={citation.startsWith("S") ? "outline" : "warn"} className="mt-0.5 shrink-0">
                     {citation}
                   </Badge>
-                ))}
-              </div>
-              {showDebugDetails ? (
-                <div className="mt-4 space-y-3 rounded-xl border border-zinc-200 bg-zinc-50/80 p-4">
-                  <p className="eyebrow">Debug sources</p>
-                  {claim.citations.map((citation) => {
-                    const source = findSource(result, citation);
+                  <span className="min-w-0">
+                    <span className="block truncate text-xs font-medium text-zinc-900">{title}</span>
+                    {source?.sourceType === "doc" ? (
+                      <span className="mt-0.5 block text-[11px] text-zinc-500">{Math.round(source.score * 100)}% retrieval match</span>
+                    ) : null}
+                  </span>
+                </span>
+                <span className="mt-1 shrink-0 text-[11px] font-medium text-zinc-400 group-open:hidden">open</span>
+              </summary>
+              {excerpt ? (
+                <p className="mt-2 line-clamp-4 border-t border-zinc-100 pt-2 text-xs leading-5 text-zinc-600">{excerpt}</p>
+              ) : (
+                <p className="mt-2 border-t border-zinc-100 pt-2 text-xs leading-5 text-zinc-500">No source content was returned.</p>
+              )}
+            </details>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
 
-                    return (
-                      <div key={`${title}-${claim.text}-${citation}-source`} className="rounded-lg border border-zinc-200 bg-white p-3">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">
-                            {source
-                              ? source.sourceType === "doc"
-                                ? `${citation} · ${source.filename} · ${source.sectionTitle ?? "General section"}`
-                                : `${citation} · ${source.toolName} · ${source.title}`
-                              : `${citation} · Missing source`}
-                          </p>
-                          {source && source.sourceType === "doc" ? (
-                            <Badge variant="secondary">{Math.round(source.score * 100)}% match</Badge>
-                          ) : null}
-                        </div>
-                        {source ? (
-                          <details className="mt-3">
-                            <summary className="cursor-pointer text-xs uppercase tracking-[0.16em] text-zinc-500">
-                              View source content
-                            </summary>
-                            <pre className="mt-3 whitespace-pre-wrap text-sm leading-6 text-zinc-700">
-                              {source.sourceType === "doc" ? source.excerpt : JSON.stringify(source.raw, null, 2)}
-                            </pre>
-                          </details>
-                        ) : null}
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : null}
+function AnswerSection({
+  claims,
+  emptyMessage
+}: {
+  claims: StructuredClaimV2[];
+  emptyMessage: string;
+}) {
+  return (
+    <section className="rounded-xl border border-zinc-200/80 bg-white/80 p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <MessageSquareText className="h-4 w-4 text-zinc-500" />
+          <p className="eyebrow">Answer</p>
+        </div>
+        <Badge variant="outline">
+          {claims.length} claim{claims.length === 1 ? "" : "s"}
+        </Badge>
+      </div>
+
+      {claims.length ? (
+        <div className="mt-4 space-y-4">
+          <div className="space-y-3 rounded-lg bg-zinc-50/70 p-4">
+            {claims.map((claim, index) => (
+              <p key={`${claim.text}-${index}`} className="text-[15px] leading-7 text-zinc-900">
+                {claim.text}{" "}
+                <span className="whitespace-nowrap text-xs font-semibold text-zinc-500">
+                  {claim.citations.map((citation) => `[${citation}]`).join(" ")}
+                </span>
+              </p>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="mt-4 rounded-lg border border-dashed border-zinc-200 bg-zinc-50/70 p-4 text-sm text-zinc-500">{emptyMessage}</div>
+      )}
+    </section>
+  );
+}
+
+function InternalFindings({
+  claims,
+  emptyMessage
+}: {
+  claims: StructuredClaimV2[];
+  emptyMessage: string;
+}) {
+  if (!claims.length) {
+    return null;
+  }
+
+  return (
+    <section className="rounded-xl border border-zinc-200/80 bg-white/80 p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <Stethoscope className="h-4 w-4 text-zinc-500" />
+          <p className="eyebrow">Why this answer</p>
+        </div>
+        <Badge variant="outline">
+          {claims.length} note{claims.length === 1 ? "" : "s"}
+        </Badge>
+      </div>
+
+      <div className="mt-4 divide-y divide-zinc-100 rounded-lg border border-zinc-100 bg-zinc-50/50">
+        {claims.map((claim, index) => (
+          <div key={`${claim.text}-${index}`} className="grid gap-3 p-4 lg:grid-cols-[1fr_180px]">
+            <p className="text-sm leading-6 text-zinc-800">{claim.text}</p>
+            <div className="flex flex-wrap content-start gap-1.5 lg:justify-end">
+              {claim.citations.map((citation) => (
+                <Badge key={`${claim.text}-${citation}`} variant={citation.startsWith("S") ? "outline" : "warn"}>
+                  {citation}
+                </Badge>
+              ))}
             </div>
-          ))
-        ) : (
-          <div className="surface-muted border-dashed p-4 text-sm text-zinc-500">{emptyMessage}</div>
-        )}
-      </CardContent>
-    </Card>
+          </div>
+        ))}
+      </div>
+      <p className="sr-only">{emptyMessage}</p>
+    </section>
   );
 }
 
@@ -174,18 +269,22 @@ export function AnswerPanel({
   }
 
   const reviewAction = getReviewAction(result);
+  const showOpenQuestions = result.internalDiagnosis.openQuestions.length > 0;
+  const showRoutingReason = showDebugDetails || result.reviewStatus === "needs_human_review";
 
   return (
     <div className="space-y-4">
-      <Card className="surface-shell">
-        <CardHeader className="pb-4">
+      <Card className="surface-shell overflow-hidden">
+        <CardHeader className="border-b border-zinc-100 pb-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <p className="eyebrow">Investigation synthesis</p>
-              <CardTitle className="mt-2 text-[2rem] tracking-[-0.05em]">Customer reply and internal diagnosis</CardTitle>
-              <CardDescription className="mt-2 max-w-2xl text-sm leading-6">
-                Grounded support investigation with visible evidence, explicit routing, and a separate internal diagnosis.
-              </CardDescription>
+              <p className="eyebrow">Case brief</p>
+              <CardTitle className="mt-2 text-2xl tracking-[-0.04em]">
+                {result.reviewStatus === "needs_human_review" ? "Review needed before replying" : "Answer ready"}
+              </CardTitle>
+              {showRoutingReason ? (
+                <CardDescription className="mt-2 max-w-2xl text-sm leading-6">{result.routingReason}</CardDescription>
+              ) : null}
             </div>
             <div className="flex flex-wrap gap-2">
               <Badge variant={supportVariant[result.supportLevel]}>{supportLabel[result.supportLevel]}</Badge>
@@ -196,28 +295,30 @@ export function AnswerPanel({
             </div>
           </div>
         </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-3">
-          <div className={`surface-muted p-4 ${investigationContext.trim() ? "" : "md:col-span-1"}`}>
+        <CardContent className="space-y-4 p-4">
+          <div className="rounded-lg border border-zinc-200/80 bg-zinc-50/70 p-3">
             <p className="eyebrow">Ticket</p>
-            <p className="mt-3 text-sm leading-6 text-zinc-700">{ticket}</p>
+            <p className="mt-2 text-sm leading-6 text-zinc-700">{ticket}</p>
           </div>
-          {investigationContext.trim() ? (
-            <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-4">
+
+          {showDebugDetails && investigationContext.trim() ? (
+            <div className="rounded-lg border border-amber-200/80 bg-amber-50/70 p-3">
               <p className="eyebrow">Provided context</p>
-              <p className="mt-3 text-sm leading-6 text-zinc-700">{investigationContext}</p>
+              <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-zinc-700">{investigationContext}</p>
             </div>
           ) : null}
-          <div className="surface-muted p-4">
-            <p className="eyebrow">Routing reason</p>
-            <p className="mt-3 text-sm leading-6 text-zinc-700">{result.routingReason}</p>
-          </div>
-          <div className="surface-muted p-4">
-            <p className="eyebrow">Evidence mix</p>
-            <p className="mt-3 text-sm leading-6 text-zinc-700">
-              {result.docEvidence.length} doc source{result.docEvidence.length === 1 ? "" : "s"} and {result.toolEvidence.length} tool
-              source{result.toolEvidence.length === 1 ? "" : "s"} contributed to this run.
-            </p>
-          </div>
+
+          <AnswerSection
+            claims={result.customerReply.claims}
+            emptyMessage="No grounded answer was produced for this run."
+          />
+
+          <InternalFindings
+            claims={result.internalDiagnosis.claims}
+            emptyMessage="No grounded internal diagnosis claims were produced for this run."
+          />
+
+          <SourceLedger result={result} showDebugDetails={showDebugDetails} />
         </CardContent>
       </Card>
 
@@ -272,49 +373,25 @@ export function AnswerPanel({
         </Card>
       ) : null}
 
-      <ClaimsSection
-        title="Customer-facing draft"
-        claims={result.customerReply.claims}
-        result={result}
-        emptyMessage="No grounded customer-facing draft was produced for this run."
-        showDebugDetails={showDebugDetails}
-      />
-
-      <ClaimsSection
-        title="Internal diagnosis"
-        claims={result.internalDiagnosis.claims}
-        result={result}
-        emptyMessage="No grounded internal diagnosis claims were produced for this run."
-        showDebugDetails={showDebugDetails}
-      />
-
-      <Card className="surface-shell">
-        <CardHeader className="pb-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+      {showOpenQuestions ? (
+        <Card className="surface-shell">
+          <CardHeader className="pb-4">
             <div>
               <p className="eyebrow">Open questions</p>
               <CardDescription className="mt-2 text-sm leading-6">
-                {result.internalDiagnosis.openQuestions.length
-                  ? "These remain unresolved after the current docs and tool calls."
-                  : "No unresolved questions were recorded for this run."}
+                These remain unresolved after the current docs and tool calls.
               </CardDescription>
             </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {result.internalDiagnosis.openQuestions.length ? (
-            result.internalDiagnosis.openQuestions.map((question) => (
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {result.internalDiagnosis.openQuestions.map((question) => (
               <div key={question} className="surface-muted p-4 text-sm leading-6 text-zinc-700">
                 {question}
               </div>
-            ))
-          ) : (
-            <div className="surface-muted p-4 text-sm leading-6 text-zinc-500">
-              The current evidence set closed without open investigative gaps.
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            ))}
+          </CardContent>
+        </Card>
+      ) : null}
     </div>
   );
 }

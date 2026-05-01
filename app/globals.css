@@ -114,8 +114,9 @@
 
   @media (min-width: 1180px) {
     .workbench-layout {
-      grid-template-columns: 300px minmax(0, 1fr) 320px;
+      grid-template-columns: 300px minmax(0, 960px);
       align-items: start;
+      justify-content: center;
     }
 
     .workbench-layout--start {
