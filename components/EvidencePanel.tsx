@@ -14,7 +14,9 @@ export function EvidencePanel({
   result: InvestigationResult | null;
   isInvestigating: boolean;
 }) {
-  const citations = new Set(result?.citations ?? []);
+  const citations = new Set(
+    result ? [...result.customerReply.claims, ...result.internalDiagnosis.claims].flatMap((claim) => claim.citations) : []
+  );
 
   return (
     <Card className="surface-shell sidebar-scroll xl:sticky xl:top-4">

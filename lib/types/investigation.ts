@@ -1,4 +1,4 @@
-import type { GroundedClaim, SupportLevel } from "@/lib/types";
+import type { SupportLevel } from "@/lib/types";
 
 export type InvestigationMode = "docs_only" | "docs_plus_tools" | "needs_human_review";
 export type ReviewStatus = "ready" | "needs_human_review";
@@ -57,20 +57,6 @@ export interface InvestigationResult {
   docEvidence: DocEvidenceItem[];
   toolEvidence: ToolEvidenceItem[];
   toolCalls: ToolCallRecord[];
-  answer: string;
-  claims: GroundedClaim[];
-  citations: string[];
-  evidence: Array<{
-    id: string;
-    documentId: string;
-    filename: string;
-    sectionTitle: string | null;
-    content: string;
-    score: number;
-    rank: number;
-    chunkIndex: number;
-  }>;
-  insufficientSupport: boolean;
 }
 
 export interface AccountRecord {

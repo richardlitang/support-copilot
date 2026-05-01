@@ -17,12 +17,7 @@ const baseResult: InvestigationResult = {
   },
   docEvidence: [],
   toolEvidence: [],
-  toolCalls: [],
-  answer: "",
-  claims: [],
-  citations: [],
-  evidence: [],
-  insufficientSupport: true
+  toolCalls: []
 };
 
 describe("getReviewAction", () => {
@@ -32,8 +27,7 @@ describe("getReviewAction", () => {
         ...baseResult,
         mode: "docs_only",
         supportLevel: "medium",
-        reviewStatus: "ready",
-        insufficientSupport: false
+        reviewStatus: "ready"
       })
     ).toBeNull();
   });

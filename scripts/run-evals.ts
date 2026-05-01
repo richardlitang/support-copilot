@@ -269,6 +269,10 @@ function createOfflineGroundedAnswer(evidence: EvidenceChunk[]): StructuredAnswe
   };
 }
 
+function countClaimCitations(result: Awaited<ReturnType<typeof investigateTicket>>) {
+  return new Set([...result.customerReply.claims, ...result.internalDiagnosis.claims].flatMap((claim) => claim.citations)).size;
+}
+
 function createOfflineDependencies(testCase: EvalCase) {
   const evidence = buildOfflineEvidence(testCase);
 
@@ -427,10 +431,10 @@ async function main() {
       mode: result.mode,
       reviewStatus: result.reviewStatus,
       supportLevel: result.supportLevel,
-      insufficientSupport: result.insufficientSupport,
+      insufficientSupport: result.supportLevel === "insufficient_support",
       customerClaims: result.customerReply.claims.length,
       internalClaims: result.internalDiagnosis.claims.length,
-      citations: result.citations.length,
+      citations: countClaimCitations(result),
       docEvidence: result.docEvidence.length,
       toolEvidence: result.toolEvidence.length,
       toolCalls: result.toolCalls.length,

@@ -12,7 +12,7 @@ import {
   generateGroundedAnswer as generateGroundedAnswerAdapter,
   generateInvestigationAnswer as generateInvestigationAnswerAdapter
 } from "@/lib/answer";
-import { buildLegacyAnswer, collectCitationIds, createDocEvidence, toLegacyClaims } from "@/lib/evidence-builder";
+import { buildLegacyAnswer, createDocEvidence } from "@/lib/evidence-builder";
 import { determineReviewStatus, shouldEscalateToHumanReview } from "@/lib/review-policy";
 import { retrieveEvidence as retrieveEvidenceAdapter } from "@/lib/retrieve";
 import { determineSupportLevel } from "@/lib/support-level";
@@ -20,7 +20,7 @@ import { collectToolArtifacts, createSyntheticToolEvidence } from "@/lib/tool-ru
 import { getAccountContext as getAccountContextAdapter } from "@/lib/tools/account-context";
 import { getFeatureFlags as getFeatureFlagsAdapter } from "@/lib/tools/feature-flags";
 import { getRecentErrors as getRecentErrorsAdapter } from "@/lib/tools/recent-errors";
-import type { GroundedClaim, SupportLevel, EvidenceChunk } from "@/lib/types";
+import type { EvidenceChunk } from "@/lib/types";
 import type {
   CitationId,
   InvestigationMode,
@@ -248,11 +248,6 @@ export async function investigateTicket(
         dependencies: deps
       });
 
-  const citations = collectCitationIds({
-    customerReply: generated.customerReply,
-    internalDiagnosis: generated.internalDiagnosis
-  });
-
   return {
     investigationId: persisted.investigationId,
     ticketId: persisted.ticketId,
@@ -264,19 +259,8 @@ export async function investigateTicket(
     internalDiagnosis: generated.internalDiagnosis,
     docEvidence,
     toolEvidence: toolArtifacts.toolEvidence,
-    toolCalls: toolArtifacts.toolCalls,
-    answer: answerMarkdown,
-    claims: toLegacyClaims(generated.customerReply.claims),
-    citations,
-    evidence,
-    insufficientSupport: supportLevel === "insufficient_support"
-  } satisfies InvestigationResult & {
-    answer: string;
-    claims: GroundedClaim[];
-    citations: string[];
-    evidence: EvidenceChunk[];
-    insufficientSupport: boolean;
-  };
+    toolCalls: toolArtifacts.toolCalls
+  } satisfies InvestigationResult;
 }
 
 async function persistInvestigationRunWithLegacyAdapters(input: {

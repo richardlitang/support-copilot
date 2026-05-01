@@ -59,9 +59,8 @@ describe("investigateTicket", () => {
     );
 
     expect(result.supportLevel).toBe("high");
-    expect(result.citations).toEqual(["S1", "S2"]);
-    expect(result.insufficientSupport).toBe(false);
-    expect(result.claims).toHaveLength(2);
+    expect(result.customerReply.claims.map((claim) => claim.citations)).toEqual([["S1", "S2"], ["S1"]]);
+    expect(result.customerReply.claims).toHaveLength(2);
   });
 
   it("falls back when evidence is weak or RAG is disabled", async () => {
@@ -88,8 +87,6 @@ describe("investigateTicket", () => {
     );
 
     expect(result.supportLevel).toBe("insufficient_support");
-    expect(result.insufficientSupport).toBe(true);
-    expect(result.citations).toEqual([]);
-    expect(result.claims).toEqual([]);
+    expect(result.customerReply.claims).toEqual([]);
   });
 });

@@ -44,10 +44,12 @@ export async function POST(request: Request) {
       mode: result.mode,
       reviewStatus: result.reviewStatus,
       supportLevel: result.supportLevel,
-      insufficientSupport: result.insufficientSupport,
+      insufficientSupport: result.supportLevel === "insufficient_support",
       evidenceCount: result.docEvidence.length,
       toolEvidenceCount: result.toolEvidence.length,
-      citationCount: result.citations.length
+      citationCount: new Set(
+        [...result.customerReply.claims, ...result.internalDiagnosis.claims].flatMap((claim) => claim.citations)
+      ).size
     });
     const response = NextResponse.json(result);
     response.headers.set("x-request-id", logger.requestId);
