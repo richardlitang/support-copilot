@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { investigateTicket } from "@/lib/investigate";
+import { InvestigationRequestError, normalizeInvestigationRequest } from "@/lib/investigation-request";
 import { createRequestLogger } from "@/lib/log";
 import { ensureSessionId } from "@/lib/session";
 
@@ -8,36 +9,22 @@ export async function POST(request: Request) {
 
   try {
     const sessionId = await ensureSessionId();
-    const body = (await request.json()) as {
-      ticket?: string;
-      ragEnabled?: boolean;
-      selectedAccountId?: string | null;
-      investigationContext?: string | null;
-    };
-    const ticket = body.ticket?.trim() ?? "";
-    const selectedAccountId = body.selectedAccountId?.trim() || null;
-    const investigationContext = body.investigationContext?.trim() || null;
+    const body = await request.json();
+    const payload = normalizeInvestigationRequest(body);
     logger.info("investigate_received", {
       sessionId,
-      ragEnabled: body.ragEnabled ?? true,
-      ticketLength: ticket.length,
-      selectedAccountId,
-      investigationContextLength: investigationContext?.length ?? 0
+      ragEnabled: payload.ragEnabled,
+      ticketLength: payload.ticket.length,
+      selectedAccountId: payload.selectedAccountId,
+      investigationContextLength: payload.investigationContext?.length ?? 0
     });
 
-    if (!ticket) {
-      logger.finish({ outcome: "validation_error_no_ticket" });
-      const response = NextResponse.json({ error: "Paste a support ticket before investigating." }, { status: 400 });
-      response.headers.set("x-request-id", logger.requestId);
-      return response;
-    }
-
     const result = await investigateTicket({
-      ticket,
-      ragEnabled: body.ragEnabled ?? true,
+      ticket: payload.ticket,
+      ragEnabled: payload.ragEnabled,
       sessionId,
-      selectedAccountId,
-      investigationContext
+      selectedAccountId: payload.selectedAccountId,
+      investigationContext: payload.investigationContext
     });
     logger.finish({
       outcome: "success",
@@ -56,13 +43,14 @@ export async function POST(request: Request) {
     return response;
   } catch (error) {
     const message = error instanceof Error ? error.message : "Investigation failed.";
+    const status = error instanceof InvestigationRequestError ? 400 : 500;
     logger.error("investigate_request_failed", { message });
-    logger.finish({ outcome: "request_error" });
+    logger.finish({ outcome: status === 400 ? "validation_error" : "request_error" });
     const response = NextResponse.json(
       {
         error: message
       },
-      { status: 500 }
+      { status }
     );
     response.headers.set("x-request-id", logger.requestId);
     return response;
