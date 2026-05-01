@@ -293,10 +293,6 @@ function createOfflineDependencies(testCase: EvalCase) {
   const evidence = buildOfflineEvidence(testCase);
 
   return {
-    createTicket: async () => `${testCase.id}-ticket`,
-    createInvestigation: async () => `${testCase.id}-investigation`,
-    insertInvestigationSources: async () => undefined,
-    insertInvestigationToolCalls: async () => undefined,
     persistInvestigationRun: async () => ({
       ticketId: `${testCase.id}-ticket`,
       investigationId: `${testCase.id}-investigation`

@@ -115,7 +115,7 @@ Only after those pass should the project introduce a feature-flagged LangGraph r
 - Extracted `lib/evidence-builder.ts` from `lib/investigate.ts`.
 - Extracted `lib/tool-runner.ts` from `lib/investigate.ts`.
 - Extracted `lib/conflict-policy.ts` from `lib/investigate.ts`.
-- Changed investigation v2 schema fallback to fail loudly by default; temporary fallback now requires `ALLOW_LEGACY_INVESTIGATION_INSERT=true`.
+- Changed investigation schema handling to fail loudly when required migrations are missing.
 - Fixed TypeScript 6 `baseUrl` deprecation noise with `ignoreDeprecations`.
 
 Verification from this batch:
@@ -131,7 +131,7 @@ Verification from this batch:
 - Linked the architecture and demo script from `README.md`.
 - Added MCP future-positioning notes to this roadmap and the chunk 2 PRD. MCP remains out of V1 and is framed as a later controlled-tool interface.
 - Made `scripts/run-evals.ts` fail with a clear Supabase/OpenAI environment message instead of raw `fetch failed`.
-- Added `ALLOW_LEGACY_INVESTIGATION_INSERT=false` to `.env.example`.
+- Removed the temporary legacy investigation insert path from normal configuration.
 - Reduced build fragility:
   - Changed the manual env loader to use a statically scoped project root and Turbopack ignore comment.
   - Made the package explicitly ESM with `"type": "module"`.
@@ -434,7 +434,7 @@ npm run test -- conflict-policy investigate
 
 **Implementation rule:**
 - Default: fail loudly if structured columns are missing.
-- Optional: allow fallback only when `ALLOW_LEGACY_INVESTIGATION_INSERT=true`.
+- Optional fallback was removed; investigations now require the atomic persistence path.
 
 **Verify:**
 ```bash

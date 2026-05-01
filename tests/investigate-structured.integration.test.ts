@@ -15,10 +15,6 @@ describe("investigateTicket structured", () => {
   ];
 
   const baseDeps = {
-    createTicket: async () => "ticket-structured",
-    createInvestigation: async () => "investigation-structured",
-    insertInvestigationSources: async () => undefined,
-    insertInvestigationToolCalls: async () => undefined,
     persistInvestigationRun: async () => ({
       ticketId: "ticket-structured",
       investigationId: "investigation-structured"
@@ -147,18 +143,6 @@ describe("investigateTicket structured", () => {
         selectedAccountId: "acct-1"
       },
       {
-        createTicket: async () => {
-          throw new Error("legacy createTicket should not run when atomic persistence is available");
-        },
-        createInvestigation: async () => {
-          throw new Error("legacy createInvestigation should not run when atomic persistence is available");
-        },
-        insertInvestigationSources: async () => {
-          throw new Error("legacy source insert should not run when atomic persistence is available");
-        },
-        insertInvestigationToolCalls: async () => {
-          throw new Error("legacy tool-call insert should not run when atomic persistence is available");
-        },
         persistInvestigationRun: async (payload) => {
           persistedPayloads.push(payload);
           return {

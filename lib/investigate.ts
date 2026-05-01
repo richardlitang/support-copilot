@@ -1,12 +1,6 @@
 import { classifyInvestigation, type RoutingDecision } from "@/lib/classify";
 import { detectConflict } from "@/lib/conflict-policy";
-import {
-  createInvestigation as createInvestigationAdapter,
-  createTicket as createTicketAdapter,
-  insertInvestigationSources as insertInvestigationSourcesAdapter,
-  insertInvestigationToolCalls as insertInvestigationToolCallsAdapter,
-  persistInvestigationRun as persistInvestigationRunAdapter
-} from "@/lib/db";
+import { persistInvestigationRun as persistInvestigationRunAdapter } from "@/lib/db";
 import {
   buildStructuredHumanReviewFallback,
   generateGroundedAnswer as generateGroundedAnswerAdapter,
@@ -31,11 +25,7 @@ import type {
 } from "@/lib/types/investigation";
 
 type InvestigationDependencies = {
-  createInvestigation: typeof createInvestigationAdapter;
-  createTicket: typeof createTicketAdapter;
-  insertInvestigationSources: typeof insertInvestigationSourcesAdapter;
-  insertInvestigationToolCalls: typeof insertInvestigationToolCallsAdapter;
-  persistInvestigationRun?: typeof persistInvestigationRunAdapter;
+  persistInvestigationRun: typeof persistInvestigationRunAdapter;
   retrieveEvidence: typeof retrieveEvidenceAdapter;
   generateGroundedAnswer: typeof generateGroundedAnswerAdapter;
   generateInvestigationAnswer: typeof generateInvestigationAnswerAdapter;
@@ -62,10 +52,6 @@ type GeneratedInvestigation = {
 };
 
 const defaultDependencies: InvestigationDependencies = {
-  createInvestigation: createInvestigationAdapter,
-  createTicket: createTicketAdapter,
-  insertInvestigationSources: insertInvestigationSourcesAdapter,
-  insertInvestigationToolCalls: insertInvestigationToolCallsAdapter,
   persistInvestigationRun: persistInvestigationRunAdapter,
   retrieveEvidence: retrieveEvidenceAdapter,
   generateGroundedAnswer: generateGroundedAnswerAdapter,
@@ -368,51 +354,5 @@ async function persistInvestigation(input: {
     }))
   };
 
-  return input.dependencies.persistInvestigationRun
-    ? await input.dependencies.persistInvestigationRun(persistenceInput)
-    : persistInvestigationRunWithLegacyAdapters({
-        input: persistenceInput,
-        dependencies: input.dependencies
-      });
-}
-
-async function persistInvestigationRunWithLegacyAdapters(input: {
-  input: Parameters<typeof persistInvestigationRunAdapter>[0];
-  dependencies: InvestigationDependencies;
-}) {
-  const ticketId = await input.dependencies.createTicket(input.input.ticketText);
-  const investigationId = await input.dependencies.createInvestigation({
-    ticketId,
-    status: input.input.status,
-    answerMarkdown: input.input.answerMarkdown,
-    supportLevel: input.input.supportLevel,
-    mode: input.input.mode,
-    reviewStatus: input.input.reviewStatus,
-    routingReason: input.input.routingReason,
-    accountId: input.input.accountId ?? null,
-    customerReplyJson: input.input.customerReplyJson,
-    internalDiagnosisJson: input.input.internalDiagnosisJson
-  });
-
-  await input.dependencies.insertInvestigationSources(
-    input.input.sources.map((source) => ({
-      investigationId,
-      documentChunkId: source.documentChunkId,
-      rank: source.rank,
-      score: source.score
-    }))
-  );
-  await input.dependencies.insertInvestigationToolCalls(
-    input.input.toolCalls.map((toolCall) => ({
-      investigationId,
-      toolName: toolCall.toolName,
-      input: toolCall.input,
-      output: toolCall.output
-    }))
-  );
-
-  return {
-    ticketId,
-    investigationId
-  };
+  return input.dependencies.persistInvestigationRun(persistenceInput);
 }

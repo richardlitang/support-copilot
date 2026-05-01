@@ -95,10 +95,6 @@ function isSchemaCompatibilityError(message: string) {
   );
 }
 
-function allowLegacyInvestigationInsert() {
-  return process.env.ALLOW_LEGACY_INVESTIGATION_INSERT === "true";
-}
-
 function readStringArray(value: unknown) {
   return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
 }
@@ -394,32 +390,13 @@ export async function createInvestigation(input: {
     return primaryInsert.data.id as string;
   }
 
-  if (!primaryInsert.error || !isSchemaCompatibilityError(primaryInsert.error.message)) {
-    throw new Error(`Failed to create investigation: ${primaryInsert.error?.message ?? "Unknown error"}`);
-  }
-
-  if (!allowLegacyInvestigationInsert()) {
+  if (isSchemaCompatibilityError(primaryInsert.error.message)) {
     throw new Error(
-      `Failed to create investigation: ${primaryInsert.error.message}. Apply the chunk 2 investigation schema or set ALLOW_LEGACY_INVESTIGATION_INSERT=true for temporary compatibility.`
+      `Failed to create investigation: ${primaryInsert.error.message}. Apply the structured investigation schema migration before running investigations.`
     );
   }
 
-  const fallbackInsert = await supabase
-    .from("investigations")
-    .insert({
-      ticket_id: input.ticketId,
-      status: input.status,
-      answer_markdown: input.answerMarkdown,
-      support_level: input.supportLevel
-    })
-    .select("id")
-    .single();
-
-  if (fallbackInsert.error || !fallbackInsert.data) {
-    throw new Error(`Failed to create investigation: ${fallbackInsert.error?.message ?? "Unknown error"}`);
-  }
-
-  return fallbackInsert.data.id as string;
+  throw new Error(`Failed to create investigation: ${primaryInsert.error.message}`);
 }
 
 export async function insertInvestigationSources(
@@ -471,7 +448,7 @@ export async function insertInvestigationToolCalls(
     }))
   );
 
-  if (error && (!isSchemaCompatibilityError(error.message) || !allowLegacyInvestigationInsert())) {
+  if (error) {
     throw new Error(`Failed to save investigation tool calls: ${error.message}`);
   }
 }
@@ -542,41 +519,7 @@ export async function persistInvestigationRun(input: {
     throw new Error(`Failed to persist investigation run: ${errorMessage}`);
   }
 
-  const ticketId = await createTicket(input.ticketText);
-  const investigationId = await createInvestigation({
-    ticketId,
-    status: input.status,
-    answerMarkdown: input.answerMarkdown,
-    supportLevel: input.supportLevel,
-    mode: input.mode,
-    reviewStatus: input.reviewStatus,
-    routingReason: input.routingReason,
-    accountId: input.accountId ?? null,
-    customerReplyJson: input.customerReplyJson,
-    internalDiagnosisJson: input.internalDiagnosisJson
-  });
-
-  await insertInvestigationSources(
-    input.sources.map((source) => ({
-      investigationId,
-      documentChunkId: source.documentChunkId,
-      rank: source.rank,
-      score: source.score
-    }))
-  );
-  await insertInvestigationToolCalls(
-    input.toolCalls.map((toolCall) => ({
-      investigationId,
-      toolName: toolCall.toolName,
-      input: toolCall.input,
-      output: toolCall.output
-    }))
-  );
-
-  return {
-    ticketId,
-    investigationId
-  };
+  throw new Error(`Failed to persist investigation run: ${errorMessage}. Apply the atomic investigation-run migration.`);
 }
 
 export async function matchDocumentChunks(input: {

@@ -67,7 +67,7 @@ npm install
 
 `SUPABASE_URL` should be the project HTTP URL such as `https://<project-ref>.supabase.co`. If you only have the Postgres connection string, the app will derive the HTTP project URL from it.
 
-If investigation inserts fail with missing `mode`, `review_status`, `account_id`, `customer_reply_json`, or `internal_diagnosis_json`, apply the chunk 2 migration. Apply the atomic investigation-run migration as well so ticket, investigation, source, and tool-call rows are written in one database transaction. Temporary legacy inserts can be enabled with `ALLOW_LEGACY_INVESTIGATION_INSERT=true`, but that drops structured investigation persistence and should not be used for the portfolio demo.
+If investigation inserts fail with missing `mode`, `review_status`, `account_id`, `customer_reply_json`, or `internal_diagnosis_json`, apply the chunk 2 migration. Apply the atomic investigation-run migration as well so ticket, investigation, source, and tool-call rows are written in one database transaction. Current app code requires the atomic write path.
 
 3. Apply the SQL migrations in `supabase/migrations/` to your Supabase project.
 

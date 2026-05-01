@@ -9,10 +9,6 @@ describe("investigateTicket", () => {
         sessionId: "test-session"
       },
       {
-        createTicket: async () => "ticket-1",
-        createInvestigation: async () => "investigation-1",
-        insertInvestigationSources: async () => undefined,
-        insertInvestigationToolCalls: async () => undefined,
         persistInvestigationRun: async () => ({
           ticketId: "ticket-1",
           investigationId: "investigation-1"
@@ -71,10 +67,6 @@ describe("investigateTicket", () => {
         sessionId: "test-session"
       },
       {
-        createTicket: async () => "ticket-2",
-        createInvestigation: async () => "investigation-2",
-        insertInvestigationSources: async () => undefined,
-        insertInvestigationToolCalls: async () => undefined,
         persistInvestigationRun: async () => ({
           ticketId: "ticket-2",
           investigationId: "investigation-2"
