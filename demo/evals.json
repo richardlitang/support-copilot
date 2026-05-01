@@ -7,6 +7,7 @@
     "expectedMode": "docs_only",
     "expectedReviewStatus": "ready",
     "expectedEvidenceKeywords": ["export"],
+    "expectedClaimKeywords": ["billing", "permission"],
     "minDocEvidence": 1
   },
   {
@@ -18,6 +19,7 @@
     "expectedMode": "docs_plus_tools",
     "expectedReviewStatus": "ready",
     "expectedEvidenceKeywords": ["export"],
+    "expectedClaimKeywords": ["Starter", "export"],
     "minDocEvidence": 1,
     "requireToolEvidence": true
   },
@@ -29,6 +31,7 @@
     "expectedMode": "docs_only",
     "expectedReviewStatus": "ready",
     "expectedEvidenceKeywords": ["redirect"],
+    "expectedClaimKeywords": ["redirect"],
     "minDocEvidence": 1
   },
   {
@@ -40,6 +43,7 @@
     "expectedMode": "docs_plus_tools",
     "expectedReviewStatus": "ready",
     "expectedEvidenceKeywords": ["audit"],
+    "expectedClaimKeywords": ["Starter", "audit"],
     "minDocEvidence": 1,
     "requireToolEvidence": true
   },
@@ -52,6 +56,7 @@
     "expectedMode": "docs_plus_tools",
     "expectedReviewStatus": "ready",
     "expectedEvidenceKeywords": ["payment"],
+    "expectedClaimKeywords": ["payment", "billing"],
     "minDocEvidence": 1,
     "requireToolEvidence": true
   },
@@ -64,6 +69,7 @@
     "expectedMode": "docs_plus_tools",
     "expectedReviewStatus": "ready",
     "expectedEvidenceKeywords": ["row"],
+    "expectedClaimKeywords": ["row"],
     "minDocEvidence": 1,
     "requireToolEvidence": true
   },
@@ -93,7 +99,8 @@
     "ticket": "Why is our workspace missing exports even though the customer says they should have them?",
     "expectation": "Should route directly to needs human review because account context is required but not provided.",
     "expectedMode": "needs_human_review",
-    "expectedReviewStatus": "needs_human_review"
+    "expectedReviewStatus": "needs_human_review",
+    "expectedReviewReasonKeywords": ["context"]
   },
   {
     "id": "eval-10",
@@ -103,6 +110,7 @@
     "expectedMode": "docs_only",
     "expectedReviewStatus": "ready",
     "expectedEvidenceKeywords": ["billing"],
+    "expectedClaimKeywords": ["billing"],
     "minDocEvidence": 1
   },
   {
@@ -111,7 +119,8 @@
     "ticket": "How do I rotate the product's encryption keys?",
     "expectation": "Should return insufficient support.",
     "expectedMode": "needs_human_review",
-    "expectedReviewStatus": "needs_human_review"
+    "expectedReviewStatus": "needs_human_review",
+    "expectedReviewReasonKeywords": ["weak"]
   },
   {
     "id": "eval-12",
@@ -122,6 +131,8 @@
     "expectedMode": "docs_plus_tools",
     "expectedReviewStatus": "ready",
     "expectedEvidenceKeywords": ["growth"],
+    "expectedClaimKeywords": ["ERR-219", "permission"],
+    "forbiddenClaimKeywords": ["Starter"],
     "minDocEvidence": 1,
     "requireToolEvidence": true
   },
@@ -133,6 +144,7 @@
     "expectedMode": "docs_only",
     "expectedReviewStatus": "ready",
     "expectedEvidenceKeywords": ["starter"],
+    "expectedClaimKeywords": ["Starter"],
     "minDocEvidence": 1
   },
   {
@@ -143,6 +155,7 @@
     "expectedMode": "docs_only",
     "expectedReviewStatus": "ready",
     "expectedEvidenceKeywords": ["row"],
+    "expectedClaimKeywords": ["row"],
     "minDocEvidence": 1
   },
   {
@@ -154,6 +167,7 @@
     "expectedMode": "needs_human_review",
     "expectedReviewStatus": "needs_human_review",
     "expectedEvidenceKeywords": ["export"],
+    "expectedReviewReasonKeywords": ["do not explain"],
     "minDocEvidence": 1,
     "requireToolEvidence": true
   }

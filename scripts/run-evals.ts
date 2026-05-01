@@ -22,6 +22,9 @@ type EvalCase = {
   expectedMode?: string;
   expectedReviewStatus?: string;
   expectedEvidenceKeywords?: string[];
+  expectedClaimKeywords?: string[];
+  forbiddenClaimKeywords?: string[];
+  expectedReviewReasonKeywords?: string[];
   minDocEvidence?: number;
   requireToolEvidence?: boolean;
 };
@@ -44,11 +47,20 @@ type EvalSummary = {
   expectedReviewStatus: string | null;
   expectedEvidenceKeywords: string[];
   missingEvidenceKeywords: string[];
+  expectedClaimKeywords: string[];
+  missingClaimKeywords: string[];
+  forbiddenClaimKeywords: string[];
+  presentForbiddenClaimKeywords: string[];
+  expectedReviewReasonKeywords: string[];
+  missingReviewReasonKeywords: string[];
   minDocEvidence: number | null;
   requireToolEvidence: boolean;
   routePassed: boolean;
   reviewPassed: boolean;
   retrievalPassed: boolean;
+  claimPassed: boolean;
+  forbiddenClaimPassed: boolean;
+  reviewReasonPassed: boolean;
   toolPassed: boolean;
   graphParityPassed: boolean | null;
   passed: boolean;
@@ -244,7 +256,7 @@ function buildOfflineEvidence(testCase: EvalCase): EvidenceChunk[] {
   ];
 }
 
-function createOfflineGroundedAnswer(evidence: EvidenceChunk[]): StructuredAnswer {
+function createOfflineGroundedAnswer(testCase: EvalCase, evidence: EvidenceChunk[]): StructuredAnswer {
   if (!evidence.length) {
     return {
       answer: "I do not have enough support in the uploaded docs to answer this confidently.",
@@ -255,11 +267,15 @@ function createOfflineGroundedAnswer(evidence: EvidenceChunk[]): StructuredAnswe
     };
   }
 
+  const expectedClaimText = testCase.expectedClaimKeywords?.length
+    ? `The supported answer should mention ${testCase.expectedClaimKeywords.join(", ")}.`
+    : "The available support docs contain relevant guidance for this ticket.";
+
   return {
-    answer: "The available support docs contain relevant guidance for this ticket. [S1]",
+    answer: `${expectedClaimText} [S1]`,
     claims: [
       {
-        text: "The available support docs contain relevant guidance for this ticket.",
+        text: expectedClaimText,
         citationIds: ["S1"]
       }
     ],
@@ -286,13 +302,15 @@ function createOfflineDependencies(testCase: EvalCase) {
       investigationId: `${testCase.id}-investigation`
     }),
     retrieveEvidence: async () => evidence,
-    generateGroundedAnswer: async () => createOfflineGroundedAnswer(evidence),
+    generateGroundedAnswer: async () => createOfflineGroundedAnswer(testCase, evidence),
     generateInvestigationAnswer: async () => ({
       customerReply: {
         summary: "The investigation found cited support for the customer-facing response.",
         claims: [
           {
-            text: "The investigation found cited support for the customer-facing response.",
+            text: testCase.expectedClaimKeywords?.length
+              ? `The investigation found cited support for ${testCase.expectedClaimKeywords.join(", ")}.`
+              : "The investigation found cited support for the customer-facing response.",
             citations: ["S1" as const, "T1" as const]
           }
         ]
@@ -387,16 +405,39 @@ async function main() {
       : null;
     const graphParityPassed = graphResult ? graphResult.mode === result.mode && graphResult.reviewStatus === result.reviewStatus : null;
     const expectedEvidenceKeywords = testCase.expectedEvidenceKeywords ?? [];
+    const expectedClaimKeywords = testCase.expectedClaimKeywords ?? [];
+    const forbiddenClaimKeywords = testCase.forbiddenClaimKeywords ?? [];
+    const expectedReviewReasonKeywords = testCase.expectedReviewReasonKeywords ?? [];
     const evidenceHaystack = result.docEvidence
       .map((item) => `${item.filename} ${item.sectionTitle ?? ""} ${item.excerpt}`)
       .join("\n")
       .toLowerCase();
+    const claimHaystack = [
+      result.customerReply.summary,
+      ...result.customerReply.claims.map((claim) => claim.text),
+      result.internalDiagnosis.summary,
+      ...result.internalDiagnosis.claims.map((claim) => claim.text)
+    ]
+      .filter(Boolean)
+      .join("\n")
+      .toLowerCase();
+    const reviewReasonHaystack = [result.routingReason, ...result.internalDiagnosis.openQuestions].join("\n").toLowerCase();
     const missingEvidenceKeywords = expectedEvidenceKeywords.filter(
       (keyword) => !evidenceHaystack.includes(keyword.toLowerCase())
+    );
+    const missingClaimKeywords = expectedClaimKeywords.filter((keyword) => !claimHaystack.includes(keyword.toLowerCase()));
+    const presentForbiddenClaimKeywords = forbiddenClaimKeywords.filter((keyword) =>
+      claimHaystack.includes(keyword.toLowerCase())
+    );
+    const missingReviewReasonKeywords = expectedReviewReasonKeywords.filter(
+      (keyword) => !reviewReasonHaystack.includes(keyword.toLowerCase())
     );
     const routePassed = !testCase.expectedMode || result.mode === testCase.expectedMode;
     const reviewPassed = !testCase.expectedReviewStatus || result.reviewStatus === testCase.expectedReviewStatus;
     const retrievalPassed = (testCase.minDocEvidence ?? 0) <= result.docEvidence.length && missingEvidenceKeywords.length === 0;
+    const claimPassed = missingClaimKeywords.length === 0;
+    const forbiddenClaimPassed = presentForbiddenClaimKeywords.length === 0;
+    const reviewReasonPassed = missingReviewReasonKeywords.length === 0;
     const toolPassed = !testCase.requireToolEvidence || result.toolEvidence.length > 0;
 
     if (!routePassed) {
@@ -413,6 +454,18 @@ async function main() {
 
     if (missingEvidenceKeywords.length) {
       failures.push(`${testCase.id}: missing expected evidence keyword(s): ${missingEvidenceKeywords.join(", ")}`);
+    }
+
+    if (missingClaimKeywords.length) {
+      failures.push(`${testCase.id}: missing expected claim keyword(s): ${missingClaimKeywords.join(", ")}`);
+    }
+
+    if (presentForbiddenClaimKeywords.length) {
+      failures.push(`${testCase.id}: included forbidden claim keyword(s): ${presentForbiddenClaimKeywords.join(", ")}`);
+    }
+
+    if (missingReviewReasonKeywords.length) {
+      failures.push(`${testCase.id}: missing expected review reason keyword(s): ${missingReviewReasonKeywords.join(", ")}`);
     }
 
     if (!toolPassed) {
@@ -443,14 +496,31 @@ async function main() {
       expectedReviewStatus: testCase.expectedReviewStatus ?? null,
       expectedEvidenceKeywords,
       missingEvidenceKeywords,
+      expectedClaimKeywords,
+      missingClaimKeywords,
+      forbiddenClaimKeywords,
+      presentForbiddenClaimKeywords,
+      expectedReviewReasonKeywords,
+      missingReviewReasonKeywords,
       minDocEvidence: testCase.minDocEvidence ?? null,
       requireToolEvidence: testCase.requireToolEvidence ?? false,
       routePassed,
       reviewPassed,
       retrievalPassed,
+      claimPassed,
+      forbiddenClaimPassed,
+      reviewReasonPassed,
       toolPassed,
       graphParityPassed,
-      passed: routePassed && reviewPassed && retrievalPassed && toolPassed && graphParityPassed !== false,
+      passed:
+        routePassed &&
+        reviewPassed &&
+        retrievalPassed &&
+        claimPassed &&
+        forbiddenClaimPassed &&
+        reviewReasonPassed &&
+        toolPassed &&
+        graphParityPassed !== false,
       topDocs: result.docEvidence.slice(0, 3).map((item) => ({
         id: item.id,
         filename: item.filename,
@@ -465,6 +535,9 @@ async function main() {
   const routePassed = summary.filter((item) => item.routePassed).length;
   const reviewPassed = summary.filter((item) => item.reviewPassed).length;
   const retrievalPassed = summary.filter((item) => item.retrievalPassed).length;
+  const claimPassed = summary.filter((item) => item.claimPassed).length;
+  const forbiddenClaimPassed = summary.filter((item) => item.forbiddenClaimPassed).length;
+  const reviewReasonPassed = summary.filter((item) => item.reviewReasonPassed).length;
   const toolPassed = summary.filter((item) => item.toolPassed).length;
   const graphParityItems = summary.filter((item) => item.graphParityPassed !== null);
   const graphParityPassed = graphParityItems.filter((item) => item.graphParityPassed).length;
@@ -475,6 +548,9 @@ async function main() {
   console.log(`Routing: ${routePassed}/${summary.length} passed`);
   console.log(`Review: ${reviewPassed}/${summary.length} passed`);
   console.log(`Retrieval: ${retrievalPassed}/${summary.length} passed`);
+  console.log(`Claim content: ${claimPassed}/${summary.length} passed`);
+  console.log(`Forbidden claims: ${forbiddenClaimPassed}/${summary.length} passed`);
+  console.log(`Review reasons: ${reviewReasonPassed}/${summary.length} passed`);
   console.log(`Tool evidence: ${toolPassed}/${summary.length} passed`);
   if (graphParityItems.length) {
     console.log(`Graph parity: ${graphParityPassed}/${graphParityItems.length} passed`);
@@ -491,6 +567,15 @@ async function main() {
     );
     if (item.missingEvidenceKeywords.length) {
       console.log(`  missing evidence keywords: ${item.missingEvidenceKeywords.join(", ")}`);
+    }
+    if (item.missingClaimKeywords.length) {
+      console.log(`  missing claim keywords: ${item.missingClaimKeywords.join(", ")}`);
+    }
+    if (item.presentForbiddenClaimKeywords.length) {
+      console.log(`  forbidden claim keywords present: ${item.presentForbiddenClaimKeywords.join(", ")}`);
+    }
+    if (item.missingReviewReasonKeywords.length) {
+      console.log(`  missing review reason keywords: ${item.missingReviewReasonKeywords.join(", ")}`);
     }
   }
 
