@@ -59,6 +59,75 @@ function collectCitations(claims: StructuredClaim[]) {
   return Array.from(new Set(claims.flatMap((claim) => claim.citations)));
 }
 
+function normalizeClaimText(text: string) {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function getDistinctInternalClaims(customerClaims: StructuredClaim[], internalClaims: StructuredClaim[]) {
+  const customerTexts = new Set(customerClaims.map((claim) => normalizeClaimText(claim.text)));
+  const customerTokenSets = customerClaims.map((claim) => new Set(normalizeClaimText(claim.text).split(" ").filter(Boolean)));
+
+  return internalClaims.filter((claim) => {
+    const normalized = normalizeClaimText(claim.text);
+
+    if (customerTexts.has(normalized)) {
+      return false;
+    }
+
+    const tokens = normalized.split(" ").filter(Boolean);
+    if (tokens.length < 5) {
+      return true;
+    }
+
+    return !customerTokenSets.some((customerTokens) => {
+      const overlap = tokens.filter((token) => customerTokens.has(token)).length;
+      return overlap / tokens.length >= 0.82;
+    });
+  });
+}
+
+function CitationMarker({
+  citation,
+  result
+}: {
+  citation: CitationId;
+  result: InvestigationResult;
+}) {
+  const source = findSource(result, citation);
+  const title = getSourceTitle(result, citation);
+  const excerpt = getSourceExcerpt(result, citation);
+
+  return (
+    <span className="group/source relative inline-flex align-baseline">
+      <button
+        type="button"
+        className={`rounded-md border px-1.5 py-0.5 text-[11px] font-semibold leading-none transition focus:outline-none focus:ring-2 focus:ring-zinc-300 ${
+          citation.startsWith("S")
+            ? "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-400"
+            : "border-amber-200 bg-amber-50 text-amber-800 hover:border-amber-300"
+        }`}
+        aria-label={`Show source ${citation}`}
+      >
+        {citation}
+      </button>
+      <span className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 hidden w-[min(340px,calc(100vw-48px))] -translate-x-1/2 rounded-lg border border-zinc-200 bg-white p-3 text-left shadow-xl group-hover/source:block group-focus-within/source:block">
+        <span className="flex items-center gap-2">
+          <Badge variant={citation.startsWith("S") ? "outline" : "warn"}>{citation}</Badge>
+          {source?.sourceType === "doc" ? (
+            <span className="text-[11px] font-medium text-zinc-500">{Math.round(source.score * 100)}% match</span>
+          ) : null}
+        </span>
+        <span className="mt-2 block text-xs font-semibold leading-5 text-zinc-950">{title}</span>
+        {excerpt ? <span className="mt-1.5 line-clamp-5 block text-xs leading-5 text-zinc-600">{excerpt}</span> : null}
+      </span>
+    </span>
+  );
+}
+
 function SourceLedger({
   result,
   showDebugDetails
@@ -68,7 +137,7 @@ function SourceLedger({
 }) {
   const citations = collectCitations([...result.customerReply.claims, ...result.internalDiagnosis.claims]);
 
-  if (!citations.length) {
+  if (!showDebugDetails || !citations.length) {
     return null;
   }
 
@@ -121,10 +190,12 @@ function SourceLedger({
 
 function AnswerSection({
   claims,
-  emptyMessage
+  emptyMessage,
+  result
 }: {
   claims: StructuredClaim[];
   emptyMessage: string;
+  result: InvestigationResult;
 }) {
   return (
     <section className="rounded-xl border border-zinc-200/80 bg-white/80 p-4">
@@ -144,8 +215,10 @@ function AnswerSection({
             {claims.map((claim, index) => (
               <p key={`${claim.text}-${index}`} className="text-[15px] leading-7 text-zinc-900">
                 {claim.text}{" "}
-                <span className="whitespace-nowrap text-xs font-semibold text-zinc-500">
-                  {claim.citations.map((citation) => `[${citation}]`).join(" ")}
+                <span className="inline-flex flex-wrap gap-1 align-baseline">
+                  {claim.citations.map((citation) => (
+                    <CitationMarker key={`${claim.text}-${citation}`} citation={citation} result={result} />
+                  ))}
                 </span>
               </p>
             ))}
@@ -208,7 +281,6 @@ export function AnswerPanel({
   onMarkReviewed,
   onRetryWithContext,
   result,
-  ticket,
   showDebugDetails
 }: {
   isInvestigating: boolean;
@@ -218,7 +290,6 @@ export function AnswerPanel({
   onMarkReviewed: () => void;
   onRetryWithContext: () => void;
   result: InvestigationResult | null;
-  ticket: string;
   showDebugDetails: boolean;
 }) {
   if (isInvestigating) {
@@ -271,10 +342,11 @@ export function AnswerPanel({
   const reviewAction = getReviewAction(result);
   const showOpenQuestions = result.internalDiagnosis.openQuestions.length > 0;
   const showRoutingReason = showDebugDetails || result.reviewStatus === "needs_human_review";
+  const distinctInternalClaims = getDistinctInternalClaims(result.customerReply.claims, result.internalDiagnosis.claims);
 
   return (
     <div className="space-y-4">
-      <Card className="surface-shell overflow-hidden">
+      <Card className="surface-shell">
         <CardHeader className="border-b border-zinc-100 pb-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
@@ -296,11 +368,6 @@ export function AnswerPanel({
           </div>
         </CardHeader>
         <CardContent className="space-y-4 p-4">
-          <div className="rounded-lg border border-zinc-200/80 bg-zinc-50/70 p-3">
-            <p className="eyebrow">Ticket</p>
-            <p className="mt-2 text-sm leading-6 text-zinc-700">{ticket}</p>
-          </div>
-
           {showDebugDetails && investigationContext.trim() ? (
             <div className="rounded-lg border border-amber-200/80 bg-amber-50/70 p-3">
               <p className="eyebrow">Provided context</p>
@@ -311,10 +378,11 @@ export function AnswerPanel({
           <AnswerSection
             claims={result.customerReply.claims}
             emptyMessage="No grounded answer was produced for this run."
+            result={result}
           />
 
           <InternalFindings
-            claims={result.internalDiagnosis.claims}
+            claims={distinctInternalClaims}
             emptyMessage="No grounded internal diagnosis claims were produced for this run."
           />
 

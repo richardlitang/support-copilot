@@ -58,6 +58,7 @@ export function SupportCopilotShell({
   const [reviewedInvestigationId, setReviewedInvestigationId] = useState<string | null>(null);
   const [focusContextToken, setFocusContextToken] = useState(0);
   const [isReviewRetryActive, setIsReviewRetryActive] = useState(false);
+  const [isComposerExpandedAfterRun, setIsComposerExpandedAfterRun] = useState(false);
 
   const showDebugToggle = process.env.NEXT_PUBLIC_DEBUG_RAG === "true";
   const hasRunState = Boolean(result) || isInvestigating;
@@ -202,6 +203,7 @@ export function SupportCopilotShell({
     setError(null);
     setIsInvestigating(true);
     setIsReviewRetryActive(false);
+    setIsComposerExpandedAfterRun(false);
 
     try {
       const response = await fetch("/api/investigate", {
@@ -239,6 +241,7 @@ export function SupportCopilotShell({
   function handleRetryWithContext() {
     setFocusContextToken((value) => value + 1);
     setIsReviewRetryActive(true);
+    setIsComposerExpandedAfterRun(true);
 
     if (!investigationContext.trim()) {
       setInvestigationContext("Plan:\nFeature state:\nRecent errors:\nSupport notes:");
@@ -258,6 +261,7 @@ export function SupportCopilotShell({
     setResult(null);
     setError(null);
     setIsReviewRetryActive(false);
+    setIsComposerExpandedAfterRun(false);
   }
 
   return (
@@ -314,6 +318,7 @@ export function SupportCopilotShell({
               showDebugToggle={showDebugToggle}
               focusContextToken={focusContextToken}
               isReviewRetryActive={isReviewRetryActive}
+              isCollapsed={hasRunState && !isComposerExpandedAfterRun && !isReviewRetryActive}
               accountHint={
                 result?.reviewStatus === "needs_human_review" &&
                 result.routingReason.toLowerCase().includes("none was provided")
@@ -325,6 +330,7 @@ export function SupportCopilotShell({
               onToggleRag={setRagEnabled}
               onTicketChange={setTicket}
               onLoadScenario={handleLoadScenario}
+              onEdit={() => setIsComposerExpandedAfterRun(true)}
               onSubmit={handleInvestigate}
             />
 
@@ -333,7 +339,6 @@ export function SupportCopilotShell({
                 isInvestigating={isInvestigating}
                 investigationContext={investigationContext}
                 result={result}
-                ticket={ticket}
                 isReviewAcknowledged={Boolean(result && reviewedInvestigationId === result.investigationId)}
                 isReviewRetryActive={isReviewRetryActive}
                 onMarkReviewed={handleMarkReviewed}
