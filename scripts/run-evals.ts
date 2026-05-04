@@ -32,7 +32,6 @@ type EvalCase = {
   expectedEvidenceKeywords?: string[];
   expectedClaimKeywords?: string[];
   forbiddenClaimKeywords?: string[];
-  expectedReviewReasonKeywords?: string[];
   minDocEvidence?: number;
   requireToolEvidence?: boolean;
 };
@@ -63,8 +62,6 @@ type EvalSummary = {
   missingClaimKeywords: string[];
   forbiddenClaimKeywords: string[];
   presentForbiddenClaimKeywords: string[];
-  expectedReviewReasonKeywords: string[];
-  missingReviewReasonKeywords: string[];
   minDocEvidence: number | null;
   requireToolEvidence: boolean;
   routePassed: boolean;
@@ -74,7 +71,6 @@ type EvalSummary = {
   retrievalPassed: boolean;
   claimPassed: boolean;
   forbiddenClaimPassed: boolean;
-  reviewReasonPassed: boolean;
   toolPassed: boolean;
   graphParityPassed: boolean | null;
   passed: boolean;
@@ -423,7 +419,6 @@ async function main() {
     const expectedEvidenceKeywords = testCase.expectedEvidenceKeywords ?? [];
     const expectedClaimKeywords = testCase.expectedClaimKeywords ?? [];
     const forbiddenClaimKeywords = testCase.forbiddenClaimKeywords ?? [];
-    const expectedReviewReasonKeywords = testCase.expectedReviewReasonKeywords ?? [];
     const evidenceHaystack = result.docEvidence
       .map((item) => `${item.filename} ${item.sectionTitle ?? ""} ${item.excerpt}`)
       .join("\n")
@@ -437,16 +432,12 @@ async function main() {
       .filter(Boolean)
       .join("\n")
       .toLowerCase();
-    const reviewReasonHaystack = [result.routingReason, ...result.internalDiagnosis.openQuestions].join("\n").toLowerCase();
     const missingEvidenceKeywords = expectedEvidenceKeywords.filter(
       (keyword) => !evidenceHaystack.includes(keyword.toLowerCase())
     );
     const missingClaimKeywords = expectedClaimKeywords.filter((keyword) => !claimHaystack.includes(keyword.toLowerCase()));
     const presentForbiddenClaimKeywords = forbiddenClaimKeywords.filter((keyword) =>
       claimHaystack.includes(keyword.toLowerCase())
-    );
-    const missingReviewReasonKeywords = expectedReviewReasonKeywords.filter(
-      (keyword) => !reviewReasonHaystack.includes(keyword.toLowerCase())
     );
     const routePassed = !testCase.expectedMode || result.mode === testCase.expectedMode;
     const reviewPassed = !testCase.expectedReviewStatus || result.reviewStatus === testCase.expectedReviewStatus;
@@ -456,7 +447,6 @@ async function main() {
     const retrievalPassed = (testCase.minDocEvidence ?? 0) <= result.docEvidence.length && missingEvidenceKeywords.length === 0;
     const claimPassed = missingClaimKeywords.length === 0;
     const forbiddenClaimPassed = presentForbiddenClaimKeywords.length === 0;
-    const reviewReasonPassed = missingReviewReasonKeywords.length === 0;
     const toolPassed = !testCase.requireToolEvidence || result.toolEvidence.length > 0;
 
     if (!routePassed) {
@@ -491,10 +481,6 @@ async function main() {
 
     if (presentForbiddenClaimKeywords.length) {
       failures.push(`${testCase.id}: included forbidden claim keyword(s): ${presentForbiddenClaimKeywords.join(", ")}`);
-    }
-
-    if (missingReviewReasonKeywords.length) {
-      failures.push(`${testCase.id}: missing expected review reason keyword(s): ${missingReviewReasonKeywords.join(", ")}`);
     }
 
     if (!toolPassed) {
@@ -533,8 +519,6 @@ async function main() {
       missingClaimKeywords,
       forbiddenClaimKeywords,
       presentForbiddenClaimKeywords,
-      expectedReviewReasonKeywords,
-      missingReviewReasonKeywords,
       minDocEvidence: testCase.minDocEvidence ?? null,
       requireToolEvidence: testCase.requireToolEvidence ?? false,
       routePassed,
@@ -544,7 +528,6 @@ async function main() {
       retrievalPassed,
       claimPassed,
       forbiddenClaimPassed,
-      reviewReasonPassed,
       toolPassed,
       graphParityPassed,
       passed:
@@ -555,7 +538,6 @@ async function main() {
         retrievalPassed &&
         claimPassed &&
         forbiddenClaimPassed &&
-        reviewReasonPassed &&
         toolPassed &&
         graphParityPassed !== false,
       topDocs: result.docEvidence.slice(0, 3).map((item) => ({
@@ -576,7 +558,6 @@ async function main() {
   const retrievalPassed = summary.filter((item) => item.retrievalPassed).length;
   const claimPassed = summary.filter((item) => item.claimPassed).length;
   const forbiddenClaimPassed = summary.filter((item) => item.forbiddenClaimPassed).length;
-  const reviewReasonPassed = summary.filter((item) => item.reviewReasonPassed).length;
   const toolPassed = summary.filter((item) => item.toolPassed).length;
   const graphParityItems = summary.filter((item) => item.graphParityPassed !== null);
   const graphParityPassed = graphParityItems.filter((item) => item.graphParityPassed).length;
@@ -591,7 +572,6 @@ async function main() {
   console.log(`Retrieval: ${retrievalPassed}/${summary.length} passed`);
   console.log(`Claim content: ${claimPassed}/${summary.length} passed`);
   console.log(`Forbidden claims: ${forbiddenClaimPassed}/${summary.length} passed`);
-  console.log(`Review reasons: ${reviewReasonPassed}/${summary.length} passed`);
   console.log(`Tool evidence: ${toolPassed}/${summary.length} passed`);
   if (graphParityItems.length) {
     console.log(`Graph parity: ${graphParityPassed}/${graphParityItems.length} passed`);
@@ -614,9 +594,6 @@ async function main() {
     }
     if (item.presentForbiddenClaimKeywords.length) {
       console.log(`  forbidden claim keywords present: ${item.presentForbiddenClaimKeywords.join(", ")}`);
-    }
-    if (item.missingReviewReasonKeywords.length) {
-      console.log(`  missing review reason keywords: ${item.missingReviewReasonKeywords.join(", ")}`);
     }
     if (!item.reviewReasonCodePassed) {
       console.log(`  expected review reason code: ${item.expectedReviewReasonCode ?? "none"}`);
