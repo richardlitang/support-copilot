@@ -7,6 +7,11 @@ const baseResult: InvestigationResult = {
   mode: "needs_human_review",
   supportLevel: "insufficient_support",
   reviewStatus: "needs_human_review",
+  reviewDecision: {
+    status: "needs_human_review",
+    reasonCode: "weak_retrieval",
+    action: "add_docs"
+  },
   routingReason: "Documentation evidence was too weak to support a grounded answer.",
   customerReply: {
     claims: []
@@ -27,7 +32,12 @@ describe("getReviewAction", () => {
         ...baseResult,
         mode: "docs_only",
         supportLevel: "medium",
-        reviewStatus: "ready"
+        reviewStatus: "ready",
+        reviewDecision: {
+          status: "ready",
+          reasonCode: "none",
+          action: "none"
+        }
       })
     ).toBeNull();
   });
@@ -36,6 +46,11 @@ describe("getReviewAction", () => {
     expect(
       getReviewAction({
         ...baseResult,
+        reviewDecision: {
+          status: "needs_human_review",
+          reasonCode: "missing_account_context",
+          action: "add_context"
+        },
         routingReason: "Structured product or account context is required for this ticket, but none was provided.",
         internalDiagnosis: {
           claims: [],
@@ -70,6 +85,11 @@ describe("getReviewAction", () => {
             chunkIndex: 0
           }
         ],
+        reviewDecision: {
+          status: "needs_human_review",
+          reasonCode: "unresolved_evidence_conflict",
+          action: "inspect_conflict"
+        },
         routingReason: "Docs and current tool state do not explain the reported issue.",
         internalDiagnosis: {
           claims: [],

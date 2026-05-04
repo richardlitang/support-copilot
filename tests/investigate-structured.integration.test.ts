@@ -234,6 +234,11 @@ describe("investigateTicket structured", () => {
 
     expect(result.mode).toBe("needs_human_review");
     expect(result.reviewStatus).toBe("needs_human_review");
+    expect(result.reviewDecision).toEqual({
+      status: "needs_human_review",
+      reasonCode: "missing_account_context",
+      action: "add_context"
+    });
     expect(result.routingReason).toContain("none was provided");
     expect(result.toolEvidence.length).toBeGreaterThan(0);
   });
@@ -281,6 +286,11 @@ describe("investigateTicket structured", () => {
 
     expect(result.mode).toBe("needs_human_review");
     expect(result.reviewStatus).toBe("needs_human_review");
+    expect(result.reviewDecision).toEqual({
+      status: "needs_human_review",
+      reasonCode: "unresolved_evidence_conflict",
+      action: "inspect_conflict"
+    });
     expect(result.internalDiagnosis.openQuestions.length).toBeGreaterThan(0);
   });
 });

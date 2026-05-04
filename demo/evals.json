@@ -100,6 +100,8 @@
     "expectation": "Should route directly to needs human review because account context is required but not provided.",
     "expectedMode": "needs_human_review",
     "expectedReviewStatus": "needs_human_review",
+    "expectedReviewReasonCode": "missing_account_context",
+    "expectedReviewAction": "add_context",
     "expectedReviewReasonKeywords": ["context"]
   },
   {
@@ -120,6 +122,8 @@
     "expectation": "Should return insufficient support.",
     "expectedMode": "needs_human_review",
     "expectedReviewStatus": "needs_human_review",
+    "expectedReviewReasonCode": "weak_retrieval",
+    "expectedReviewAction": "add_docs",
     "expectedReviewReasonKeywords": ["weak"]
   },
   {
@@ -166,6 +170,8 @@
     "expectation": "Should end in needs human review because docs and tool state do not explain the failure.",
     "expectedMode": "needs_human_review",
     "expectedReviewStatus": "needs_human_review",
+    "expectedReviewReasonCode": "unresolved_evidence_conflict",
+    "expectedReviewAction": "inspect_conflict",
     "expectedEvidenceKeywords": ["export"],
     "expectedReviewReasonKeywords": ["do not explain"],
     "minDocEvidence": 1,

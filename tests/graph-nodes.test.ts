@@ -209,6 +209,11 @@ describe("investigation graph nodes", () => {
     expect(reviewed.review).toMatchObject({
       supportLevel: "medium",
       reviewStatus: "ready",
+      reviewDecision: {
+        status: "ready",
+        reasonCode: "none",
+        action: "none"
+      },
       finalMode: "docs_plus_tools"
     });
     expect(reviewed.steps).toEqual([

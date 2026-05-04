@@ -2,8 +2,21 @@ import type { SupportLevel } from "@/lib/types";
 
 export type InvestigationMode = "docs_only" | "docs_plus_tools" | "needs_human_review";
 export type ReviewStatus = "ready" | "needs_human_review";
+export type ReviewReasonCode =
+  | "none"
+  | "weak_retrieval"
+  | "missing_account_context"
+  | "unresolved_evidence_conflict"
+  | "grounding_validation_failed";
+export type ReviewActionKind = "none" | "add_context" | "add_docs" | "inspect_conflict" | "review_claims";
 export type ToolName = "getAccountContext" | "getFeatureFlags" | "getRecentErrors" | "getProvidedContext";
 export type CitationId = `S${number}` | `T${number}`;
+
+export interface ReviewDecision {
+  status: ReviewStatus;
+  reasonCode: ReviewReasonCode;
+  action: ReviewActionKind;
+}
 
 export interface StructuredClaim {
   text: string;
@@ -51,6 +64,7 @@ export interface InvestigationResult {
   mode: InvestigationMode;
   supportLevel: SupportLevel;
   reviewStatus: ReviewStatus;
+  reviewDecision: ReviewDecision;
   routingReason: string;
   customerReply: StructuredClaimSet;
   internalDiagnosis: StructuredClaimSetWithOpenQuestions;

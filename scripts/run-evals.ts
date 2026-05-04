@@ -11,7 +11,13 @@ import { defaultRunContextToolsAdapters, runContextToolsNode } from "../lib/grap
 import { validateGroundingNode } from "../lib/graph/nodes/validate-grounding";
 import { investigateTicket } from "../lib/investigate";
 import type { EvidenceChunk, StructuredAnswer } from "../lib/types";
-import type { AccountRecord, ErrorEventRecord, FeatureFlagRecord } from "../lib/types/investigation";
+import type {
+  AccountRecord,
+  ErrorEventRecord,
+  FeatureFlagRecord,
+  ReviewActionKind,
+  ReviewReasonCode
+} from "../lib/types/investigation";
 
 type EvalCase = {
   id: string;
@@ -21,6 +27,8 @@ type EvalCase = {
   expectation: string;
   expectedMode?: string;
   expectedReviewStatus?: string;
+  expectedReviewReasonCode?: ReviewReasonCode;
+  expectedReviewAction?: ReviewActionKind;
   expectedEvidenceKeywords?: string[];
   expectedClaimKeywords?: string[];
   forbiddenClaimKeywords?: string[];
@@ -34,6 +42,8 @@ type EvalSummary = {
   bucket: string;
   mode: string;
   reviewStatus: string;
+  reviewReasonCode: string;
+  reviewAction: string;
   supportLevel: string;
   insufficientSupport: boolean;
   customerClaims: number;
@@ -45,6 +55,8 @@ type EvalSummary = {
   selectedAccountId: string | null;
   expectedMode: string | null;
   expectedReviewStatus: string | null;
+  expectedReviewReasonCode: string | null;
+  expectedReviewAction: string | null;
   expectedEvidenceKeywords: string[];
   missingEvidenceKeywords: string[];
   expectedClaimKeywords: string[];
@@ -57,6 +69,8 @@ type EvalSummary = {
   requireToolEvidence: boolean;
   routePassed: boolean;
   reviewPassed: boolean;
+  reviewReasonCodePassed: boolean;
+  reviewActionPassed: boolean;
   retrievalPassed: boolean;
   claimPassed: boolean;
   forbiddenClaimPassed: boolean;
@@ -364,7 +378,8 @@ async function runOfflineGraphParity(input: {
 
   return {
     mode: reviewed.review.finalMode,
-    reviewStatus: reviewed.review.reviewStatus
+    reviewStatus: reviewed.review.reviewStatus,
+    reviewDecision: reviewed.review.reviewDecision
   };
 }
 
@@ -399,7 +414,12 @@ async function main() {
           dependencies: offlineDependencies
         })
       : null;
-    const graphParityPassed = graphResult ? graphResult.mode === result.mode && graphResult.reviewStatus === result.reviewStatus : null;
+    const graphParityPassed = graphResult
+      ? graphResult.mode === result.mode &&
+        graphResult.reviewStatus === result.reviewStatus &&
+        graphResult.reviewDecision.reasonCode === result.reviewDecision.reasonCode &&
+        graphResult.reviewDecision.action === result.reviewDecision.action
+      : null;
     const expectedEvidenceKeywords = testCase.expectedEvidenceKeywords ?? [];
     const expectedClaimKeywords = testCase.expectedClaimKeywords ?? [];
     const forbiddenClaimKeywords = testCase.forbiddenClaimKeywords ?? [];
@@ -430,6 +450,9 @@ async function main() {
     );
     const routePassed = !testCase.expectedMode || result.mode === testCase.expectedMode;
     const reviewPassed = !testCase.expectedReviewStatus || result.reviewStatus === testCase.expectedReviewStatus;
+    const reviewReasonCodePassed =
+      !testCase.expectedReviewReasonCode || result.reviewDecision.reasonCode === testCase.expectedReviewReasonCode;
+    const reviewActionPassed = !testCase.expectedReviewAction || result.reviewDecision.action === testCase.expectedReviewAction;
     const retrievalPassed = (testCase.minDocEvidence ?? 0) <= result.docEvidence.length && missingEvidenceKeywords.length === 0;
     const claimPassed = missingClaimKeywords.length === 0;
     const forbiddenClaimPassed = presentForbiddenClaimKeywords.length === 0;
@@ -442,6 +465,16 @@ async function main() {
 
     if (!reviewPassed) {
       failures.push(`${testCase.id}: expected reviewStatus ${testCase.expectedReviewStatus}, got ${result.reviewStatus}`);
+    }
+
+    if (!reviewReasonCodePassed) {
+      failures.push(
+        `${testCase.id}: expected review reason code ${testCase.expectedReviewReasonCode}, got ${result.reviewDecision.reasonCode}`
+      );
+    }
+
+    if (!reviewActionPassed) {
+      failures.push(`${testCase.id}: expected review action ${testCase.expectedReviewAction}, got ${result.reviewDecision.action}`);
     }
 
     if ((testCase.minDocEvidence ?? 0) > result.docEvidence.length) {
@@ -470,7 +503,7 @@ async function main() {
 
     if (graphParityPassed === false && graphResult) {
       failures.push(
-        `${testCase.id}: graph parity failed, direct mode/review ${result.mode}/${result.reviewStatus}, graph mode/review ${graphResult.mode}/${graphResult.reviewStatus}`
+        `${testCase.id}: graph parity failed, direct ${result.mode}/${result.reviewStatus}/${result.reviewDecision.reasonCode}/${result.reviewDecision.action}, graph ${graphResult.mode}/${graphResult.reviewStatus}/${graphResult.reviewDecision.reasonCode}/${graphResult.reviewDecision.action}`
       );
     }
 
@@ -479,6 +512,8 @@ async function main() {
       bucket: testCase.bucket,
       mode: result.mode,
       reviewStatus: result.reviewStatus,
+      reviewReasonCode: result.reviewDecision.reasonCode,
+      reviewAction: result.reviewDecision.action,
       supportLevel: result.supportLevel,
       insufficientSupport: result.supportLevel === "insufficient_support",
       customerClaims: result.customerReply.claims.length,
@@ -490,6 +525,8 @@ async function main() {
       selectedAccountId: testCase.selectedAccountId ?? null,
       expectedMode: testCase.expectedMode ?? null,
       expectedReviewStatus: testCase.expectedReviewStatus ?? null,
+      expectedReviewReasonCode: testCase.expectedReviewReasonCode ?? null,
+      expectedReviewAction: testCase.expectedReviewAction ?? null,
       expectedEvidenceKeywords,
       missingEvidenceKeywords,
       expectedClaimKeywords,
@@ -502,6 +539,8 @@ async function main() {
       requireToolEvidence: testCase.requireToolEvidence ?? false,
       routePassed,
       reviewPassed,
+      reviewReasonCodePassed,
+      reviewActionPassed,
       retrievalPassed,
       claimPassed,
       forbiddenClaimPassed,
@@ -511,6 +550,8 @@ async function main() {
       passed:
         routePassed &&
         reviewPassed &&
+        reviewReasonCodePassed &&
+        reviewActionPassed &&
         retrievalPassed &&
         claimPassed &&
         forbiddenClaimPassed &&
@@ -530,6 +571,8 @@ async function main() {
   const passedCount = summary.filter((item) => item.passed).length;
   const routePassed = summary.filter((item) => item.routePassed).length;
   const reviewPassed = summary.filter((item) => item.reviewPassed).length;
+  const reviewReasonCodePassed = summary.filter((item) => item.reviewReasonCodePassed).length;
+  const reviewActionPassed = summary.filter((item) => item.reviewActionPassed).length;
   const retrievalPassed = summary.filter((item) => item.retrievalPassed).length;
   const claimPassed = summary.filter((item) => item.claimPassed).length;
   const forbiddenClaimPassed = summary.filter((item) => item.forbiddenClaimPassed).length;
@@ -543,6 +586,8 @@ async function main() {
   console.log(`Cases: ${passedCount}/${summary.length} passed`);
   console.log(`Routing: ${routePassed}/${summary.length} passed`);
   console.log(`Review: ${reviewPassed}/${summary.length} passed`);
+  console.log(`Review reason codes: ${reviewReasonCodePassed}/${summary.length} passed`);
+  console.log(`Review actions: ${reviewActionPassed}/${summary.length} passed`);
   console.log(`Retrieval: ${retrievalPassed}/${summary.length} passed`);
   console.log(`Claim content: ${claimPassed}/${summary.length} passed`);
   console.log(`Forbidden claims: ${forbiddenClaimPassed}/${summary.length} passed`);
@@ -559,7 +604,7 @@ async function main() {
       ? item.topDocs.map((doc) => `${doc.id}:${doc.filename}${doc.sectionTitle ? `#${doc.sectionTitle}` : ""}@${doc.score}`).join(", ")
       : "none";
     console.log(
-      `- ${status} ${item.id} [${item.bucket}] mode=${item.mode} review=${item.reviewStatus} docs=${item.docEvidence} tools=${item.toolEvidence} top=${topDocList}`
+      `- ${status} ${item.id} [${item.bucket}] mode=${item.mode} review=${item.reviewStatus} reason=${item.reviewReasonCode} action=${item.reviewAction} docs=${item.docEvidence} tools=${item.toolEvidence} top=${topDocList}`
     );
     if (item.missingEvidenceKeywords.length) {
       console.log(`  missing evidence keywords: ${item.missingEvidenceKeywords.join(", ")}`);
@@ -572,6 +617,12 @@ async function main() {
     }
     if (item.missingReviewReasonKeywords.length) {
       console.log(`  missing review reason keywords: ${item.missingReviewReasonKeywords.join(", ")}`);
+    }
+    if (!item.reviewReasonCodePassed) {
+      console.log(`  expected review reason code: ${item.expectedReviewReasonCode ?? "none"}`);
+    }
+    if (!item.reviewActionPassed) {
+      console.log(`  expected review action: ${item.expectedReviewAction ?? "none"}`);
     }
   }
 

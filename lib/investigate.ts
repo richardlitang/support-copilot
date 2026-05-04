@@ -7,6 +7,7 @@ import {
   generateInvestigationAnswer as generateInvestigationAnswerAdapter
 } from "@/lib/answer";
 import { buildLegacyAnswer, createDocEvidence } from "@/lib/evidence-builder";
+import { determineReviewDecision } from "@/lib/review-decision";
 import { determineReviewStatus, shouldEscalateToHumanReview } from "@/lib/review-policy";
 import { retrieveEvidence as retrieveEvidenceAdapter } from "@/lib/retrieve";
 import { determineSupportLevel } from "@/lib/support-level";
@@ -125,6 +126,7 @@ export async function investigateTicket(
     mode: review.finalMode,
     supportLevel: review.supportLevel,
     reviewStatus: review.reviewStatus,
+    reviewDecision: review.reviewDecision,
     routingReason,
     customerReply: generated.customerReply,
     internalDiagnosis: generated.internalDiagnosis,
@@ -315,7 +317,14 @@ function decideInvestigationReview(input: {
   return {
     finalMode,
     supportLevel,
-    reviewStatus
+    reviewStatus,
+    reviewDecision: determineReviewDecision({
+      reviewStatus,
+      supportLevel,
+      missingRequiredContext: input.missingRequiredContext,
+      hasConflict: input.hasConflict,
+      validationFailed
+    })
   };
 }
 

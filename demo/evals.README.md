@@ -6,6 +6,8 @@ Each case should test behavior that matters for a support investigation workflow
 
 - `expectedMode`: expected route, such as `docs_only`, `docs_plus_tools`, or `needs_human_review`.
 - `expectedReviewStatus`: expected final review status.
+- `expectedReviewReasonCode`: expected machine-readable reason for review routing.
+- `expectedReviewAction`: expected machine-readable reviewer action.
 - `minDocEvidence`: minimum retrieved source count.
 - `requireToolEvidence`: whether tool/context evidence must be present.
 - `expectedEvidenceKeywords`: broad keywords that must appear in retrieved document evidence.

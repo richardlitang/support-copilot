@@ -320,8 +320,7 @@ export function SupportCopilotShell({
               isReviewRetryActive={isReviewRetryActive}
               isCollapsed={hasRunState && !isComposerExpandedAfterRun && !isReviewRetryActive}
               accountHint={
-                result?.reviewStatus === "needs_human_review" &&
-                result.routingReason.toLowerCase().includes("none was provided")
+                result?.reviewDecision.action === "add_context"
                   ? "Paste plan, feature, or recent error context to unlock a deeper investigation path."
                   : null
               }

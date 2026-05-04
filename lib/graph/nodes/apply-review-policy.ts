@@ -1,4 +1,5 @@
 import { markInvestigationGraphStep } from "@/lib/graph/investigation-state";
+import { determineReviewDecision } from "@/lib/review-decision";
 import { determineReviewStatus, shouldEscalateToHumanReview } from "@/lib/review-policy";
 import { determineSupportLevel } from "@/lib/support-level";
 import type { InvestigationMode } from "@/lib/types/investigation";
@@ -49,6 +50,13 @@ export function applyReviewPolicyNode(state: InvestigationGraphState): Investiga
       review: {
         supportLevel,
         reviewStatus,
+        reviewDecision: determineReviewDecision({
+          reviewStatus,
+          supportLevel,
+          hasConflict: state.hasConflict,
+          missingRequiredContext: state.missingRequiredContext,
+          validationFailed
+        }),
         finalMode,
         routingReason: state.conflictReason ?? state.routing.routingReason
       }

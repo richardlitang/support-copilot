@@ -5,6 +5,7 @@ import type {
   DocEvidenceItem,
   ErrorEventRecord,
   FeatureFlagRecord,
+  ReviewDecision,
   ReviewStatus,
   StructuredClaimSet,
   StructuredClaimSetWithOpenQuestions,
@@ -55,6 +56,7 @@ export interface GroundingValidationState {
 export interface ReviewPolicyState {
   supportLevel: SupportLevel;
   reviewStatus: ReviewStatus;
+  reviewDecision: ReviewDecision;
   finalMode: RoutingDecision["mode"];
   routingReason: string;
 }

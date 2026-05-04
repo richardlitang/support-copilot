@@ -123,6 +123,11 @@ describe("investigation graph state", () => {
       review: {
         supportLevel: "medium",
         reviewStatus: "ready",
+        reviewDecision: {
+          status: "ready",
+          reasonCode: "none",
+          action: "none"
+        },
         finalMode: "docs_plus_tools",
         routingReason: "Ticket includes failure language and account-specific state."
       },

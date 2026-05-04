@@ -1,6 +1,6 @@
 import type { InvestigationResult } from "@/lib/types/investigation";
 
-export type ReviewActionKind = "add_context" | "add_docs" | "inspect_conflict" | "review_claims";
+export type ReviewActionKind = Exclude<InvestigationResult["reviewDecision"]["action"], "none">;
 
 export interface ReviewAction {
   kind: ReviewActionKind;
@@ -14,9 +14,7 @@ export function getReviewAction(result: InvestigationResult): ReviewAction | nul
     return null;
   }
 
-  const reason = `${result.routingReason} ${result.internalDiagnosis.openQuestions.join(" ")}`.toLowerCase();
-
-  if (reason.includes("none was provided") || reason.includes("required for this ticket")) {
+  if (result.reviewDecision.action === "add_context") {
     return {
       kind: "add_context",
       title: "Add missing account context",
@@ -25,7 +23,7 @@ export function getReviewAction(result: InvestigationResult): ReviewAction | nul
     };
   }
 
-  if (!result.docEvidence.length || reason.includes("documentation") || reason.includes("stronger docs")) {
+  if (result.reviewDecision.action === "add_docs") {
     return {
       kind: "add_docs",
       title: "Add stronger documentation",
@@ -34,16 +32,7 @@ export function getReviewAction(result: InvestigationResult): ReviewAction | nul
     };
   }
 
-  if (reason.includes("context") || reason.includes("account")) {
-    return {
-      kind: "add_context",
-      title: "Add missing account context",
-      description: "The current run needs plan, feature, recent-error, or support-note context before it can produce a supported answer.",
-      primaryActionLabel: "Add context and retry"
-    };
-  }
-
-  if (reason.includes("conflict") || reason.includes("do not explain") || reason.includes("unresolved")) {
+  if (result.reviewDecision.action === "inspect_conflict") {
     return {
       kind: "inspect_conflict",
       title: "Resolve the evidence gap",
