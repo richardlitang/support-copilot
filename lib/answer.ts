@@ -379,6 +379,16 @@ function normalizeStructuredClaims(
   return normalized;
 }
 
+function extractRequiredDiagnosticTokens(toolEvidence: ToolEvidenceItem[]) {
+  return Array.from(
+    new Set(
+      toolEvidence
+        .filter((item) => item.toolName === "getRecentErrors")
+        .flatMap((item) => item.excerpt.match(/\b[A-Z][A-Z0-9]+-[A-Z0-9]+\b/g) ?? [])
+    )
+  );
+}
+
 function tokenizeClaimValidationText(text: string) {
   return text
     .toLowerCase()
@@ -528,6 +538,20 @@ export function validateInvestigationAnswer(input: {
     }
   }
 
+  if (!input.answer.insufficientSupport) {
+    const claimText = [...customerClaims, ...internalClaims].map((claim) => claim.text).join("\n");
+    const missingDiagnosticTokens = extractRequiredDiagnosticTokens(input.toolEvidence).filter(
+      (token) => !claimText.includes(token)
+    );
+
+    if (missingDiagnosticTokens.length) {
+      return {
+        valid: false,
+        reason: `Missing required diagnostic token ${missingDiagnosticTokens[0]}.`
+      } as const;
+    }
+  }
+
   return {
     valid: true,
     answer: {
@@ -569,6 +593,7 @@ async function requestInvestigationAnswer(input: {
   const toolBlock = input.toolEvidence.length
     ? input.toolEvidence.map((item) => `${item.id} | ${item.toolName} | ${item.title}\n${item.excerpt}`).join("\n\n")
     : "None";
+  const requiredDiagnosticTokens = extractRequiredDiagnosticTokens(input.toolEvidence);
 
   const response = await client.responses.create({
     model,
@@ -594,7 +619,8 @@ async function requestInvestigationAnswer(input: {
               `Routing mode:\n${input.mode}\n\n` +
               `Routing reason:\n${input.routingReason}\n\n` +
               `Documentation evidence:\n${docBlock}\n\n` +
-              `Tool evidence:\n${toolBlock}`
+              `Tool evidence:\n${toolBlock}\n\n` +
+              `Required exact diagnostic tokens:\n${requiredDiagnosticTokens.length ? requiredDiagnosticTokens.join(", ") : "None"}`
           }
         ]
       }

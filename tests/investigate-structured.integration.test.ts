@@ -197,6 +197,11 @@ describe("investigateTicket structured", () => {
       ticketText: "Why can't this customer access exports?",
       mode: "docs_plus_tools",
       reviewStatus: "ready",
+      reviewDecision: {
+        status: "ready",
+        reasonCode: "none",
+        action: "none"
+      },
       sources: [{ documentChunkId: "chunk-1", rank: 1, score: 0.84 }],
       toolCalls: expect.arrayContaining([
         expect.objectContaining({

@@ -98,4 +98,36 @@ describe("validateInvestigationAnswer", () => {
       reason: "Claim does not appear supported by its cited evidence."
     });
   });
+
+  it("rejects ready investigation claims that omit cited recent-error codes", () => {
+    const result = validateInvestigationAnswer({
+      answer: {
+        customerReplyClaims: [
+          {
+            text: "The export failed because the actor lacked write permission.",
+            citations: ["T1"]
+          }
+        ],
+        internalDiagnosisClaims: [],
+        openQuestions: [],
+        insufficientSupport: false
+      },
+      docEvidence: [],
+      toolEvidence: [
+        {
+          id: "T1",
+          sourceType: "tool",
+          toolName: "getRecentErrors",
+          title: "Recent errors",
+          excerpt: "ERR-219: Export actor had read access but lacked Exports: Write.",
+          raw: []
+        }
+      ]
+    });
+
+    expect(result).toEqual({
+      valid: false,
+      reason: "Missing required diagnostic token ERR-219."
+    });
+  });
 });

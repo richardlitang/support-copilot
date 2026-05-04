@@ -5,6 +5,7 @@ import type {
   ErrorEventRecord,
   FeatureFlagRecord,
   InvestigationMode,
+  ReviewDecision,
   ReviewStatus,
   StructuredClaimSet,
   StructuredClaimSetWithOpenQuestions,
@@ -363,6 +364,7 @@ export async function createInvestigation(input: {
   supportLevel: SupportLevel;
   mode?: InvestigationMode | null;
   reviewStatus?: ReviewStatus | null;
+  reviewDecision?: ReviewDecision | null;
   routingReason?: string | null;
   accountId?: string | null;
   customerReplyJson?: StructuredClaimSet | null;
@@ -378,6 +380,8 @@ export async function createInvestigation(input: {
       support_level: input.supportLevel,
       mode: input.mode ?? null,
       review_status: input.reviewStatus ?? null,
+      review_reason_code: input.reviewDecision?.reasonCode ?? null,
+      review_action: input.reviewDecision?.action ?? null,
       routing_reason: input.routingReason ?? null,
       account_id: input.accountId ?? null,
       customer_reply_json: (input.customerReplyJson ?? null) as InvestigationJsonPayload | null,
@@ -460,6 +464,7 @@ export async function persistInvestigationRun(input: {
   supportLevel: SupportLevel;
   mode: InvestigationMode;
   reviewStatus: ReviewStatus;
+  reviewDecision: ReviewDecision;
   routingReason: string;
   accountId?: string | null;
   customerReplyJson: StructuredClaimSet;
@@ -484,6 +489,8 @@ export async function persistInvestigationRun(input: {
       p_support_level: input.supportLevel,
       p_mode: input.mode,
       p_review_status: input.reviewStatus,
+      p_review_reason_code: input.reviewDecision.reasonCode,
+      p_review_action: input.reviewDecision.action,
       p_routing_reason: input.routingReason,
       p_account_id: input.accountId ?? null,
       p_customer_reply_json: input.customerReplyJson as InvestigationJsonPayload,

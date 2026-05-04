@@ -116,6 +116,7 @@ export async function investigateTicket(
     toolArtifacts,
     mode: review.finalMode,
     reviewStatus: review.reviewStatus,
+    reviewDecision: review.reviewDecision,
     supportLevel: review.supportLevel,
     routingReason
   });
@@ -336,6 +337,7 @@ async function persistInvestigation(input: {
   toolArtifacts: ToolArtifacts;
   mode: InvestigationMode;
   reviewStatus: ReturnType<typeof determineReviewStatus>;
+  reviewDecision: ReturnType<typeof determineReviewDecision>;
   supportLevel: ReturnType<typeof determineSupportLevel>;
   routingReason: string;
 }) {
@@ -347,6 +349,7 @@ async function persistInvestigation(input: {
     supportLevel: input.supportLevel,
     mode: input.mode,
     reviewStatus: input.reviewStatus,
+    reviewDecision: input.reviewDecision,
     routingReason: input.routingReason,
     accountId: input.input.selectedAccountId ?? null,
     customerReplyJson: input.generated.customerReply,
