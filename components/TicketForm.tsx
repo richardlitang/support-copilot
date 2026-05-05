@@ -288,44 +288,34 @@ export function TicketForm({
             className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
           >
             <div>
-              <p className="text-sm font-medium text-zinc-950">Need a quick smoke test?</p>
-              <p className="mt-1 text-xs leading-5 text-zinc-600">Load a demo ticket.</p>
+              <p className="text-sm font-medium text-zinc-950">Sample test cases</p>
+              <p className="mt-1 text-xs leading-5 text-zinc-600">Run a known case against the seeded docs.</p>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-zinc-500">{demoScenarios.length} demos</span>
+              <span className="text-xs font-medium text-zinc-500">{demoScenarios.length} cases</span>
               <ChevronDown className={`h-4 w-4 text-zinc-500 transition ${showDemos ? "rotate-180" : ""}`} />
             </div>
           </button>
 
           {showDemos ? (
-            <div className="space-y-3 border-t border-zinc-200 px-4 py-3">
-              <div className="flex flex-wrap gap-2">
-                {demoScenarios.slice(0, 5).map((scenario) => (
-                  <Button key={scenario.id} type="button" variant="secondary" size="sm" onClick={() => onLoadScenario(scenario)}>
-                    {(scenario.label ?? scenario.rawText).trim()}
-                  </Button>
-                ))}
-              </div>
-
-              <div className="grid gap-2">
-                {demoScenarios.slice(0, 3).map((scenario) => (
-                  <button
-                    key={`${scenario.id}-detail`}
-                    type="button"
-                    onClick={() => onLoadScenario(scenario)}
-                    className="surface-muted flex items-start justify-between gap-3 p-3 text-left transition hover:border-zinc-300"
-                  >
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-xs font-semibold text-zinc-950">{scenario.label ?? scenario.rawText}</p>
-                        <Badge variant="outline">{(scenario.bucket ?? "demo").replaceAll("_", " ")}</Badge>
-                      </div>
-                      <p className="mt-1.5 line-clamp-2 text-xs leading-5 text-zinc-600">{scenario.rawText}</p>
+            <div className="grid gap-2 border-t border-zinc-200 px-4 py-3">
+              {demoScenarios.map((scenario) => (
+                <button
+                  key={scenario.id}
+                  type="button"
+                  onClick={() => onLoadScenario(scenario)}
+                  className="surface-muted flex items-start justify-between gap-3 p-3 text-left transition hover:border-zinc-300"
+                >
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-xs font-semibold text-zinc-950">{scenario.label ?? scenario.rawText}</p>
+                      <Badge variant="outline">{(scenario.bucket ?? "demo").replaceAll("_", " ")}</Badge>
                     </div>
-                    <FlaskConical className="mt-0.5 h-4 w-4 shrink-0 text-zinc-500" />
-                  </button>
-                ))}
-              </div>
+                    <p className="mt-1.5 line-clamp-2 text-xs leading-5 text-zinc-600">{scenario.rawText}</p>
+                  </div>
+                  <FlaskConical className="mt-0.5 h-4 w-4 shrink-0 text-zinc-500" />
+                </button>
+              ))}
             </div>
           ) : null}
         </div>
@@ -388,7 +378,7 @@ export function TicketForm({
           className="h-11 w-full rounded-xl"
           type="button"
           disabled={!ticket.trim() || isInvestigating}
-          onClick={onSubmit}
+          onClick={() => onSubmit()}
         >
           {isInvestigating
             ? executionMode === "evidence_only"
