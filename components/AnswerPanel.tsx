@@ -297,10 +297,10 @@ export function AnswerPanel({
       <Card className="surface-shell">
         <CardContent className="flex min-h-[260px] items-center justify-center p-8 text-center">
           <div className="max-w-lg">
-            <p className="eyebrow">Investigation running</p>
-            <h2 className="mt-3 text-2xl font-semibold text-zinc-950">Retrieving evidence and assembling claims...</h2>
+            <p className="eyebrow">Investigating</p>
+            <h2 className="mt-3 text-2xl font-semibold text-zinc-950">Checking evidence...</h2>
             <p className="mt-3 text-sm leading-6 text-zinc-600">
-              Routing, retrieval, and any required context analysis are being assembled before the final structured answer renders.
+              Support Copilot is retrieving docs, checking context, and drafting cited claims.
             </p>
           </div>
         </CardContent>
@@ -313,25 +313,25 @@ export function AnswerPanel({
       <Card className="surface-shell">
         <CardContent className="p-6">
           <div className="mx-auto max-w-3xl text-center">
-            <p className="eyebrow">Investigation synthesis</p>
-            <h2 className="mt-3 text-2xl font-semibold text-zinc-950">Grounded answer output appears here.</h2>
+            <p className="eyebrow">Answer</p>
+            <h2 className="mt-3 text-2xl font-semibold text-zinc-950">Run a ticket to see the answer.</h2>
             <p className="mt-3 text-sm leading-6 text-zinc-600">
-              This center canvas stays quiet until an investigation runs so you can clearly inspect routing, evidence, and fallback behavior.
+              The result will show the customer reply, internal findings, citations, and any review action.
             </p>
           </div>
 
           <div className="mt-6 grid gap-3 md:grid-cols-3">
             <div className="surface-muted p-4 text-left">
               <p className="eyebrow">1 · Ingest</p>
-              <p className="mt-2 text-xs leading-5 text-zinc-700">Upload a corpus or load a canonical demo.</p>
+              <p className="mt-2 text-xs leading-5 text-zinc-700">Add focused docs.</p>
             </div>
             <div className="surface-muted p-4 text-left">
               <p className="eyebrow">2 · Investigate</p>
-              <p className="mt-2 text-xs leading-5 text-zinc-700">Run retrieval with context only when needed.</p>
+              <p className="mt-2 text-xs leading-5 text-zinc-700">Paste the ticket and run it.</p>
             </div>
             <div className="surface-muted p-4 text-left">
               <p className="eyebrow">3 · Validate</p>
-              <p className="mt-2 text-xs leading-5 text-zinc-700">Inspect citations and human-review fallback.</p>
+              <p className="mt-2 text-xs leading-5 text-zinc-700">Check citations before replying.</p>
             </div>
           </div>
         </CardContent>

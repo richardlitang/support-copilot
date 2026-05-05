@@ -146,9 +146,9 @@ export function TicketForm({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
             <p className="eyebrow">Investigation composer</p>
-            <CardTitle className="mt-2 text-2xl tracking-[-0.04em]">What should Support Copilot investigate?</CardTitle>
+            <CardTitle className="mt-2 text-2xl tracking-[-0.04em]">New support ticket</CardTitle>
             <CardDescription className="mt-2 text-xs leading-5">
-              Paste the customer issue first. The app will retrieve evidence and produce cited claims only after you run it.
+              Paste the customer issue. Add context only when the case depends on plan, feature, or error state.
             </CardDescription>
           </div>
           {ticket.trim() || investigationContext.trim() ? (
@@ -167,7 +167,7 @@ export function TicketForm({
                 <div>
                   <p className="eyebrow">Review retry staged</p>
                   <p className="mt-1.5 text-sm leading-6 text-amber-800">
-                    Add the missing context below, then rerun the same ticket to see whether support becomes ready.
+                    Add the missing context, then rerun this ticket.
                   </p>
                 </div>
                 <Badge variant="warn">Needs rerun</Badge>
@@ -179,11 +179,18 @@ export function TicketForm({
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="eyebrow">Required</p>
-                <p className="mt-1.5 text-xs text-zinc-600">Paste the customer issue exactly as received.</p>
+                <p className="mt-1.5 text-xs text-zinc-600">Use the customer’s wording.</p>
               </div>
-              <span className={ticket.trim() ? "text-xs font-medium text-emerald-700" : "text-xs text-zinc-500"}>
-                {ticket.trim() ? "Ready" : "Empty"}
-              </span>
+              <div className="flex items-center gap-2">
+                {!contextExpanded ? (
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setShowContext(true)}>
+                    Add context
+                  </Button>
+                ) : null}
+                <span className={ticket.trim() ? "text-xs font-medium text-emerald-700" : "text-xs text-zinc-500"}>
+                  {ticket.trim() ? "Ready" : "Empty"}
+                </span>
+              </div>
             </div>
             <Textarea
               className="mt-3 min-h-[150px] rounded-lg text-base leading-7"
@@ -212,7 +219,7 @@ export function TicketForm({
                 <div>
                   <p className="eyebrow">2 · Investigation context</p>
                   <p className="mt-1.5 text-xs text-zinc-600">
-                    Paste plan details, enabled features, recent errors, or support notes only when they make the answer more grounded.
+                    Add plan, feature, error, or support-note details when they matter.
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -267,23 +274,7 @@ export function TicketForm({
                 </details>
               ) : null}
             </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setShowContext(true)}
-              className="surface-muted flex items-center justify-between gap-3 p-4 text-left transition hover:border-zinc-300"
-            >
-              <div>
-                <p className="eyebrow">Optional context</p>
-                <p className="mt-1.5 text-xs leading-5 text-zinc-600">
-                  Optional. Add plan details, recent errors, or support notes only when the case needs them.
-                </p>
-              </div>
-              <span className={likelyNeedsContext ? "text-xs font-medium text-amber-700" : "text-xs text-zinc-500"}>
-                {likelyNeedsContext ? "Suggested" : "Add"}
-              </span>
-            </button>
-          )}
+          ) : null}
         </div>
 
         <div className="rounded-lg border border-zinc-200 bg-white/70">
@@ -294,7 +285,7 @@ export function TicketForm({
           >
             <div>
               <p className="text-sm font-medium text-zinc-950">Need a quick smoke test?</p>
-              <p className="mt-1 text-xs leading-5 text-zinc-600">Load a canonical ticket instead of typing one.</p>
+              <p className="mt-1 text-xs leading-5 text-zinc-600">Load a demo ticket.</p>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-medium text-zinc-500">{demoScenarios.length} demos</span>
@@ -342,7 +333,7 @@ export function TicketForm({
               <div>
                 <p className="eyebrow">Debug ablation</p>
                 <p className="mt-2 text-sm leading-6 text-zinc-600">
-                  Compare retrieval-on and retrieval-off runs to show that the answer quality depends on evidence.
+                  Compare answer quality with and without retrieval.
                 </p>
               </div>
               <div className="flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 p-1">

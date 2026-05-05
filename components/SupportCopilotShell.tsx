@@ -97,12 +97,12 @@ function RecentInvestigations({
             <History className="h-4 w-4 shrink-0 text-zinc-500" />
             <div className="min-w-0">
               <p className="eyebrow">Recent</p>
-              <p className="mt-1 text-xs text-zinc-500">{items.length ? `${items.length} saved locally` : "No investigations yet"}</p>
+              <p className="mt-1 text-xs text-zinc-500">{items.length ? `${items.length} recent run${items.length === 1 ? "" : "s"}` : "No runs yet"}</p>
             </div>
           </div>
           {items.length ? (
             <Button type="button" variant="ghost" size="sm" onClick={onClear}>
-              Clear
+              Clear history
             </Button>
           ) : null}
         </div>
@@ -133,7 +133,7 @@ function RecentInvestigations({
             })
           ) : (
             <div className="surface-muted border-dashed p-3 text-xs leading-5 text-zinc-500">
-              Finished investigations will appear here so you can reopen a previous answer.
+              Run a ticket to save it here.
             </div>
           )}
         </div>
@@ -429,11 +429,11 @@ export function SupportCopilotShell({
               <div className="min-w-0">
                 <Badge variant="secondary" className="gap-1.5 rounded-md px-2 py-0.5">
                   <Sparkles className="h-3 w-3" />
-                  Grounded investigation
+                  Support workbench
                 </Badge>
                 <h1 className="mt-2 text-xl font-semibold text-zinc-950">Support Copilot</h1>
                 <p className="mt-1 max-w-2xl text-xs leading-5 text-zinc-600">
-                  Upload docs, paste a ticket, and inspect cited evidence before trusting the answer.
+                  Investigate support tickets with retrieved docs, tool context, and cited answers.
                 </p>
               </div>
 
@@ -452,6 +452,12 @@ export function SupportCopilotShell({
 
         <section className={hasRunState && showDebugToggle ? "workbench-layout workbench-layout--with-evidence" : "workbench-layout"}>
           <div className="left-stack">
+            <RecentInvestigations
+              currentInvestigationId={result?.investigationId}
+              items={historyItems}
+              onClear={handleClearHistory}
+              onSelect={handleLoadHistoryItem}
+            />
             <UploadPanel
               documents={documents}
               uploadOutcomes={uploadOutcomes}
@@ -460,12 +466,6 @@ export function SupportCopilotShell({
               onFilesSelected={handleUpload}
               onDeleteDocument={handleDeleteDocument}
               onClearDocuments={handleClearDocuments}
-            />
-            <RecentInvestigations
-              currentInvestigationId={result?.investigationId}
-              items={historyItems}
-              onClear={handleClearHistory}
-              onSelect={handleLoadHistoryItem}
             />
           </div>
 
