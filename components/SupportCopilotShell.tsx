@@ -1,12 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Sparkles } from "lucide-react";
+import { History, Plus, Sparkles } from "lucide-react";
 import { AnswerPanel } from "@/components/AnswerPanel";
 import { EvidencePanel } from "@/components/EvidencePanel";
 import { TicketForm } from "@/components/TicketForm";
 import { UploadPanel } from "@/components/UploadPanel";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import type { DocumentRecord, UploadOutcome } from "@/lib/types";
 import type { AccountRecord, InvestigationResult } from "@/lib/types/investigation";
@@ -35,6 +36,112 @@ export type DemoScenario = {
   selectedAccountId?: string;
 };
 
+type InvestigationHistoryItem = {
+  investigationId: string;
+  ticket: string;
+  investigationContext: string;
+  selectedAccountId: string | null;
+  ragEnabled: boolean;
+  createdAt: string;
+  result: InvestigationResult;
+};
+
+const historyStorageKey = "support-copilot:recent-investigations";
+const historyLimit = 6;
+
+function readStoredHistory() {
+  try {
+    const stored = window.localStorage.getItem(historyStorageKey);
+
+    if (!stored) {
+      return [];
+    }
+
+    return (JSON.parse(stored) as InvestigationHistoryItem[]).slice(0, historyLimit);
+  } catch {
+    return [];
+  }
+}
+
+function writeStoredHistory(items: InvestigationHistoryItem[]) {
+  try {
+    window.localStorage.setItem(historyStorageKey, JSON.stringify(items.slice(0, historyLimit)));
+  } catch {
+    // History is a convenience. Investigation results still work if browser storage is unavailable.
+  }
+}
+
+function formatHistoryTime(value: string) {
+  return new Intl.DateTimeFormat(undefined, {
+    hour: "2-digit",
+    minute: "2-digit"
+  }).format(new Date(value));
+}
+
+function RecentInvestigations({
+  currentInvestigationId,
+  items,
+  onClear,
+  onSelect
+}: {
+  currentInvestigationId?: string | null;
+  items: InvestigationHistoryItem[];
+  onClear: () => void;
+  onSelect: (item: InvestigationHistoryItem) => void;
+}) {
+  return (
+    <Card className="surface-shell">
+      <CardContent className="p-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-2">
+            <History className="h-4 w-4 shrink-0 text-zinc-500" />
+            <div className="min-w-0">
+              <p className="eyebrow">Recent</p>
+              <p className="mt-1 text-xs text-zinc-500">{items.length ? `${items.length} saved locally` : "No investigations yet"}</p>
+            </div>
+          </div>
+          {items.length ? (
+            <Button type="button" variant="ghost" size="sm" onClick={onClear}>
+              Clear
+            </Button>
+          ) : null}
+        </div>
+
+        <div className="mt-3 grid gap-2">
+          {items.length ? (
+            items.map((item) => {
+              const isCurrent = item.investigationId === currentInvestigationId;
+
+              return (
+                <button
+                  key={item.investigationId}
+                  type="button"
+                  onClick={() => onSelect(item)}
+                  className={`surface-muted min-w-0 p-3 text-left transition hover:border-zinc-300 ${
+                    isCurrent ? "border-zinc-950/40 bg-white" : ""
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-medium text-zinc-500">{formatHistoryTime(item.createdAt)}</span>
+                    <Badge variant={item.result.reviewStatus === "needs_human_review" ? "danger" : "secondary"}>
+                      {item.result.reviewStatus === "needs_human_review" ? "Review" : "Ready"}
+                    </Badge>
+                  </div>
+                  <p className="mt-2 line-clamp-2 text-sm leading-5 text-zinc-800">{item.ticket}</p>
+                </button>
+              );
+            })
+          ) : (
+            <div className="surface-muted border-dashed p-3 text-xs leading-5 text-zinc-500">
+              Finished investigations will appear here so you can reopen a previous answer.
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export function SupportCopilotShell({
   initialAccounts,
   initialDocuments,
@@ -51,6 +158,7 @@ export function SupportCopilotShell({
   const [ticket, setTicket] = useState("");
   const [uploadOutcomes, setUploadOutcomes] = useState<UploadOutcome[]>([]);
   const [result, setResult] = useState<InvestigationResult | null>(null);
+  const [historyItems, setHistoryItems] = useState<InvestigationHistoryItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [ragEnabled, setRagEnabled] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
@@ -105,6 +213,10 @@ export function SupportCopilotShell({
       void refreshAccounts({ silent: true });
     }
   }, [refreshAccounts, refreshDocuments, showDebugToggle]);
+
+  useEffect(() => {
+    setHistoryItems(readStoredHistory());
+  }, []);
 
   useEffect(() => {
     setReviewedInvestigationId(null);
@@ -230,6 +342,23 @@ export function SupportCopilotShell({
       }
 
       setResult(payload);
+      setHistoryItems((items) => {
+        const next = [
+          {
+            investigationId: payload.investigationId,
+            ticket,
+            investigationContext,
+            selectedAccountId,
+            ragEnabled,
+            createdAt: new Date().toISOString(),
+            result: payload
+          },
+          ...items.filter((item) => item.investigationId !== payload.investigationId)
+        ].slice(0, historyLimit);
+
+        writeStoredHistory(next);
+        return next;
+      });
       await refreshDocuments();
     } catch (investigateError) {
       setError(investigateError instanceof Error ? investigateError.message : "Investigation failed.");
@@ -252,6 +381,33 @@ export function SupportCopilotShell({
     if (result) {
       setReviewedInvestigationId(result.investigationId);
     }
+  }
+
+  function handleNewTicket() {
+    setTicket("");
+    setInvestigationContext("");
+    setSelectedAccountId(null);
+    setResult(null);
+    setError(null);
+    setReviewedInvestigationId(null);
+    setIsReviewRetryActive(false);
+    setIsComposerExpandedAfterRun(false);
+  }
+
+  function handleLoadHistoryItem(item: InvestigationHistoryItem) {
+    setTicket(item.ticket);
+    setInvestigationContext(item.investigationContext);
+    setSelectedAccountId(item.selectedAccountId);
+    setRagEnabled(item.ragEnabled);
+    setResult(item.result);
+    setError(null);
+    setIsReviewRetryActive(false);
+    setIsComposerExpandedAfterRun(false);
+  }
+
+  function handleClearHistory() {
+    setHistoryItems([]);
+    writeStoredHistory([]);
   }
 
   function handleLoadScenario(scenario: DemoScenario) {
@@ -282,6 +438,10 @@ export function SupportCopilotShell({
               </div>
 
               <div className="flex min-w-0 flex-wrap items-center justify-start gap-2 xl:justify-end">
+                <Button type="button" variant="outline" size="sm" onClick={handleNewTicket}>
+                  <Plus className="h-4 w-4" />
+                  New ticket
+                </Button>
                 {showDebugToggle ? <Badge variant={ragEnabled ? "default" : "outline"}>{ragEnabled ? "RAG On" : "RAG Off"}</Badge> : null}
               </div>
             </div>
@@ -295,15 +455,23 @@ export function SupportCopilotShell({
         ) : null}
 
         <section className="workbench-layout">
-          <UploadPanel
-            documents={documents}
-            uploadOutcomes={uploadOutcomes}
-            isUploading={isUploading}
-            isActiveStep={activeStep === "docs" && !hasRunState}
-            onFilesSelected={handleUpload}
-            onDeleteDocument={handleDeleteDocument}
-            onClearDocuments={handleClearDocuments}
-          />
+          <div className="left-stack">
+            <UploadPanel
+              documents={documents}
+              uploadOutcomes={uploadOutcomes}
+              isUploading={isUploading}
+              isActiveStep={activeStep === "docs" && !hasRunState}
+              onFilesSelected={handleUpload}
+              onDeleteDocument={handleDeleteDocument}
+              onClearDocuments={handleClearDocuments}
+            />
+            <RecentInvestigations
+              currentInvestigationId={result?.investigationId}
+              items={historyItems}
+              onClear={handleClearHistory}
+              onSelect={handleLoadHistoryItem}
+            />
+          </div>
 
           <div className="center-stack">
             <TicketForm

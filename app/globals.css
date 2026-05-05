@@ -115,6 +115,12 @@
     gap: 0.875rem;
   }
 
+  .left-stack {
+    display: grid;
+    gap: 0.875rem;
+    align-content: start;
+  }
+
   .sidebar-scroll {
     max-height: none;
   }
