@@ -2,12 +2,15 @@
 
 Support Copilot is a single-app Next.js support investigation workspace built to show real retrieval and grounding instead of hiding it behind chat UI. Users start with a bundled PayBridge sample support guide or upload their own docs, paste a ticket, inspect retrieved chunks and tool outputs, and receive grounded customer-facing and internal outputs with citations or an explicit human-review fallback.
 
-## What This Project Demonstrates
+## About the project
 
 - A real RAG pipeline over uploaded support documentation with dense retrieval, literal candidate expansion, and optional reranking
 - Deterministic routing between docs-only, docs-plus-context, and human-review modes
 - Structured outputs with claim-level citations instead of freeform answer blobs
 - A debug surface that makes retrieval, evidence, and fallback behavior inspectable
+
+<img width="1280" height="694" alt="chrome-capture-2026-05-05" src="https://github.com/user-attachments/assets/ddde7941-f7d4-4344-b5ac-81ecbb2ebdf2" />
+
 
 ## Project Goals
 
