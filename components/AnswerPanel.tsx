@@ -1,9 +1,11 @@
 import type { SupportLevel } from "@/lib/types";
-import type { CitationId, InvestigationResult, StructuredClaim } from "@/lib/types/investigation";
+import type { CitationId, DocsGapReport, InvestigationResult, StructuredClaim } from "@/lib/types/investigation";
 import {
   AlertTriangle,
   CheckCircle2,
   ClipboardCheck,
+  Copy,
+  FileWarning,
   FileSearch,
   ListChecks,
   MessageSquareText,
@@ -92,7 +94,9 @@ function SourcePreview({
           {citation}
         </span>
         {source?.sourceType === "doc" ? (
-          <span className="text-[11px] font-medium text-zinc-500">{Math.round(source.score * 100)}% match</span>
+          <span className="text-[11px] font-medium text-zinc-500">
+            {Math.round(source.score * 100)}% {source.rerankScore !== undefined ? "rerank" : "match"}
+          </span>
         ) : null}
       </span>
       <span className="mt-2 block text-xs font-semibold leading-5 text-zinc-950">{title}</span>
@@ -129,6 +133,28 @@ function SourcePreview({
 
 function collectCitations(claims: StructuredClaim[]) {
   return Array.from(new Set(claims.flatMap((claim) => claim.citations)));
+}
+
+function formatDocsGapReport(report: DocsGapReport) {
+  const missingInformation = report.missingInformation.length
+    ? report.missingInformation.map((item) => `- ${item}`).join("\n")
+    : "- No specific missing information was identified.";
+  const evidence = report.evidenceSnapshot.length
+    ? report.evidenceSnapshot
+        .map((item) => `- [${item.id}] ${item.title}${item.score !== undefined ? ` (${Math.round(item.score * 100)}%)` : ""}`)
+        .join("\n")
+    : "- No evidence was available.";
+
+  return [
+    `Gap type: ${report.gapType.replaceAll("_", " ")}`,
+    `Ticket need: ${report.whatTicketNeeded}`,
+    `Why docs failed: ${report.whyDocsFailed}`,
+    `Next action: ${report.suggestedNextAction}`,
+    "Missing information:",
+    missingInformation,
+    "Evidence checked:",
+    evidence
+  ].join("\n");
 }
 
 function normalizeClaimText(text: string) {
@@ -231,7 +257,10 @@ function SourceLedger({
                   <span className="min-w-0">
                     <span className="block truncate text-xs font-medium text-zinc-900">{title}</span>
                     {source?.sourceType === "doc" ? (
-                      <span className="mt-0.5 block text-[11px] text-zinc-500">{Math.round(source.score * 100)}% retrieval match</span>
+                      <span className="mt-0.5 block text-[11px] text-zinc-500">
+                        {Math.round(source.score * 100)}% {source.rerankScore !== undefined ? "rerank score" : "retrieval match"}
+                        {source.retrievalSource ? ` · ${source.retrievalSource}` : ""}
+                      </span>
                     ) : null}
                   </span>
                 </span>
@@ -390,7 +419,12 @@ function EvidenceOnlySummary({
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant="outline">{item.id}</Badge>
-                  <span className="text-xs font-medium text-zinc-500">{Math.round(item.score * 100)}% match</span>
+                  <span className="text-xs font-medium text-zinc-500">
+                    {Math.round(item.score * 100)}% {item.rerankScore !== undefined ? "rerank" : "match"}
+                  </span>
+                  <Badge variant={item.retrievalSource === "literal" ? "warn" : item.retrievalSource === "hybrid" ? "secondary" : "outline"}>
+                    {item.retrievalSource ?? "vector"}
+                  </Badge>
                 </div>
                 <p className="mt-2 text-sm font-semibold text-zinc-950">{item.filename}</p>
                 {item.sectionTitle ? <p className="mt-1 text-xs uppercase tracking-[0.14em] text-zinc-500">{item.sectionTitle}</p> : null}
@@ -410,6 +444,74 @@ function EvidenceOnlySummary({
             <p className="mt-3 line-clamp-4 text-sm leading-6 text-zinc-700">{item.excerpt}</p>
           </div>
         ))}
+      </div>
+    </section>
+  );
+}
+
+function DocsGapReportCard({ report }: { report: DocsGapReport }) {
+  async function handleCopyReport() {
+    await navigator.clipboard?.writeText(formatDocsGapReport(report));
+  }
+
+  return (
+    <section className="rounded-xl border border-amber-200 bg-amber-50/75 p-4">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <FileWarning className="h-4 w-4 text-amber-700" />
+            <p className="eyebrow text-amber-800">Documentation gap report</p>
+            <Badge variant="warn">{report.gapType.replaceAll("_", " ")}</Badge>
+          </div>
+          <h3 className="mt-2 text-lg font-semibold text-zinc-950">The docs do not support a customer-ready answer.</h3>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-zinc-700">{report.whyDocsFailed}</p>
+        </div>
+        <Button type="button" variant="outline" className="shrink-0 bg-white/80" onClick={handleCopyReport}>
+          <Copy className="h-4 w-4" />
+          Copy report
+        </Button>
+      </div>
+
+      <div className="mt-4 grid gap-3 lg:grid-cols-2">
+        <div className="rounded-lg border border-amber-100 bg-white/70 p-3">
+          <p className="eyebrow">Next documentation fix</p>
+          <p className="mt-2 text-sm leading-6 text-zinc-800">{report.suggestedNextAction}</p>
+        </div>
+        <div className="rounded-lg border border-amber-100 bg-white/70 p-3">
+          <p className="eyebrow">Missing information</p>
+          {report.missingInformation.length ? (
+            <div className="mt-2 grid gap-2">
+              {report.missingInformation.slice(0, 3).map((item) => (
+                <p key={item} className="text-sm leading-6 text-zinc-800">
+                  {item}
+                </p>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-2 text-sm leading-6 text-zinc-600">No specific missing information was identified.</p>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-3 rounded-lg border border-amber-100 bg-white/70 p-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="eyebrow">Evidence checked</p>
+          <Badge variant="outline">
+            {report.evidenceSnapshot.length} source{report.evidenceSnapshot.length === 1 ? "" : "s"}
+          </Badge>
+        </div>
+        <div className="mt-3 grid gap-2">
+          {report.evidenceSnapshot.slice(0, 4).map((item) => (
+            <div key={item.id} className="rounded-lg border border-zinc-100 bg-zinc-50/70 p-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant={item.sourceType === "doc" ? "outline" : "warn"}>{item.id}</Badge>
+                <span className="text-xs font-medium text-zinc-600">{item.title}</span>
+                {item.score !== undefined ? <span className="text-xs text-zinc-500">{Math.round(item.score * 100)}%</span> : null}
+              </div>
+              <p className="mt-2 line-clamp-2 text-xs leading-5 text-zinc-600">{item.excerpt}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -602,6 +704,8 @@ export function AnswerPanel({
             <EvidenceOnlySummary result={result} onDraftFromEvidence={onDraftFromEvidence} />
           ) : (
             <>
+              {result.docsGapReport ? <DocsGapReportCard report={result.docsGapReport} /> : null}
+
               <AnswerSection
                 claims={result.customerReply.claims}
                 emptyMessage="No grounded answer was produced for this run."

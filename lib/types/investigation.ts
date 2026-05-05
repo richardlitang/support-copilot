@@ -12,6 +12,7 @@ export type ReviewReasonCode =
 export type ReviewActionKind = "none" | "add_context" | "add_docs" | "inspect_conflict" | "review_claims";
 export type ToolName = "getAccountContext" | "getFeatureFlags" | "getRecentErrors" | "getProvidedContext";
 export type CitationId = `S${number}` | `T${number}`;
+export type DocsGapType = "unsupported_by_docs" | "missing_context" | "evidence_conflict" | "grounding_failed";
 
 export interface ReviewDecision {
   status: ReviewStatus;
@@ -42,6 +43,10 @@ export interface DocEvidenceItem {
   excerpt: string;
   score: number;
   chunkIndex: number;
+  retrievalSource?: "vector" | "literal" | "hybrid";
+  vectorScore?: number;
+  literalMatches?: string[];
+  rerankScore?: number;
 }
 
 export interface ToolEvidenceItem {
@@ -68,6 +73,23 @@ export interface PipelineTraceStep {
   output?: unknown;
 }
 
+export interface DocsGapEvidenceSnapshot {
+  id: CitationId;
+  sourceType: "doc" | "tool";
+  title: string;
+  excerpt: string;
+  score?: number;
+}
+
+export interface DocsGapReport {
+  gapType: DocsGapType;
+  whatTicketNeeded: string;
+  whyDocsFailed: string;
+  suggestedNextAction: string;
+  missingInformation: string[];
+  evidenceSnapshot: DocsGapEvidenceSnapshot[];
+}
+
 export interface InvestigationResult {
   investigationId: string;
   ticketId: string;
@@ -83,6 +105,7 @@ export interface InvestigationResult {
   toolEvidence: ToolEvidenceItem[];
   toolCalls: ToolCallRecord[];
   pipelineTrace: PipelineTraceStep[];
+  docsGapReport?: DocsGapReport;
 }
 
 export interface AccountRecord {

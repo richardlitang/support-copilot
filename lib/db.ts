@@ -38,6 +38,18 @@ type MatchRow = {
   chunk_index: number;
 };
 
+type LiteralMatchRow = {
+  id: string;
+  document_id: string;
+  section_title: string | null;
+  content: string;
+  chunk_index: number;
+  documents?: {
+    filename?: string | null;
+    session_id?: string | null;
+  } | null;
+};
+
 type DbAccountRow = {
   id: string;
   name: string;
@@ -534,7 +546,7 @@ export async function matchDocumentChunks(input: {
   queryEmbedding: number[];
   matchCount: number;
   matchThreshold: number;
-}) {
+}): Promise<EvidenceChunk[]> {
   const supabase = getSupabaseAdminClient();
   const { data, error } = await supabase.rpc("match_document_chunks", {
     session_id_filter: input.sessionId,
@@ -556,6 +568,60 @@ export async function matchDocumentChunks(input: {
     score: row.score,
     rank: index + 1,
     chunkIndex: row.chunk_index
+  }));
+}
+
+function escapeIlikePattern(value: string) {
+  return value.replaceAll("\\", "\\\\").replaceAll("%", "\\%").replaceAll("_", "\\_");
+}
+
+export async function matchLiteralDocumentChunks(input: {
+  sessionId: string;
+  literals: string[];
+  matchCount: number;
+}): Promise<EvidenceChunk[]> {
+  const supabase = getSupabaseAdminClient();
+  const rowsById = new Map<string, EvidenceChunk & { literalMatches: string[] }>();
+
+  for (const literal of input.literals) {
+    const pattern = `%${escapeIlikePattern(literal)}%`;
+    const { data, error } = await supabase
+      .from("document_chunks")
+      .select("id, document_id, section_title, content, chunk_index, documents!inner(filename, session_id)")
+      .eq("documents.session_id", input.sessionId)
+      .ilike("content", pattern)
+      .limit(input.matchCount);
+
+    if (error) {
+      throw new Error(`Failed to retrieve literal document chunks: ${error.message}`);
+    }
+
+    for (const row of (data ?? []) as LiteralMatchRow[]) {
+      const existing = rowsById.get(row.id);
+
+      if (existing) {
+        existing.literalMatches = Array.from(new Set([...existing.literalMatches, literal]));
+        continue;
+      }
+
+      rowsById.set(row.id, {
+        id: row.id,
+        documentId: row.document_id,
+        filename: row.documents?.filename ?? "Untitled document",
+        sectionTitle: row.section_title,
+        content: row.content,
+        score: 0.62,
+        rank: rowsById.size + 1,
+        chunkIndex: row.chunk_index,
+        retrievalSource: "literal",
+        literalMatches: [literal]
+      });
+    }
+  }
+
+  return Array.from(rowsById.values()).slice(0, input.matchCount).map((row, index) => ({
+    ...row,
+    rank: index + 1
   }));
 }
 

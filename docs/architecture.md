@@ -11,6 +11,9 @@ Support Copilot is a trust-first RAG support workbench. The core design goal is 
 
 2. **Retrieve**
    - `lib/retrieve.ts` embeds the pasted ticket and queries Supabase Postgres through pgvector.
+   - `lib/literal-retrieval.ts` extracts likely exact literals such as error codes, snake_case product strings, and object IDs.
+   - Literal matches expand the candidate set before ranking so exact support tokens can enter the evidence pool even when dense retrieval ranks them poorly.
+   - If `COHERE_API_KEY` is configured, `lib/rerank.ts` reranks the merged candidate set before final evidence selection.
    - Retrieved chunks become document evidence items with source IDs such as `S1`, `S2`, and `S3`.
 
 3. **Classify**
@@ -29,6 +32,7 @@ Support Copilot is a trust-first RAG support workbench. The core design goal is 
    - Every claim must cite existing document or tool evidence.
    - `lib/support-level.ts`, `lib/review-policy.ts`, and `lib/conflict-policy.ts` decide support level and review state.
    - Weak, missing, or conflicting evidence routes to `needs_human_review` instead of bluffing.
+   - `lib/docs-gap-report.ts` turns failed or weak-support runs into a structured docs-gap report.
 
 7. **Persist and inspect**
    - `lib/db.ts` stores tickets, investigations, sources, tool calls, and structured JSON outputs.
@@ -51,6 +55,7 @@ The project relies on explicit artifacts instead of hidden reasoning:
 - Claims are structured data.
 - Citations map to concrete evidence IDs.
 - Evidence is separated by source type.
+- Document evidence records whether it came from vector retrieval, literal expansion, or both, and whether it was reranked.
 - Support level is heuristic, not model self-confidence.
 - Missing account/context evidence is a safe review state, not a UI blocker.
 - Eval cases track expected route, review state, tool evidence, and broad retrieved-evidence keywords.
@@ -58,11 +63,12 @@ The project relies on explicit artifacts instead of hidden reasoning:
 
 ## Current Limitations
 
-- The eval suite is useful but still shallow. It checks route shape and evidence presence more than full semantic answer quality.
+- The eval suite is useful but still shallow. It checks route shape and evidence presence more than full semantic answer quality or reranker lift.
 - Claim validation now catches uncited output, unknown citation labels, over-broad claims, and claims with no meaningful token overlap with cited evidence. It is a guardrail, not a proof of entailment.
 - Atomic investigation persistence depends on applying the latest Supabase migration; older schemas still use the compatibility path.
 - PDF parsing is best effort and should not be the primary demo path.
 - Chunking has basic table preservation but is not a full layout-aware document parser.
+- Literal expansion currently uses simple Postgres `ILIKE` matching. Trigram or full-text retrieval should be added only if evals show missed literal/prose cases.
 - LangGraph is not implemented yet. The current architecture is prepared for it but intentionally stays direct until evals prove stability.
 
 ## Future Direction

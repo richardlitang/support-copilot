@@ -74,6 +74,7 @@ Expected behavior:
 - Review status is `needs_human_review`.
 - Customer-facing output is cautious.
 - Internal diagnosis says account or structured context is required.
+- A documentation gap report explains what was missing and what evidence was checked.
 
 Talk track:
 
@@ -91,11 +92,12 @@ Expected behavior:
 
 - The system falls back to insufficient support or human review.
 - It does not invent setup steps.
+- The docs-gap report gives a reusable artifact for the docs owner.
 
 Talk track:
 
-"This is the negative control. A convincing RAG demo needs to show what happens when the corpus does not support the question."
+"This is the negative control. A convincing RAG demo needs to show what happens when the corpus does not support the question, and this one turns that failure into a docs issue instead of a dead end."
 
 ## Closing
 
-"The current implementation is a deterministic, inspectable support workflow. The next step is not adding vague agents; it is moving this direct pipeline into a LangGraph-style state machine with the same eval suite proving parity."
+"The current implementation is a deterministic, inspectable support workflow. It answers when evidence supports it, improves recall with literal-aware candidate expansion and reranking, and produces a docs-gap report when it cannot safely answer."

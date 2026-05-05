@@ -22,7 +22,11 @@ export function createDocEvidence(evidence: EvidenceChunk[]): DocEvidenceItem[] 
     sectionTitle: item.sectionTitle,
     excerpt: item.content,
     score: item.score,
-    chunkIndex: item.chunkIndex
+    chunkIndex: item.chunkIndex,
+    ...(item.retrievalSource ? { retrievalSource: item.retrievalSource } : {}),
+    ...(item.vectorScore !== undefined ? { vectorScore: item.vectorScore } : {}),
+    ...(item.literalMatches?.length ? { literalMatches: item.literalMatches } : {}),
+    ...(item.rerankScore !== undefined ? { rerankScore: item.rerankScore } : {})
   }));
 }
 

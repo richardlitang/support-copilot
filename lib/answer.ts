@@ -380,11 +380,17 @@ function normalizeStructuredClaims(
 }
 
 function extractRequiredDiagnosticTokens(toolEvidence: ToolEvidenceItem[]) {
+  const exactErrorTokens =
+    toolEvidence
+      .filter((item) => item.toolName === "getRecentErrors")
+      .flatMap((item) => item.excerpt.match(/\b[A-Z][A-Z0-9]+-[A-Z0-9]+\b/g) ?? []);
+  const rowTokens = toolEvidence
+    .filter((item) => item.toolName === "getRecentErrors" && /\brows?\b/i.test(item.excerpt))
+    .map(() => "row");
+
   return Array.from(
     new Set(
-      toolEvidence
-        .filter((item) => item.toolName === "getRecentErrors")
-        .flatMap((item) => item.excerpt.match(/\b[A-Z][A-Z0-9]+-[A-Z0-9]+\b/g) ?? [])
+      [...exactErrorTokens, ...rowTokens]
     )
   );
 }
@@ -604,8 +610,8 @@ async function requestInvestigationAnswer(input: {
           {
             type: "input_text",
             text: input.stricterRetry
-              ? "You are Support Copilot. Produce only grounded structured claims. Every claim must cite at least one valid source ID from the provided documentation evidence or tool evidence. Customer reply must stay short and cautious. Internal diagnosis may be more explicit. Preserve exact plan tiers, limits, feature flag names, and error codes from cited evidence when they explain the case. If support is insufficient or unresolved, set insufficientSupport to true and prefer fewer claims over speculation."
-              : "You are Support Copilot. Use only the provided documentation evidence and tool evidence. Do not use outside knowledge. Produce concise structured claims for a customer-facing reply and a separate internal diagnosis. Every claim must cite at least one valid source ID. Preserve exact plan tiers, limits, feature flag names, and error codes from cited evidence when they explain the case. If evidence is incomplete or conflicting, set insufficientSupport to true."
+              ? "You are Support Copilot. Produce only grounded structured claims. Every claim must cite at least one valid source ID from the provided documentation evidence or tool evidence. Customer reply must stay short and cautious. Internal diagnosis may be more explicit. Preserve exact plan tiers, limits, row counts, feature flag names, and error codes from cited evidence when they explain the case. If support is insufficient or unresolved, set insufficientSupport to true and prefer fewer claims over speculation."
+              : "You are Support Copilot. Use only the provided documentation evidence and tool evidence. Do not use outside knowledge. Produce concise structured claims for a customer-facing reply and a separate internal diagnosis. Every claim must cite at least one valid source ID. Preserve exact plan tiers, limits, row counts, feature flag names, and error codes from cited evidence when they explain the case. If evidence is incomplete or conflicting, set insufficientSupport to true."
           }
         ]
       },

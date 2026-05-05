@@ -4,7 +4,7 @@ Support Copilot is a single-app Next.js support investigation workspace built to
 
 ## What This Project Demonstrates
 
-- A real RAG pipeline over uploaded support documentation
+- A real RAG pipeline over uploaded support documentation with dense retrieval, literal candidate expansion, and optional reranking
 - Deterministic routing between docs-only, docs-plus-context, and human-review modes
 - Structured outputs with claim-level citations instead of freeform answer blobs
 - A debug surface that makes retrieval, evidence, and fallback behavior inspectable
@@ -16,6 +16,7 @@ This project is strongest when presented as a trust-first support copilot rather
 - The app makes retrieval visible in the UI instead of hiding it inside one answer box.
 - Customer-facing output and internal diagnosis are separated so support reasoning stays inspectable.
 - Weak or conflicting evidence routes to `needs_human_review` instead of bluffing.
+- Failed or weak-support runs produce a structured docs-gap report so the user leaves with a reusable documentation issue, not just a refusal.
 - The demo path is repeatable through canonical scenarios and a seeded eval suite.
 
 ## Stack
@@ -35,7 +36,9 @@ For a fuller walkthrough, see [`docs/architecture.md`](docs/architecture.md).
 - `app/api/investigate/route.ts`: retrieve docs, deterministically decide whether tools are needed, run tool-backed investigation, and store structured investigation metadata
 - `lib/parse.ts`: text extraction and heading-aware parsing
 - `lib/chunk.ts`: deterministic chunking for retrieval
-- `lib/retrieve.ts`: semantic retrieval against `match_document_chunks`
+- `lib/retrieve.ts`: dense retrieval against `match_document_chunks`, literal-aware candidate expansion, candidate merging, and reranking
+- `lib/literal-retrieval.ts` and `lib/rerank.ts`: deterministic literal extraction and hosted reranker adapter
+- `lib/docs-gap-report.ts`: structured documentation-gap artifact generation for failed or weak-support runs
 - `lib/answer.ts`: chunk-1 grounded answer generation plus chunk-2 mixed-evidence structured claim generation
 - `lib/classify.ts`: deterministic routing for docs-only vs docs-plus-tools vs human-review
 - `lib/tools/*`: Postgres-backed read-only investigation tools for account context, feature flags, and recent errors
@@ -45,9 +48,10 @@ For a fuller walkthrough, see [`docs/architecture.md`](docs/architecture.md).
 
 - Customer-facing output and internal diagnosis both render as cited structured claims instead of freeform prose.
 - The evidence panel shows retrieved document chunks separately from product-context tool evidence and raw tool calls.
+- Document evidence preserves retrieval provenance: vector, literal, or hybrid candidate source, plus rerank score when available.
 - Citation labels such as `[S1]` and `[T1]` map directly from claims to document and tool evidence.
 - A grounding validator rejects uncited output, unknown citations, over-broad claims, and claims with no meaningful overlap with cited evidence.
-- If retrieval is weak, account context is missing, or docs and tools do not explain the issue, the app routes to `needs_human_review`.
+- If retrieval is weak, account context is missing, or docs and tools do not explain the issue, the app routes to `needs_human_review` and emits a docs-gap report.
 - Current-schema deployments can persist the ticket, investigation record, source links, and tool-call records through a single database function so the UI does not land on a half-saved investigation.
 - Supabase access is server-side only; public table access and investigation RPC execution are locked down for `anon` and `authenticated` roles.
 
@@ -64,8 +68,11 @@ npm install
 - `OPENAI_API_KEY`
 - `SUPABASE_URL`
 - either `SUPABASE_SERVICE_ROLE_KEY` or `SUPABASE_SECRET_KEY`
+- optional `COHERE_API_KEY` for hosted reranking
 
 `SUPABASE_URL` should be the project HTTP URL such as `https://<project-ref>.supabase.co`. If you only have the Postgres connection string, the app will derive the HTTP project URL from it.
+
+Without `COHERE_API_KEY`, retrieval still runs with merged vector and literal candidates. With it, the app reranks the merged candidate set using `COHERE_RERANK_MODEL` before selecting final evidence.
 
 If investigation inserts fail with missing `mode`, `review_status`, `account_id`, `customer_reply_json`, or `internal_diagnosis_json`, apply the chunk 2 migration. Apply the atomic investigation-run migration as well so ticket, investigation, source, and tool-call rows are written in one database transaction. Current app code requires the atomic write path.
 

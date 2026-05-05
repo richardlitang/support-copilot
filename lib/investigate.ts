@@ -1,5 +1,6 @@
 import { classifyInvestigation, type RoutingDecision } from "@/lib/classify";
 import { detectConflict } from "@/lib/conflict-policy";
+import { buildDocsGapReport } from "@/lib/docs-gap-report";
 import { persistInvestigationRun as persistInvestigationRunAdapter } from "@/lib/db";
 import {
   buildStructuredHumanReviewFallback,
@@ -144,6 +145,14 @@ export async function investigateTicket(
     review,
     persisted
   });
+  const docsGapReport = buildDocsGapReport({
+    ticket: input.ticket,
+    reviewDecision: review.reviewDecision,
+    routingReason,
+    internalDiagnosis: generated.internalDiagnosis,
+    docEvidence: retrieval.docEvidence,
+    toolEvidence: toolArtifacts.toolEvidence
+  });
 
   return {
     investigationId: persisted.investigationId,
@@ -159,7 +168,8 @@ export async function investigateTicket(
     docEvidence: retrieval.docEvidence,
     toolEvidence: toolArtifacts.toolEvidence,
     toolCalls: toolArtifacts.toolCalls,
-    pipelineTrace
+    pipelineTrace,
+    ...(docsGapReport ? { docsGapReport } : {})
   } satisfies InvestigationResult;
 }
 
@@ -428,6 +438,10 @@ function summarizeEvidence(items: ReturnType<typeof createDocEvidence>) {
     filename: item.filename,
     sectionTitle: item.sectionTitle,
     score: item.score,
+    retrievalSource: item.retrievalSource ?? "vector",
+    vectorScore: item.vectorScore ?? null,
+    rerankScore: item.rerankScore ?? null,
+    literalMatches: item.literalMatches ?? [],
     excerpt: item.excerpt
   }));
 }

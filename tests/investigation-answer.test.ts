@@ -130,4 +130,36 @@ describe("validateInvestigationAnswer", () => {
       reason: "Missing required diagnostic token ERR-219."
     });
   });
+
+  it("rejects ready import investigations that omit row-count evidence", () => {
+    const result = validateInvestigationAnswer({
+      answer: {
+        customerReplyClaims: [
+          {
+            text: "Check the latest validation failure before retrying the import.",
+            citations: ["T1"]
+          }
+        ],
+        internalDiagnosisClaims: [],
+        openQuestions: [],
+        insufficientSupport: false
+      },
+      docEvidence: [],
+      toolEvidence: [
+        {
+          id: "T1",
+          sourceType: "tool",
+          toolName: "getRecentErrors",
+          title: "Recent errors",
+          excerpt: "Import stalled after row validation near the configured row limit.",
+          raw: []
+        }
+      ]
+    });
+
+    expect(result).toEqual({
+      valid: false,
+      reason: "Missing required diagnostic token row."
+    });
+  });
 });

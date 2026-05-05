@@ -45,6 +45,10 @@ export interface EvidenceChunk {
   score: number;
   rank: number;
   chunkIndex: number;
+  retrievalSource?: "vector" | "literal" | "hybrid";
+  vectorScore?: number;
+  literalMatches?: string[];
+  rerankScore?: number;
 }
 
 export interface CitationReference {

@@ -65,13 +65,26 @@ export function EvidencePanel({
                               <div className="flex flex-wrap items-center gap-2">
                                 <Badge variant="outline">{item.id}</Badge>
                                 {cited ? <Badge variant="success">cited</Badge> : null}
+                                <Badge variant={item.retrievalSource === "literal" ? "warn" : item.retrievalSource === "hybrid" ? "secondary" : "outline"}>
+                                  {(item.retrievalSource ?? "vector").replaceAll("_", " ")}
+                                </Badge>
                               </div>
                               <p className="mt-3 text-sm font-medium text-zinc-950">{item.filename}</p>
                               <p className="mt-1 text-xs uppercase tracking-[0.18em] text-zinc-500">
                                 {item.sectionTitle ?? "General section"}
                               </p>
+                              {item.literalMatches?.length ? (
+                                <p className="mt-2 text-xs leading-5 text-amber-700">
+                                  Matched {item.literalMatches.join(", ")}
+                                </p>
+                              ) : null}
                             </div>
-                            <Badge variant="secondary">{Math.round(item.score * 100)}% match</Badge>
+                            <div className="flex shrink-0 flex-col items-end gap-1">
+                              <Badge variant="secondary">{Math.round(item.score * 100)}% match</Badge>
+                              {item.rerankScore !== undefined ? (
+                                <span className="text-[11px] font-medium text-zinc-500">reranked</span>
+                              ) : null}
+                            </div>
                           </div>
                           <p className="mt-4 text-sm leading-6 text-zinc-700">{item.excerpt}</p>
                         </div>
