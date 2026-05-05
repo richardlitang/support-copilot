@@ -294,7 +294,7 @@ export function SupportCopilotShell({
           </Card>
         ) : null}
 
-        <section className={hasRunState ? "workbench-layout" : "workbench-layout workbench-layout--start"}>
+        <section className="workbench-layout">
           <UploadPanel
             documents={documents}
             uploadOutcomes={uploadOutcomes}
