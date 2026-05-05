@@ -90,8 +90,8 @@ export function UploadPanel({
         isActiveStep ? "border-zinc-950/40 shadow-[0_18px_42px_rgba(15,23,42,0.11)]" : ""
       }`}
     >
-      <CardHeader className={showIntake ? "pb-3" : "p-3"}>
-        <div className="flex items-start justify-between gap-3">
+      <CardHeader className={showIntake ? "relative pb-3 pr-14" : "relative p-3 pr-14"}>
+        <div>
           <div className="min-w-0">
             <p className="eyebrow">Case intake</p>
             <CardTitle className="mt-2 text-lg">Docs for this case</CardTitle>
@@ -101,7 +101,7 @@ export function UploadPanel({
             type="button"
             variant="outline"
             size="icon"
-            className="shrink-0"
+            className="absolute right-3 top-3"
             onClick={() => setShowIntake((value) => !value)}
             aria-label={showIntake ? "Collapse case intake" : "Expand case intake"}
           >
@@ -167,7 +167,14 @@ export function UploadPanel({
                 </Badge>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                {documents.length ? (
+                  <Button type="button" variant="ghost" size="sm" onClick={onClearDocuments}>
+                    Clear all
+                  </Button>
+                ) : (
+                  <span />
+                )}
                 <Button
                   type="button"
                   variant="outline"
@@ -177,11 +184,6 @@ export function UploadPanel({
                 >
                   <ChevronDown className={`h-4 w-4 transition ${docsExpanded ? "rotate-180" : ""}`} />
                 </Button>
-                {documents.length ? (
-                  <Button type="button" variant="ghost" size="sm" onClick={onClearDocuments}>
-                    Clear all
-                  </Button>
-                ) : null}
               </div>
             </div>
 
