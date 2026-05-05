@@ -9,15 +9,13 @@ Support Copilot is a single-app Next.js support investigation workspace built to
 - Structured outputs with claim-level citations instead of freeform answer blobs
 - A debug surface that makes retrieval, evidence, and fallback behavior inspectable
 
-## Portfolio Angle
-
-This project is strongest when presented as a trust-first support copilot rather than a generic "chat with files" demo.
+## Project Goals
 
 - The app makes retrieval visible in the UI instead of hiding it inside one answer box.
 - Customer-facing output and internal diagnosis are separated so support reasoning stays inspectable.
 - Weak or conflicting evidence routes to `needs_human_review` instead of bluffing.
-- Failed or weak-support runs produce a structured docs-gap report so the user leaves with a reusable documentation issue, not just a refusal.
-- The demo path is repeatable through canonical scenarios and a seeded eval suite.
+- Failed or weak-support runs produce a structured docs-gap report so teams leave with a reusable documentation issue, not just a refusal.
+- Demo and regression behavior should stay repeatable through canonical scenarios and a seeded eval suite.
 
 ## Stack
 
