@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import type { AccountRecord } from "@/lib/types/investigation";
+import type { AccountRecord, InvestigationExecutionMode } from "@/lib/types/investigation";
 
 export function TicketForm({
   accounts,
@@ -19,6 +19,7 @@ export function TicketForm({
   isInvestigating,
   isActiveStep,
   ragEnabled,
+  executionMode,
   showDebugToggle,
   accountHint,
   focusContextToken,
@@ -27,6 +28,7 @@ export function TicketForm({
   onEdit,
   onSelectAccount,
   onInvestigationContextChange,
+  onExecutionModeChange,
   onLoadScenario,
   onNewTicket,
   onToggleRag,
@@ -41,6 +43,7 @@ export function TicketForm({
   isInvestigating: boolean;
   isActiveStep: boolean;
   ragEnabled: boolean;
+  executionMode: InvestigationExecutionMode;
   showDebugToggle: boolean;
   accountHint?: string | null;
   focusContextToken: number;
@@ -49,6 +52,7 @@ export function TicketForm({
   onEdit: () => void;
   onSelectAccount: (value: string | null) => void;
   onInvestigationContextChange: (value: string) => void;
+  onExecutionModeChange: (value: InvestigationExecutionMode) => void;
   onLoadScenario: (scenario: DemoScenario) => void;
   onNewTicket: () => void;
   onToggleRag: (value: boolean) => void;
@@ -108,12 +112,12 @@ export function TicketForm({
               ) : null}
             </div>
             <div className="flex shrink-0 items-center gap-2">
-              {isInvestigating ? (
-                <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
-                  <SearchCheck className="h-4 w-4 animate-pulse" />
-                  Retrieving evidence
-                </div>
-              ) : null}
+          {isInvestigating ? (
+            <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
+              <SearchCheck className="h-4 w-4 animate-pulse" />
+              {executionMode === "evidence_only" ? "Finding evidence" : "Drafting answer"}
+            </div>
+          ) : null}
               {!isInvestigating ? (
                 <Button type="button" variant="outline" size="sm" onClick={onNewTicket}>
                   <Plus className="h-4 w-4" />
@@ -326,26 +330,58 @@ export function TicketForm({
           ) : null}
         </div>
 
+        <Separator />
+        <div className="rounded-lg border border-zinc-200 bg-white/70 p-3">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="eyebrow">Investigation mode</p>
+              <p className="mt-2 text-sm leading-6 text-zinc-600">
+                Start with inspectable evidence, or draft a cited reply from that evidence.
+              </p>
+            </div>
+            <div className="grid shrink-0 grid-cols-2 gap-1 rounded-lg border border-zinc-200 bg-zinc-50 p-1">
+              <Button
+                type="button"
+                size="sm"
+                variant={executionMode === "evidence_only" ? "default" : "ghost"}
+                onClick={() => onExecutionModeChange("evidence_only")}
+              >
+                Evidence only
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={executionMode === "draft_answer" ? "default" : "ghost"}
+                onClick={() => onExecutionModeChange("draft_answer")}
+              >
+                Draft answer
+              </Button>
+            </div>
+          </div>
+          <div className="mt-3 rounded-md border border-zinc-100 bg-zinc-50/80 px-3 py-2 text-xs leading-5 text-zinc-600">
+            {executionMode === "evidence_only"
+              ? "Skips the answer model. Shows retrieved docs, tool context, routing, and every pipeline step."
+              : "Runs the answer model after retrieval and validation to produce cited customer and internal claims."}
+          </div>
+        </div>
+
         {showDebugToggle ? (
-          <>
-            <Separator />
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="eyebrow">Debug ablation</p>
-                <p className="mt-2 text-sm leading-6 text-zinc-600">
-                  Compare answer quality with and without retrieval.
-                </p>
-              </div>
+          <details className="rounded-lg border border-zinc-200 bg-white/70 p-3">
+            <summary className="cursor-pointer text-xs font-medium uppercase tracking-[0.18em] text-zinc-500">
+              Retrieval ablation
+            </summary>
+            <div className="mt-3 flex items-center justify-between gap-3">
+              <p className="text-sm leading-6 text-zinc-600">Turn retrieval off to verify the fallback path.</p>
               <div className="flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 p-1">
                 <Button type="button" size="sm" variant={ragEnabled ? "default" : "ghost"} onClick={() => onToggleRag(true)}>
-                  RAG On
+                  On
                 </Button>
                 <Button type="button" size="sm" variant={!ragEnabled ? "default" : "ghost"} onClick={() => onToggleRag(false)}>
-                  RAG Off
+                  Off
                 </Button>
               </div>
             </div>
-          </>
+          </details>
         ) : null}
 
         <Button
@@ -354,7 +390,15 @@ export function TicketForm({
           disabled={!ticket.trim() || isInvestigating}
           onClick={onSubmit}
         >
-          {isInvestigating ? "Retrieving relevant documentation…" : isReviewRetryActive ? "Rerun investigation" : "Investigate"}
+          {isInvestigating
+            ? executionMode === "evidence_only"
+              ? "Finding evidence…"
+              : "Drafting cited answer…"
+            : isReviewRetryActive
+              ? "Rerun investigation"
+              : executionMode === "evidence_only"
+                ? "Find evidence"
+                : "Investigate"}
         </Button>
       </CardContent>
     </Card>

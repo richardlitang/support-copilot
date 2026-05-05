@@ -4,6 +4,8 @@ import {
   AlertTriangle,
   CheckCircle2,
   ClipboardCheck,
+  FileSearch,
+  ListChecks,
   MessageSquareText,
   RotateCcw,
   Stethoscope
@@ -333,20 +335,160 @@ function InternalFindings({
   );
 }
 
+function EvidenceOnlySummary({
+  onDraftFromEvidence,
+  result
+}: {
+  onDraftFromEvidence: () => void;
+  result: InvestigationResult;
+}) {
+  const sourceCount = result.docEvidence.length + result.toolEvidence.length;
+
+  return (
+    <section className="rounded-xl border border-zinc-200/80 bg-white/80 p-4">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <FileSearch className="h-4 w-4 text-zinc-500" />
+            <p className="eyebrow">Evidence found</p>
+          </div>
+          <h3 className="mt-2 text-xl font-semibold tracking-[-0.03em] text-zinc-950">Drafting skipped for this run.</h3>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600">
+            The app retrieved and organized sources without calling the answer model. Review the evidence below, then draft only when
+            the sources look strong enough.
+          </p>
+        </div>
+        <Button type="button" className="shrink-0" onClick={onDraftFromEvidence}>
+          Draft answer from evidence
+        </Button>
+      </div>
+
+      <div className="mt-4 grid gap-3 md:grid-cols-3">
+        <div className="surface-muted p-3">
+          <p className="eyebrow">Sources</p>
+          <p className="mt-2 text-2xl font-semibold text-zinc-950">{sourceCount}</p>
+          <p className="mt-1 text-xs leading-5 text-zinc-500">
+            {result.docEvidence.length} docs, {result.toolEvidence.length} context
+          </p>
+        </div>
+        <div className="surface-muted p-3">
+          <p className="eyebrow">Route</p>
+          <p className="mt-2 text-sm font-semibold text-zinc-950">{result.mode.replaceAll("_", " ")}</p>
+          <p className="mt-1 line-clamp-2 text-xs leading-5 text-zinc-500">{result.routingReason}</p>
+        </div>
+        <div className="surface-muted p-3">
+          <p className="eyebrow">Answer model</p>
+          <p className="mt-2 text-sm font-semibold text-zinc-950">Skipped</p>
+          <p className="mt-1 text-xs leading-5 text-zinc-500">No customer reply was generated.</p>
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-3">
+        {result.docEvidence.slice(0, 5).map((item) => (
+          <div key={item.id} className="surface-muted p-3">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant="outline">{item.id}</Badge>
+                  <span className="text-xs font-medium text-zinc-500">{Math.round(item.score * 100)}% match</span>
+                </div>
+                <p className="mt-2 text-sm font-semibold text-zinc-950">{item.filename}</p>
+                {item.sectionTitle ? <p className="mt-1 text-xs uppercase tracking-[0.14em] text-zinc-500">{item.sectionTitle}</p> : null}
+              </div>
+            </div>
+            <p className="mt-3 line-clamp-4 text-sm leading-6 text-zinc-700">{item.excerpt}</p>
+          </div>
+        ))}
+
+        {result.toolEvidence.map((item) => (
+          <div key={item.id} className="surface-muted p-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="warn">{item.id}</Badge>
+              <span className="text-xs font-medium text-zinc-500">{item.toolName}</span>
+            </div>
+            <p className="mt-2 text-sm font-semibold text-zinc-950">{item.title}</p>
+            <p className="mt-3 line-clamp-4 text-sm leading-6 text-zinc-700">{item.excerpt}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function PipelineTrace({ result }: { result: InvestigationResult }) {
+  if (!result.pipelineTrace.length) {
+    return null;
+  }
+
+  return (
+    <section className="rounded-xl border border-zinc-200/80 bg-white/80 p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <ListChecks className="h-4 w-4 text-zinc-500" />
+          <p className="eyebrow">Pipeline trace</p>
+        </div>
+        <Badge variant="outline">{result.pipelineTrace.length} steps</Badge>
+      </div>
+
+      <div className="mt-4 grid gap-2">
+        {result.pipelineTrace.map((step, index) => (
+          <details key={step.id} className="group rounded-lg border border-zinc-200/80 bg-zinc-50/70 px-3 py-2 open:bg-white">
+            <summary className="flex cursor-pointer list-none items-start justify-between gap-3">
+              <span className="flex min-w-0 items-start gap-3">
+                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-zinc-200 bg-white text-[11px] font-semibold text-zinc-500">
+                  {index + 1}
+                </span>
+                <span className="min-w-0">
+                  <span className="flex flex-wrap items-center gap-2">
+                    <span className="text-sm font-semibold text-zinc-950">{step.label}</span>
+                    <Badge variant={step.status === "complete" ? "success" : step.status === "blocked" ? "danger" : "outline"}>
+                      {step.status}
+                    </Badge>
+                  </span>
+                  <span className="mt-1 block text-xs leading-5 text-zinc-600">{step.summary}</span>
+                </span>
+              </span>
+              <span className="mt-1 shrink-0 text-[11px] font-medium text-zinc-400 group-open:hidden">inspect</span>
+            </summary>
+            <div className="mt-3 grid gap-3 border-t border-zinc-100 pt-3 lg:grid-cols-2">
+              <div>
+                <p className="eyebrow">Input sent</p>
+                <pre className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap rounded-lg border border-zinc-200 bg-white p-3 text-xs leading-5 text-zinc-700">
+                  {JSON.stringify(step.input ?? null, null, 2)}
+                </pre>
+              </div>
+              <div>
+                <p className="eyebrow">Output returned</p>
+                <pre className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap rounded-lg border border-zinc-200 bg-white p-3 text-xs leading-5 text-zinc-700">
+                  {JSON.stringify(step.output ?? null, null, 2)}
+                </pre>
+              </div>
+            </div>
+          </details>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export function AnswerPanel({
+  executionMode,
   isInvestigating,
   investigationContext,
   isReviewAcknowledged,
   isReviewRetryActive,
+  onDraftFromEvidence,
   onMarkReviewed,
   onRetryWithContext,
   result,
   showDebugDetails
 }: {
+  executionMode: "evidence_only" | "draft_answer";
   isInvestigating: boolean;
   investigationContext: string;
   isReviewAcknowledged: boolean;
   isReviewRetryActive: boolean;
+  onDraftFromEvidence: () => void;
   onMarkReviewed: () => void;
   onRetryWithContext: () => void;
   result: InvestigationResult | null;
@@ -358,9 +500,13 @@ export function AnswerPanel({
         <CardContent className="flex min-h-[260px] items-center justify-center p-8 text-center">
           <div className="max-w-lg">
             <p className="eyebrow">Investigating</p>
-            <h2 className="mt-3 text-2xl font-semibold text-zinc-950">Checking evidence...</h2>
+            <h2 className="mt-3 text-2xl font-semibold text-zinc-950">
+              {executionMode === "evidence_only" ? "Finding evidence..." : "Checking evidence..."}
+            </h2>
             <p className="mt-3 text-sm leading-6 text-zinc-600">
-              Support Copilot is retrieving docs, checking context, and drafting cited claims.
+              {executionMode === "evidence_only"
+                ? "Support Copilot is retrieving docs, checking context, and recording the pipeline trace."
+                : "Support Copilot is retrieving docs, checking context, and drafting cited claims."}
             </p>
           </div>
         </CardContent>
@@ -412,16 +558,33 @@ export function AnswerPanel({
             <div>
               <p className="eyebrow">Case brief</p>
               <CardTitle className="mt-2 text-2xl tracking-[-0.04em]">
-                {result.reviewStatus === "needs_human_review" ? "Review needed before replying" : "Answer ready"}
+                {result.executionMode === "evidence_only"
+                  ? "Evidence ready"
+                  : result.reviewStatus === "needs_human_review"
+                    ? "Review needed before replying"
+                    : "Answer ready"}
               </CardTitle>
               {showRoutingReason ? (
                 <CardDescription className="mt-2 max-w-2xl text-sm leading-6">{result.routingReason}</CardDescription>
               ) : null}
             </div>
             <div className="flex flex-wrap gap-2">
-              <Badge variant={supportVariant[result.supportLevel]}>{supportLabel[result.supportLevel]}</Badge>
-              <Badge variant={result.reviewStatus === "needs_human_review" ? "danger" : "secondary"}>
-                {isReviewAcknowledged ? "Reviewed" : result.reviewStatus === "needs_human_review" ? "Needs human review" : "Ready"}
+              {result.executionMode === "evidence_only" ? (
+                <Badge variant="secondary">
+                  {result.docEvidence.length + result.toolEvidence.length} source
+                  {result.docEvidence.length + result.toolEvidence.length === 1 ? "" : "s"}
+                </Badge>
+              ) : (
+                <Badge variant={supportVariant[result.supportLevel]}>{supportLabel[result.supportLevel]}</Badge>
+              )}
+              <Badge variant={result.executionMode === "evidence_only" ? "outline" : result.reviewStatus === "needs_human_review" ? "danger" : "secondary"}>
+                {result.executionMode === "evidence_only"
+                  ? "Evidence only"
+                  : isReviewAcknowledged
+                    ? "Reviewed"
+                    : result.reviewStatus === "needs_human_review"
+                      ? "Needs human review"
+                      : "Ready"}
               </Badge>
               <Badge variant="outline">{result.mode.replaceAll("_", " ")}</Badge>
             </div>
@@ -435,22 +598,29 @@ export function AnswerPanel({
             </div>
           ) : null}
 
-          <AnswerSection
-            claims={result.customerReply.claims}
-            emptyMessage="No grounded answer was produced for this run."
-            result={result}
-          />
+          {result.executionMode === "evidence_only" ? (
+            <EvidenceOnlySummary result={result} onDraftFromEvidence={onDraftFromEvidence} />
+          ) : (
+            <>
+              <AnswerSection
+                claims={result.customerReply.claims}
+                emptyMessage="No grounded answer was produced for this run."
+                result={result}
+              />
 
-          <InternalFindings
-            claims={distinctInternalClaims}
-            emptyMessage="No grounded internal diagnosis claims were produced for this run."
-          />
+              <InternalFindings
+                claims={distinctInternalClaims}
+                emptyMessage="No grounded internal diagnosis claims were produced for this run."
+              />
+            </>
+          )}
 
           <SourceLedger result={result} showDebugDetails={showDebugDetails} />
+          <PipelineTrace result={result} />
         </CardContent>
       </Card>
 
-      {reviewAction ? (
+      {reviewAction && result.executionMode !== "evidence_only" ? (
         <Card className={isReviewAcknowledged ? "border-emerald-200 bg-emerald-50/80" : "border-red-200 bg-red-50/80"}>
           <CardContent className="p-4">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">

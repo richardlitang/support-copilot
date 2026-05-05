@@ -1,8 +1,11 @@
+import type { InvestigationExecutionMode } from "@/lib/types/investigation";
+
 export const MAX_TICKET_LENGTH = 6000;
 export const MAX_INVESTIGATION_CONTEXT_LENGTH = 4000;
 
 export type InvestigationRequest = {
   ticket: string;
+  executionMode: InvestigationExecutionMode;
   ragEnabled: boolean;
   selectedAccountId: string | null;
   investigationContext: string | null;
@@ -28,6 +31,7 @@ export function normalizeInvestigationRequest(body: unknown): InvestigationReque
       : null;
   const selectedAccountId =
     typeof input.selectedAccountId === "string" && input.selectedAccountId.trim() ? input.selectedAccountId.trim() : null;
+  const executionMode = input.executionMode === "evidence_only" ? "evidence_only" : "draft_answer";
 
   if (!ticket) {
     throw new InvestigationRequestError("Paste a support ticket before investigating.");
@@ -49,6 +53,7 @@ export function normalizeInvestigationRequest(body: unknown): InvestigationReque
 
   return {
     ticket,
+    executionMode,
     ragEnabled: typeof input.ragEnabled === "boolean" ? input.ragEnabled : true,
     selectedAccountId,
     investigationContext

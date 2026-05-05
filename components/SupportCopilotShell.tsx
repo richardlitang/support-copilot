@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import type { DocumentRecord, UploadOutcome } from "@/lib/types";
-import type { AccountRecord, InvestigationResult } from "@/lib/types/investigation";
+import type { AccountRecord, InvestigationExecutionMode, InvestigationResult } from "@/lib/types/investigation";
 
 type UploadResponse = {
   documents: DocumentRecord[];
@@ -41,6 +41,7 @@ type InvestigationHistoryItem = {
   ticket: string;
   investigationContext: string;
   selectedAccountId: string | null;
+  executionMode: InvestigationExecutionMode;
   ragEnabled: boolean;
   createdAt: string;
   result: InvestigationResult;
@@ -123,8 +124,8 @@ function RecentInvestigations({
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-xs font-medium text-zinc-500">{formatHistoryTime(item.createdAt)}</span>
-                    <Badge variant={item.result.reviewStatus === "needs_human_review" ? "danger" : "secondary"}>
-                      {item.result.reviewStatus === "needs_human_review" ? "Review" : "Ready"}
+                    <Badge variant={item.result.executionMode === "evidence_only" ? "outline" : item.result.reviewStatus === "needs_human_review" ? "danger" : "secondary"}>
+                      {item.result.executionMode === "evidence_only" ? "Evidence" : item.result.reviewStatus === "needs_human_review" ? "Review" : "Ready"}
                     </Badge>
                   </div>
                   <p className="mt-2 line-clamp-2 text-sm leading-5 text-zinc-800">{item.ticket}</p>
@@ -160,6 +161,7 @@ export function SupportCopilotShell({
   const [result, setResult] = useState<InvestigationResult | null>(null);
   const [historyItems, setHistoryItems] = useState<InvestigationHistoryItem[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [executionMode, setExecutionMode] = useState<InvestigationExecutionMode>("draft_answer");
   const [ragEnabled, setRagEnabled] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [isInvestigating, setIsInvestigating] = useState(false);
@@ -307,11 +309,12 @@ export function SupportCopilotShell({
     }
   }
 
-  async function handleInvestigate() {
+  async function handleInvestigate(modeOverride?: InvestigationExecutionMode) {
     if (!ticket.trim() || isInvestigating) {
       return;
     }
 
+    const nextExecutionMode = modeOverride ?? executionMode;
     setError(null);
     setIsInvestigating(true);
     setIsReviewRetryActive(false);
@@ -325,6 +328,7 @@ export function SupportCopilotShell({
         },
         body: JSON.stringify({
           ticket,
+          executionMode: nextExecutionMode,
           ragEnabled,
           selectedAccountId,
           investigationContext
@@ -342,6 +346,7 @@ export function SupportCopilotShell({
       }
 
       setResult(payload);
+      setExecutionMode(payload.executionMode);
       setHistoryItems((items) => {
         const next = [
           {
@@ -349,6 +354,7 @@ export function SupportCopilotShell({
             ticket,
             investigationContext,
             selectedAccountId,
+            executionMode: payload.executionMode,
             ragEnabled,
             createdAt: new Date().toISOString(),
             result: payload
@@ -387,6 +393,7 @@ export function SupportCopilotShell({
     setTicket("");
     setInvestigationContext("");
     setSelectedAccountId(null);
+    setExecutionMode("draft_answer");
     setResult(null);
     setError(null);
     setReviewedInvestigationId(null);
@@ -398,6 +405,7 @@ export function SupportCopilotShell({
     setTicket(item.ticket);
     setInvestigationContext(item.investigationContext);
     setSelectedAccountId(item.selectedAccountId);
+    setExecutionMode(item.executionMode ?? item.result.executionMode ?? "draft_answer");
     setRagEnabled(item.ragEnabled);
     setResult(item.result);
     setError(null);
@@ -414,6 +422,7 @@ export function SupportCopilotShell({
     setTicket(scenario.rawText);
     setInvestigationContext(scenario.investigationContext ?? "");
     setSelectedAccountId(scenario.selectedAccountId ?? null);
+    setExecutionMode("draft_answer");
     setResult(null);
     setError(null);
     setIsReviewRetryActive(false);
@@ -438,7 +447,10 @@ export function SupportCopilotShell({
               </div>
 
               <div className="flex min-w-0 flex-wrap items-center justify-start gap-2 xl:justify-end">
-                {showDebugToggle ? <Badge variant={ragEnabled ? "default" : "outline"}>{ragEnabled ? "RAG On" : "RAG Off"}</Badge> : null}
+                <Badge variant={executionMode === "evidence_only" ? "outline" : "default"}>
+                  {executionMode === "evidence_only" ? "Evidence only" : "Draft answer"}
+                </Badge>
+                {showDebugToggle ? <Badge variant={ragEnabled ? "secondary" : "outline"}>{ragEnabled ? "Retrieval on" : "Retrieval off"}</Badge> : null}
               </div>
             </div>
           </CardContent>
@@ -479,6 +491,7 @@ export function SupportCopilotShell({
               isInvestigating={isInvestigating}
               isActiveStep={activeStep !== "docs" && !hasRunState}
               ragEnabled={ragEnabled}
+              executionMode={executionMode}
               showDebugToggle={showDebugToggle}
               focusContextToken={focusContextToken}
               isReviewRetryActive={isReviewRetryActive}
@@ -490,6 +503,7 @@ export function SupportCopilotShell({
               }
               onSelectAccount={setSelectedAccountId}
               onInvestigationContextChange={setInvestigationContext}
+              onExecutionModeChange={setExecutionMode}
               onToggleRag={setRagEnabled}
               onTicketChange={setTicket}
               onLoadScenario={handleLoadScenario}
@@ -500,12 +514,14 @@ export function SupportCopilotShell({
 
             {hasRunState ? (
               <AnswerPanel
+                executionMode={executionMode}
                 isInvestigating={isInvestigating}
                 investigationContext={investigationContext}
                 result={result}
                 isReviewAcknowledged={Boolean(result && reviewedInvestigationId === result.investigationId)}
                 isReviewRetryActive={isReviewRetryActive}
                 onMarkReviewed={handleMarkReviewed}
+                onDraftFromEvidence={() => void handleInvestigate("draft_answer")}
                 onRetryWithContext={handleRetryWithContext}
                 showDebugDetails={showDebugToggle}
               />

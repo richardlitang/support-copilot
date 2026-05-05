@@ -11,9 +11,22 @@ describe("normalizeInvestigationRequest", () => {
       })
     ).toEqual({
       ticket: "Export failed after setup",
+      executionMode: "draft_answer",
       ragEnabled: false,
       selectedAccountId: "acct-1",
       investigationContext: "Plan: Starter"
+    });
+  });
+
+  it("accepts evidence-only mode", () => {
+    expect(
+      normalizeInvestigationRequest({
+        ticket: "Export failed after setup",
+        executionMode: "evidence_only"
+      })
+    ).toMatchObject({
+      executionMode: "evidence_only",
+      ragEnabled: true
     });
   });
 

@@ -1,6 +1,7 @@
 import type { SupportLevel } from "@/lib/types";
 
 export type InvestigationMode = "docs_only" | "docs_plus_tools" | "needs_human_review";
+export type InvestigationExecutionMode = "evidence_only" | "draft_answer";
 export type ReviewStatus = "ready" | "needs_human_review";
 export type ReviewReasonCode =
   | "none"
@@ -58,9 +59,19 @@ export interface ToolCallRecord {
   output: unknown;
 }
 
+export interface PipelineTraceStep {
+  id: string;
+  label: string;
+  status: "complete" | "skipped" | "blocked";
+  summary: string;
+  input?: unknown;
+  output?: unknown;
+}
+
 export interface InvestigationResult {
   investigationId: string;
   ticketId: string;
+  executionMode: InvestigationExecutionMode;
   mode: InvestigationMode;
   supportLevel: SupportLevel;
   reviewStatus: ReviewStatus;
@@ -71,6 +82,7 @@ export interface InvestigationResult {
   docEvidence: DocEvidenceItem[];
   toolEvidence: ToolEvidenceItem[];
   toolCalls: ToolCallRecord[];
+  pipelineTrace: PipelineTraceStep[];
 }
 
 export interface AccountRecord {

@@ -4,6 +4,7 @@ import type { InvestigationResult } from "@/lib/types/investigation";
 const baseResult: InvestigationResult = {
   investigationId: "investigation-1",
   ticketId: "ticket-1",
+  executionMode: "draft_answer",
   mode: "needs_human_review",
   supportLevel: "insufficient_support",
   reviewStatus: "needs_human_review",
@@ -22,7 +23,8 @@ const baseResult: InvestigationResult = {
   },
   docEvidence: [],
   toolEvidence: [],
-  toolCalls: []
+  toolCalls: [],
+  pipelineTrace: []
 };
 
 describe("getReviewAction", () => {

@@ -81,4 +81,46 @@ describe("investigateTicket", () => {
     expect(result.supportLevel).toBe("insufficient_support");
     expect(result.customerReply.claims).toEqual([]);
   });
+
+  it("returns evidence-only results without calling the answer model", async () => {
+    const result = await investigateTicket(
+      {
+        ticket: "Why do exports fail after setup?",
+        executionMode: "evidence_only",
+        ragEnabled: true,
+        sessionId: "test-session"
+      },
+      {
+        persistInvestigationRun: async () => ({
+          ticketId: "ticket-evidence",
+          investigationId: "investigation-evidence"
+        }),
+        retrieveEvidence: async () => [
+          {
+            id: "chunk-1",
+            documentId: "doc-1",
+            filename: "exports.md",
+            sectionTitle: "Common export failures",
+            content: "Check billing setup and write permissions.",
+            score: 0.9,
+            rank: 1,
+            chunkIndex: 0
+          }
+        ],
+        generateGroundedAnswer: async () => {
+          throw new Error("Evidence-only mode should not call the answer model.");
+        },
+        generateInvestigationAnswer: async () => {
+          throw new Error("Evidence-only mode should not call the structured answer model.");
+        }
+      }
+    );
+
+    expect(result.executionMode).toBe("evidence_only");
+    expect(result.docEvidence).toHaveLength(1);
+    expect(result.customerReply.claims).toEqual([]);
+    expect(result.pipelineTrace.find((step) => step.id === "draft")).toMatchObject({
+      status: "skipped"
+    });
+  });
 });

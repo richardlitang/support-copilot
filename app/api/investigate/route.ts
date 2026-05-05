@@ -13,6 +13,7 @@ export async function POST(request: Request) {
     const payload = normalizeInvestigationRequest(body);
     logger.info("investigate_received", {
       sessionId,
+      executionMode: payload.executionMode,
       ragEnabled: payload.ragEnabled,
       ticketLength: payload.ticket.length,
       selectedAccountId: payload.selectedAccountId,
@@ -21,6 +22,7 @@ export async function POST(request: Request) {
 
     const result = await investigateTicket({
       ticket: payload.ticket,
+      executionMode: payload.executionMode,
       ragEnabled: payload.ragEnabled,
       sessionId,
       selectedAccountId: payload.selectedAccountId,
