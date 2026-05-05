@@ -55,6 +55,76 @@ function getSourceExcerpt(result: InvestigationResult, citation: string) {
   return source.sourceType === "doc" ? source.excerpt : source.excerpt;
 }
 
+function getFormattedExcerptLines(excerpt: string) {
+  return excerpt
+    .replace(/\r/g, "")
+    .replace(/\*\*([^*]+):\*\*/g, "\n$1:\n")
+    .replace(/\s+-\s+/g, "\n- ")
+    .split(/\n+/)
+    .map((line) => line.trim().replace(/\*\*/g, ""))
+    .filter(Boolean);
+}
+
+function SourcePreview({
+  citation,
+  excerpt,
+  result,
+  title
+}: {
+  citation: CitationId;
+  excerpt: string | null;
+  result: InvestigationResult;
+  title: string;
+}) {
+  const source = findSource(result, citation);
+  const lines = excerpt ? getFormattedExcerptLines(excerpt) : [];
+
+  return (
+    <span className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 hidden w-[min(360px,calc(100vw-48px))] -translate-x-1/2 rounded-lg border border-zinc-200 bg-white p-3 text-left shadow-xl group-hover/source:block group-focus-within/source:block">
+      <span className="flex items-center gap-2">
+        <span
+          className={`inline-flex items-center rounded-md border px-2 py-1 text-[11px] font-semibold leading-none ${
+            citation.startsWith("S") ? "border-zinc-200 bg-white text-zinc-700" : "border-amber-200 bg-amber-50 text-amber-800"
+          }`}
+        >
+          {citation}
+        </span>
+        {source?.sourceType === "doc" ? (
+          <span className="text-[11px] font-medium text-zinc-500">{Math.round(source.score * 100)}% match</span>
+        ) : null}
+      </span>
+      <span className="mt-2 block text-xs font-semibold leading-5 text-zinc-950">{title}</span>
+      {lines.length ? (
+        <span className="mt-2 block max-h-56 overflow-y-auto rounded-md border border-zinc-100 bg-zinc-50/70 p-2.5">
+          {lines.slice(0, 8).map((line, index) => {
+            const isHeading = line.endsWith(":");
+            const isBullet = line.startsWith("- ");
+
+            if (isHeading) {
+              return (
+                <span key={`${line}-${index}`} className="mt-2 first:mt-0 block text-[11px] font-semibold uppercase tracking-[0.08em] text-zinc-500">
+                  {line.slice(0, -1)}
+                </span>
+              );
+            }
+
+            return (
+              <span key={`${line}-${index}`} className="mt-1.5 block text-xs leading-5 text-zinc-700">
+                {isBullet ? <span className="mr-1 text-zinc-400">-</span> : null}
+                {isBullet ? line.slice(2) : line}
+              </span>
+            );
+          })}
+        </span>
+      ) : (
+        <span className="mt-2 block rounded-md border border-zinc-100 bg-zinc-50/70 p-2.5 text-xs leading-5 text-zinc-500">
+          No source content was returned.
+        </span>
+      )}
+    </span>
+  );
+}
+
 function collectCitations(claims: StructuredClaim[]) {
   return Array.from(new Set(claims.flatMap((claim) => claim.citations)));
 }
@@ -97,7 +167,6 @@ function CitationMarker({
   citation: CitationId;
   result: InvestigationResult;
 }) {
-  const source = findSource(result, citation);
   const title = getSourceTitle(result, citation);
   const excerpt = getSourceExcerpt(result, citation);
 
@@ -114,16 +183,7 @@ function CitationMarker({
       >
         {citation}
       </button>
-      <span className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 hidden w-[min(340px,calc(100vw-48px))] -translate-x-1/2 rounded-lg border border-zinc-200 bg-white p-3 text-left shadow-xl group-hover/source:block group-focus-within/source:block">
-        <span className="flex items-center gap-2">
-          <Badge variant={citation.startsWith("S") ? "outline" : "warn"}>{citation}</Badge>
-          {source?.sourceType === "doc" ? (
-            <span className="text-[11px] font-medium text-zinc-500">{Math.round(source.score * 100)}% match</span>
-          ) : null}
-        </span>
-        <span className="mt-2 block text-xs font-semibold leading-5 text-zinc-950">{title}</span>
-        {excerpt ? <span className="mt-1.5 line-clamp-5 block text-xs leading-5 text-zinc-600">{excerpt}</span> : null}
-      </span>
+      <SourcePreview citation={citation} excerpt={excerpt} result={result} title={title} />
     </span>
   );
 }
@@ -213,14 +273,14 @@ function AnswerSection({
         <div className="mt-4 space-y-4">
           <div className="space-y-3 rounded-lg bg-zinc-50/70 p-4">
             {claims.map((claim, index) => (
-              <p key={`${claim.text}-${index}`} className="text-[15px] leading-7 text-zinc-900">
+              <div key={`${claim.text}-${index}`} className="text-[15px] leading-7 text-zinc-900">
                 {claim.text}{" "}
                 <span className="inline-flex flex-wrap gap-1 align-baseline">
                   {claim.citations.map((citation) => (
                     <CitationMarker key={`${claim.text}-${citation}`} citation={citation} result={result} />
                   ))}
                 </span>
-              </p>
+              </div>
             ))}
           </div>
         </div>
