@@ -49,6 +49,22 @@ describe("determineSupportLevel", () => {
 
     expect(result).toBe("low");
   });
+
+  it("returns low support for validated multi-source checklist evidence just below the single-source threshold", () => {
+    const result = determineSupportLevel({
+      topDocScore: 0.49,
+      secondDocScore: 0.48,
+      docEvidenceCount: 3,
+      toolEvidenceCount: 0,
+      customerClaimCount: 2,
+      internalClaimCount: 2,
+      hasConflict: false,
+      missingRequiredContext: false,
+      validationFailed: false
+    });
+
+    expect(result).toBe("low");
+  });
 });
 
 describe("review policy", () => {

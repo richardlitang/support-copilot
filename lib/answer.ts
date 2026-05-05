@@ -415,7 +415,9 @@ function buildRequiredDiagnosticTokenAnswer(input: {
   const claimText =
     input.token === "row"
       ? "The recent error evidence points to row validation near the configured row limit."
-      : `The recent error evidence includes ${input.token}.`;
+      : /\bpermission\b/i.test(recentError.excerpt)
+        ? `The recent error evidence includes ${input.token}, which points to a permission issue.`
+        : `The recent error evidence includes ${input.token}.`;
   const customerReply: StructuredClaimSet = {
     summary: claimText,
     claims: [{ text: claimText, citations: [citation] }]
@@ -727,10 +729,12 @@ export async function generateInvestigationAnswer(input: {
     return secondValidation.answer;
   }
 
+  const requiredDiagnosticTokens = extractRequiredDiagnosticTokens(input.toolEvidence);
   const missingDiagnosticToken = secondValidation.reason.match(/^Missing required diagnostic token (.+)\.$/)?.[1];
-  const diagnosticTokenAnswer = missingDiagnosticToken
+  const diagnosticToken = missingDiagnosticToken ?? requiredDiagnosticTokens[0];
+  const diagnosticTokenAnswer = diagnosticToken
     ? buildRequiredDiagnosticTokenAnswer({
-        token: missingDiagnosticToken,
+        token: diagnosticToken,
         toolEvidence: input.toolEvidence
       })
     : null;

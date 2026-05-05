@@ -110,6 +110,12 @@ Use these PayBridge sample test cases in the UI before a live walkthrough:
 4. `Invoice vs webhook`: diagnostic checklist when more identifiers are needed
 5. `Weak evidence`: docs-gap behavior for an under-specified ticket
 
+Expected UI behavior for the bundled PayBridge samples:
+
+- The main product-support cases should return `Answer ready` with `docs only` mode and cited claims.
+- `Weak evidence` and `Unsupported topic` should intentionally route to `needs_human_review` with a docs-gap report.
+- The pipeline trace is collapsed by default so demos stay focused, but it can be expanded to inspect each retrieval, routing, drafting, review, and persistence step.
+
 ## Eval Loop
 
 Run the seeded eval suite after seeding the corpus:

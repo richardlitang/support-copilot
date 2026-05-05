@@ -12,7 +12,8 @@ const ACCOUNT_SPECIFIC_PATTERN =
 const FAILURE_PATTERN =
   /\b(fail|failing|failed|stall|stalled|stuck|not working|won't|cannot|can't|unable|error|issue|after setup)\b/i;
 const PROCEDURAL_PATTERN = /\b(how do i|how to|enable|set up|setup|configure|steps|install|where can i|what is required)\b/i;
-const FEATURE_FLAG_PATTERN = /\b(flag|rollout|disabled|not visible|missing feature|feature hidden|hidden feature)\b/i;
+const FEATURE_FLAG_PATTERN =
+  /\b(flag|rollout|not visible|missing feature|feature hidden|hidden feature)\b|\bfeature\b.{0,40}\bdisabled\b|\bdisabled\b.{0,40}\bfeature\b/i;
 const ACCESS_PATTERN = /\b(can't access|cannot access|missing|not visible|unavailable|not showing)\b/i;
 const PLAN_PATTERN = /\b(plan|tier|limit|limits|starter|basic|pro|enterprise)\b/i;
 

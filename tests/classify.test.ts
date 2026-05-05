@@ -91,6 +91,40 @@ describe("classifyInvestigation", () => {
     expect(result.requiredTools).toEqual([]);
   });
 
+  it("does not treat disabled webhook endpoint recovery as feature-flag context", () => {
+    const result = classifyInvestigation({
+      ticketText:
+        "Our webhook endpoint was disabled overnight. Delivery logs show several 500 responses after our deployment. What should we do to re-enable it safely?",
+      selectedAccountId: null,
+      evidence: [
+        {
+          id: "chunk-1",
+          documentId: "doc-1",
+          filename: "paybridge-api-support-guide.md",
+          sectionTitle: "webhook_endpoint_disabled",
+          content: "Fix the endpoint, return a 2xx response quickly, and re-enable the endpoint in the dashboard.",
+          score: 0.78,
+          rank: 1,
+          chunkIndex: 0
+        }
+      ]
+    });
+
+    expect(result.mode).toBe("docs_only");
+    expect(result.requiredTools).toEqual([]);
+  });
+
+  it("still routes explicit disabled-feature tickets to context checks", () => {
+    const result = classifyInvestigation({
+      ticketText: "The exports feature is disabled for this account.",
+      selectedAccountId: null,
+      evidence: []
+    });
+
+    expect(result.mode).toBe("needs_human_review");
+    expect(result.routingReason).toContain("none was provided");
+  });
+
   it("uses selected account context for plan entitlement questions", () => {
     const result = classifyInvestigation({
       ticketText: "Can a Starter workspace use audit logs?",

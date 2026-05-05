@@ -523,14 +523,17 @@ function PipelineTrace({ result }: { result: InvestigationResult }) {
   }
 
   return (
-    <section className="rounded-xl border border-zinc-200/80 bg-white/80 p-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
+    <details className="group rounded-xl border border-zinc-200/80 bg-white/80 p-4 open:bg-white">
+      <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-3">
+        <span className="flex items-center gap-2">
           <ListChecks className="h-4 w-4 text-zinc-500" />
-          <p className="eyebrow">Pipeline trace</p>
-        </div>
-        <Badge variant="outline">{result.pipelineTrace.length} steps</Badge>
-      </div>
+          <span className="eyebrow">Pipeline trace</span>
+        </span>
+        <span className="flex items-center gap-2">
+          <Badge variant="outline">{result.pipelineTrace.length} steps</Badge>
+          <span className="text-[11px] font-medium text-zinc-400 group-open:hidden">inspect</span>
+        </span>
+      </summary>
 
       <div className="mt-4 grid gap-2">
         {result.pipelineTrace.map((step, index) => (
@@ -569,7 +572,7 @@ function PipelineTrace({ result }: { result: InvestigationResult }) {
           </details>
         ))}
       </div>
-    </section>
+    </details>
   );
 }
 
