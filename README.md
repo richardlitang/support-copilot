@@ -1,6 +1,6 @@
 # Support Copilot
 
-Support Copilot is a single-app Next.js support investigation workspace built to show real retrieval and grounding instead of hiding it behind chat UI. Users upload support docs, paste a ticket, optionally add structured investigation context, inspect retrieved chunks and tool outputs, and receive grounded customer-facing and internal outputs with citations or an explicit human-review fallback.
+Support Copilot is a single-app Next.js support investigation workspace built to show real retrieval and grounding instead of hiding it behind chat UI. Users start with a bundled PayBridge sample support guide or upload their own docs, paste a ticket, inspect retrieved chunks and tool outputs, and receive grounded customer-facing and internal outputs with citations or an explicit human-review fallback.
 
 ## What This Project Demonstrates
 
@@ -92,22 +92,23 @@ npm run seed:demo
 
 ## Demo Data
 
-- `demo/docs`: 8 seeded support documents
+- `demo/docs/paybridge-api-support-guide.md`: bundled PayBridge sample support guide for the default app walkthrough
+- `demo/docs`: additional seeded support documents used by the eval suite
 - `demo/support-context.json`: 5 seeded accounts, feature flags, and recent error events
-- `demo/tickets.json`: canonical demo scenarios for live walkthroughs
+- `demo/tickets.json`: PayBridge sample test cases for live walkthroughs
 - `demo/evals.json`: eval tickets spanning docs-only, docs-plus-tools, unsupported, missing-account, and unresolved-conflict cases
 
 ## Canonical Demo Flow
 
 For a 3-minute interview walkthrough, see [`docs/demo-script.md`](docs/demo-script.md).
 
-Use these in the UI before a live walkthrough:
+Use these PayBridge sample test cases in the UI before a live walkthrough:
 
-1. `Happy path`: procedural docs-only answer with visible citations
-2. `Plan gate`: docs plus structured context showing a plan restriction
-3. `Error-assisted answer`: docs plus context evidence tied to a specific error
-4. `Unsupported`: deliberate fallback into insufficient support / human review
-5. `Needs human review`: unresolved case where docs suggest support but evidence stays incomplete
+1. `Live mode mismatch`: grounded answer from a literal error code
+2. `Webhook signature`: literal retrieval around `webhook_signature_failed`
+3. `Idempotency key`: duplicate-request guidance with exact code evidence
+4. `Invoice vs webhook`: diagnostic checklist when more identifiers are needed
+5. `Weak evidence`: docs-gap behavior for an under-specified ticket
 
 ## Eval Loop
 

@@ -22,6 +22,8 @@ function statusTone(status: DocumentRecord["status"]) {
   return "warn" as const;
 }
 
+const bundledSampleFilename = "paybridge-api-support-guide.md";
+
 export function UploadPanel({
   documents,
   uploadOutcomes,
@@ -95,7 +97,9 @@ export function UploadPanel({
           <div className="min-w-0">
             <p className="eyebrow">Case intake</p>
             <CardTitle className="mt-2 text-lg">Docs for this case</CardTitle>
-            <CardDescription className="mt-2 text-xs leading-5">Add up to 10 focused docs. Remove anything stale before you investigate.</CardDescription>
+            <CardDescription className="mt-2 text-xs leading-5">
+              Start with the PayBridge sample doc, remove it, or add your own focused docs.
+            </CardDescription>
           </div>
           <Button
             type="button"
@@ -160,7 +164,9 @@ export function UploadPanel({
               <div className="flex min-w-0 items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="eyebrow">Session docs</p>
-                  <p className="mt-1 text-sm text-zinc-500">{documents.length ? "Ready for retrieval." : "No docs loaded yet."}</p>
+                  <p className="mt-1 text-sm text-zinc-500">
+                    {documents.length ? "Ready for retrieval." : "No docs loaded yet."}
+                  </p>
                 </div>
                 <Badge variant="secondary" className="shrink-0">
                   {documents.length}/{maxSessionDocs}
@@ -202,6 +208,7 @@ export function UploadPanel({
                           </div>
                           <div className="flex items-center justify-between gap-2">
                             <Badge variant={statusTone(document.status)}>{document.status}</Badge>
+                            {document.filename === bundledSampleFilename ? <Badge variant="outline">sample</Badge> : null}
                             <Button
                               type="button"
                               variant="ghost"

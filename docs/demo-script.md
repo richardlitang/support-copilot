@@ -23,7 +23,7 @@ If the eval command fails, do not demo until Supabase, migrations, and seeded do
 Ticket:
 
 ```text
-What permissions are required to install the CRM integration?
+Our production checkout suddenly started failing with livemode_mismatch. It works fine in test mode. We deployed yesterday but I’m not sure what changed. Can you help?
 ```
 
 Expected behavior:
@@ -31,72 +31,65 @@ Expected behavior:
 - Mode is `docs_only`.
 - Customer reply cites documentation evidence.
 - Internal diagnosis stays concise.
-- Evidence rail shows the retrieved integration/admin source chunk.
+- Evidence rail shows the retrieved PayBridge error-code source chunk.
 
 Talk track:
 
 "This is the clean docs-only path. The answer is short because every claim needs a citation. The evidence rail makes retrieval visible without opening a separate debug panel."
 
-## Path 2: Docs Plus Structured Context
+## Path 2: Literal Retrieval
 
 Ticket:
 
 ```text
-Why can't this customer access exports?
+Webhook verification started failing after we rotated our webhook secret. We’re using Express and bodyParser.json() before verifying the signature. Error is webhook_signature_failed.
 ```
-
-Use a seeded Starter account if the account selector/context UI is enabled.
 
 Expected behavior:
 
-- Mode is `docs_plus_tools`.
-- Output combines plan/export docs with structured context.
-- Tool evidence appears separately from document evidence.
-- Customer reply is safe; internal diagnosis can be more explicit.
+- Mode is `docs_only`.
+- Evidence includes the exact webhook signature failure entry.
+- The evidence rail shows whether the chunk came from literal or hybrid retrieval.
+- Customer reply stays implementation-focused and cites the source.
 
 Talk track:
 
-"This is what makes the project more than RAG. Documentation says what should happen generally, while structured context explains this customer's actual state. The UI keeps those sources separate."
+"This shows why the retrieval stack is more than vector search. Support tickets contain exact codes, so the app expands the candidate set with literal matches before reranking."
 
-## Path 3: Missing Context Human Review
+## Path 3: Duplicate Payment Guardrail
 
 Ticket:
 
 ```text
-Why is our workspace missing exports even though the customer says they should have them?
+Some customers are double-clicking the Pay button and we’re getting idempotency_key_in_use. We use the same idempotency key for all checkout attempts from the same cart.
 ```
-
-Do not provide account/context information.
 
 Expected behavior:
 
-- Mode is `needs_human_review`.
-- Review status is `needs_human_review`.
-- Customer-facing output is cautious.
-- Internal diagnosis says account or structured context is required.
-- A documentation gap report explains what was missing and what evidence was checked.
+- Mode is `docs_only`.
+- Reply explains idempotency key reuse only for true retries of the exact same request body.
+- Evidence cites the idempotency section.
 
 Talk track:
 
-"The system does not hard-block the user, but it also does not pretend docs alone can answer an account-specific question. This is the trust boundary."
+"This is a practical support answer, not just a source lookup. The system turns the code entry into a safe customer-facing next step."
 
-## Path 4: Unsupported Question
+## Path 4: Weak Evidence
 
 Ticket:
 
 ```text
-How do I rotate the product's encryption keys?
+Payments are broken. Please tell us the root cause ASAP.
 ```
 
 Expected behavior:
 
-- The system falls back to insufficient support or human review.
-- It does not invent setup steps.
-- The docs-gap report gives a reusable artifact for the docs owner.
+- The system asks for missing identifiers instead of naming a root cause.
+- If evidence is too weak, the docs-gap report gives a reusable artifact for the docs owner.
 
 Talk track:
 
-"This is the negative control. A convincing RAG demo needs to show what happens when the corpus does not support the question, and this one turns that failure into a docs issue instead of a dead end."
+"This is the negative control. A convincing RAG demo needs to show what happens when the ticket lacks enough evidence, and this one turns weak support into a useful next step."
 
 ## Closing
 

@@ -1,73 +1,62 @@
 [
   {
-    "id": "ticket-1",
-    "label": "Happy path",
-    "bucket": "docs_only",
-    "rawText": "Our export keeps failing right after setup. What should I check first?"
+    "id": "paybridge-live-mode",
+    "label": "Live mode mismatch",
+    "bucket": "grounded_answer",
+    "rawText": "Our production checkout suddenly started failing with livemode_mismatch. It works fine in test mode. We deployed yesterday but I’m not sure what changed. Can you help?"
   },
   {
-    "id": "ticket-2",
-    "label": "Plan gate",
-    "bucket": "docs_plus_tools",
-    "rawText": "A Starter customer says exports are missing. Is that supported on their plan?",
-    "investigationContext": "Plan: Starter. Exports UI hidden. Support note: billing setup already completed. Recent note: customer expects exports because onboarding is done.",
-    "selectedAccountId": "11111111-1111-4111-8111-111111111111"
+    "id": "paybridge-webhook-signature",
+    "label": "Webhook signature",
+    "bucket": "literal_retrieval",
+    "rawText": "Webhook verification started failing after we rotated our webhook secret. We’re using Express and bodyParser.json() before verifying the signature. Error is webhook_signature_failed."
   },
   {
-    "id": "ticket-3",
-    "label": "Procedural docs answer",
-    "bucket": "docs_only",
-    "rawText": "The CRM integration install page rejects our redirect URL. What should I tell the customer?"
+    "id": "paybridge-idempotency",
+    "label": "Idempotency key",
+    "bucket": "duplicate_payment",
+    "rawText": "Some customers are double-clicking the Pay button and we’re getting idempotency_key_in_use. We use the same idempotency key for all checkout attempts from the same cart."
   },
   {
-    "id": "ticket-4",
-    "label": "Import failure",
-    "bucket": "docs_plus_tools",
-    "rawText": "An import with 80,000 rows stalled. What is the most likely first check?",
-    "investigationContext": "Plan: Growth. Import size: 80,000 rows. Recent note: upload completed but validation appears stalled.",
-    "selectedAccountId": "55555555-5555-4555-8555-555555555555"
+    "id": "paybridge-invoice-webhook",
+    "label": "Invoice vs webhook",
+    "bucket": "diagnostic_checklist",
+    "rawText": "The invoice still says unpaid, but we can see a payment event in the logs. We are not sure if this is a webhook issue or an invoice issue."
   },
   {
-    "id": "ticket-5",
-    "label": "Error-assisted answer",
-    "bucket": "docs_plus_tools",
-    "rawText": "A workspace is seeing ERR-219 while running exports. What does that indicate?",
-    "investigationContext": "Plan: Growth. Recent error: ERR-219 during exports. Support note: exports were visible before the error appeared.",
-    "selectedAccountId": "22222222-2222-4222-8222-222222222222"
+    "id": "paybridge-weak-evidence",
+    "label": "Weak evidence",
+    "bucket": "docs_gap",
+    "rawText": "Payments are broken. Please tell us the root cause ASAP."
   },
   {
-    "id": "ticket-6",
-    "label": "Plan entitlement",
-    "bucket": "docs_plus_tools",
-    "rawText": "Can this Starter workspace use audit logs?",
-    "investigationContext": "Plan: Starter. Customer is asking whether audit logs should be available in the current workspace.",
-    "selectedAccountId": "11111111-1111-4111-8111-111111111111"
+    "id": "paybridge-invalid-amount",
+    "label": "Invalid amount",
+    "bucket": "grounded_answer",
+    "rawText": "We’re seeing invalid_amount when creating a payment. The customer is trying to pay €12.34 and we’re sending 12.34 in the request. Why is this failing?"
   },
   {
-    "id": "ticket-7",
-    "label": "Billing + exports",
-    "bucket": "docs_plus_tools",
-    "rawText": "The payment failed yesterday. Could that block new exports today?",
-    "investigationContext": "Plan: Growth. Billing note: payment failed yesterday. Customer wants to know whether billing hold could affect exports today.",
-    "selectedAccountId": "44444444-4444-4444-8444-444444444444"
+    "id": "paybridge-api-key-expired",
+    "label": "Expired API key",
+    "bucket": "grounded_answer",
+    "rawText": "Our API calls started failing with api_key_expired after we rotated keys in the dashboard. We updated the env var but payments are still failing."
   },
   {
-    "id": "ticket-8",
-    "label": "Unsupported",
-    "bucket": "needs_human_review",
-    "rawText": "How do I rotate the product's encryption keys?"
+    "id": "paybridge-disabled-webhook",
+    "label": "Disabled webhook",
+    "bucket": "webhook_recovery",
+    "rawText": "Our webhook endpoint was disabled overnight. Delivery logs show several 500 responses after our deployment. What should we do to re-enable it safely?"
   },
   {
-    "id": "ticket-9",
-    "label": "Permissions",
-    "bucket": "docs_only",
-    "rawText": "What permissions are required to install the CRM integration?"
+    "id": "paybridge-duplicate-event",
+    "label": "Duplicate webhook",
+    "bucket": "idempotency",
+    "rawText": "We are seeing duplicate webhook events for the same payment. Should we dedupe by order_id or event_id?"
   },
   {
-    "id": "ticket-10",
-    "label": "Needs human review",
-    "bucket": "needs_human_review",
-    "rawText": "Why can't this customer access exports even though the docs say Growth should support it?",
-    "investigationContext": "Plan: Growth. Customer says exports should be enabled. No known recent errors. Support note: docs suggest the feature should work, but the issue remains unresolved."
+    "id": "paybridge-paypal-gap",
+    "label": "Unsupported topic",
+    "bucket": "docs_gap",
+    "rawText": "Can you check if this is a PayPal dispute issue?"
   }
 ]

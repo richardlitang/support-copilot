@@ -571,10 +571,6 @@ export async function matchDocumentChunks(input: {
   }));
 }
 
-function escapeIlikePattern(value: string) {
-  return value.replaceAll("\\", "\\\\").replaceAll("%", "\\%").replaceAll("_", "\\_");
-}
-
 export async function matchLiteralDocumentChunks(input: {
   sessionId: string;
   literals: string[];
@@ -583,20 +579,8 @@ export async function matchLiteralDocumentChunks(input: {
   const supabase = getSupabaseAdminClient();
   const rowsById = new Map<string, EvidenceChunk & { literalMatches: string[] }>();
 
-  for (const literal of input.literals) {
-    const pattern = `%${escapeIlikePattern(literal)}%`;
-    const { data, error } = await supabase
-      .from("document_chunks")
-      .select("id, document_id, section_title, content, chunk_index, documents!inner(filename, session_id)")
-      .eq("documents.session_id", input.sessionId)
-      .ilike("content", pattern)
-      .limit(input.matchCount);
-
-    if (error) {
-      throw new Error(`Failed to retrieve literal document chunks: ${error.message}`);
-    }
-
-    for (const row of (data ?? []) as LiteralMatchRow[]) {
+  function addRows(rows: LiteralMatchRow[], literal: string) {
+    for (const row of rows) {
       const existing = rowsById.get(row.id);
 
       if (existing) {
@@ -617,6 +601,35 @@ export async function matchLiteralDocumentChunks(input: {
         literalMatches: [literal]
       });
     }
+  }
+
+  for (const literal of input.literals) {
+    const pattern = `%${literal}%`;
+    const contentResult = await supabase
+      .from("document_chunks")
+      .select("id, document_id, section_title, content, chunk_index, documents!inner(filename, session_id)")
+      .eq("documents.session_id", input.sessionId)
+      .ilike("content", pattern)
+      .limit(input.matchCount);
+
+    if (contentResult.error) {
+      throw new Error(`Failed to retrieve literal document chunks: ${contentResult.error.message}`);
+    }
+
+    addRows((contentResult.data ?? []) as LiteralMatchRow[], literal);
+
+    const titleResult = await supabase
+      .from("document_chunks")
+      .select("id, document_id, section_title, content, chunk_index, documents!inner(filename, session_id)")
+      .eq("documents.session_id", input.sessionId)
+      .ilike("section_title", pattern)
+      .limit(input.matchCount);
+
+    if (titleResult.error) {
+      throw new Error(`Failed to retrieve literal document chunks by title: ${titleResult.error.message}`);
+    }
+
+    addRows((titleResult.data ?? []) as LiteralMatchRow[], literal);
   }
 
   return Array.from(rowsById.values()).slice(0, input.matchCount).map((row, index) => ({

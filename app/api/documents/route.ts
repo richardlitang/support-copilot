@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { deleteDocumentById, deleteDocumentsBySessionId, listDocuments } from "@/lib/db";
 import { createRequestLogger } from "@/lib/log";
+import {
+  ingestBundledSampleDocument,
+  includesBundledSampleDocument,
+  SAMPLE_DOCUMENT_OPT_OUT_COOKIE
+} from "@/lib/sample-document";
 import { ensureSessionId } from "@/lib/session";
 
 export async function GET() {
@@ -8,7 +14,20 @@ export async function GET() {
 
   try {
     const sessionId = await ensureSessionId();
-    const documents = await listDocuments(sessionId);
+    const cookieStore = await cookies();
+    let documents = await listDocuments(sessionId);
+
+    if (!documents.length && cookieStore.get(SAMPLE_DOCUMENT_OPT_OUT_COOKIE)?.value !== "true") {
+      try {
+        await ingestBundledSampleDocument(sessionId);
+        documents = await listDocuments(sessionId);
+      } catch (sampleError) {
+        logger.error("bundled_sample_ingest_failed", {
+          message: sampleError instanceof Error ? sampleError.message : "Failed to ingest bundled sample document."
+        });
+      }
+    }
+
     logger.finish({
       outcome: "success",
       sessionId,
@@ -37,9 +56,16 @@ export async function DELETE(request: Request) {
 
   try {
     const sessionId = await ensureSessionId();
+    const cookieStore = await cookies();
     const payload = (await request.json()) as { documentId?: string; clearAll?: boolean };
     if (payload.clearAll) {
       await deleteDocumentsBySessionId(sessionId);
+      cookieStore.set(SAMPLE_DOCUMENT_OPT_OUT_COOKIE, "true", {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        maxAge: 60 * 60 * 24 * 14
+      });
       logger.finish({
         outcome: "success_clear_all",
         sessionId
@@ -60,6 +86,14 @@ export async function DELETE(request: Request) {
 
     await deleteDocumentById(documentId, sessionId);
     const documents = await listDocuments(sessionId);
+    if (!includesBundledSampleDocument(documents)) {
+      cookieStore.set(SAMPLE_DOCUMENT_OPT_OUT_COOKIE, "true", {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        maxAge: 60 * 60 * 24 * 14
+      });
+    }
     logger.finish({
       outcome: "success_delete_one",
       sessionId,

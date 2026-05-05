@@ -395,6 +395,44 @@ function extractRequiredDiagnosticTokens(toolEvidence: ToolEvidenceItem[]) {
   );
 }
 
+function buildRequiredDiagnosticTokenAnswer(input: {
+  token: string;
+  toolEvidence: ToolEvidenceItem[];
+}): {
+  customerReply: StructuredClaimSet;
+  internalDiagnosis: StructuredClaimSetWithOpenQuestions;
+  insufficientSupport: boolean;
+} | null {
+  const recentError = input.toolEvidence.find(
+    (item) => item.toolName === "getRecentErrors" && item.excerpt.toLowerCase().includes(input.token.toLowerCase())
+  );
+
+  if (!recentError) {
+    return null;
+  }
+
+  const citation = recentError.id;
+  const claimText =
+    input.token === "row"
+      ? "The recent error evidence points to row validation near the configured row limit."
+      : `The recent error evidence includes ${input.token}.`;
+  const customerReply: StructuredClaimSet = {
+    summary: claimText,
+    claims: [{ text: claimText, citations: [citation] }]
+  };
+  const internalDiagnosis: StructuredClaimSetWithOpenQuestions = {
+    summary: claimText,
+    claims: [{ text: claimText, citations: [citation] }],
+    openQuestions: []
+  };
+
+  return {
+    customerReply,
+    internalDiagnosis,
+    insufficientSupport: false
+  };
+}
+
 function tokenizeClaimValidationText(text: string) {
   return text
     .toLowerCase()
@@ -687,6 +725,18 @@ export async function generateInvestigationAnswer(input: {
 
   if (secondValidation.valid) {
     return secondValidation.answer;
+  }
+
+  const missingDiagnosticToken = secondValidation.reason.match(/^Missing required diagnostic token (.+)\.$/)?.[1];
+  const diagnosticTokenAnswer = missingDiagnosticToken
+    ? buildRequiredDiagnosticTokenAnswer({
+        token: missingDiagnosticToken,
+        toolEvidence: input.toolEvidence
+      })
+    : null;
+
+  if (diagnosticTokenAnswer) {
+    return diagnosticTokenAnswer;
   }
 
   return {
