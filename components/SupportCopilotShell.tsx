@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { History, Plus, Sparkles } from "lucide-react";
+import { History, Sparkles } from "lucide-react";
 import { AnswerPanel } from "@/components/AnswerPanel";
 import { EvidencePanel } from "@/components/EvidencePanel";
 import { TicketForm } from "@/components/TicketForm";
@@ -438,10 +438,6 @@ export function SupportCopilotShell({
               </div>
 
               <div className="flex min-w-0 flex-wrap items-center justify-start gap-2 xl:justify-end">
-                <Button type="button" variant="outline" size="sm" onClick={handleNewTicket}>
-                  <Plus className="h-4 w-4" />
-                  New ticket
-                </Button>
                 {showDebugToggle ? <Badge variant={ragEnabled ? "default" : "outline"}>{ragEnabled ? "RAG On" : "RAG Off"}</Badge> : null}
               </div>
             </div>
@@ -454,7 +450,7 @@ export function SupportCopilotShell({
           </Card>
         ) : null}
 
-        <section className="workbench-layout">
+        <section className={hasRunState && showDebugToggle ? "workbench-layout workbench-layout--with-evidence" : "workbench-layout"}>
           <div className="left-stack">
             <UploadPanel
               documents={documents}
@@ -498,6 +494,7 @@ export function SupportCopilotShell({
               onTicketChange={setTicket}
               onLoadScenario={handleLoadScenario}
               onEdit={() => setIsComposerExpandedAfterRun(true)}
+              onNewTicket={handleNewTicket}
               onSubmit={handleInvestigate}
             />
 

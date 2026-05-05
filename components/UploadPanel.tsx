@@ -2,7 +2,7 @@
 
 import { useId, useRef, useState } from "react";
 import type { ChangeEvent, DragEvent } from "react";
-import { ChevronDown, FileText, UploadCloud } from "lucide-react";
+import { ChevronDown, FileText, Trash2, UploadCloud } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,8 +42,9 @@ export function UploadPanel({
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [isDragActive, setIsDragActive] = useState(false);
-  const [showDocs, setShowDocs] = useState(false);
-  const isAtSessionLimit = documents.length >= 3;
+  const [showDocs, setShowDocs] = useState(true);
+  const maxSessionDocs = 10;
+  const isAtSessionLimit = documents.length >= maxSessionDocs;
   const docsExpanded = showDocs || uploadOutcomes.length > 0;
 
   function toUploadableFiles(files: FileList | null) {
@@ -94,7 +95,7 @@ export function UploadPanel({
             <p className="eyebrow">Case intake</p>
             <CardTitle className="mt-2 text-lg">Source corpus</CardTitle>
             <CardDescription className="mt-2 text-xs leading-5">
-              Add up to 3 docs for this session. Keep the corpus small so retrieval is easy to inspect.
+              Add up to 10 docs for this session. Keep the corpus focused so retrieval is easy to inspect.
             </CardDescription>
           </div>
         </div>
@@ -138,26 +139,28 @@ export function UploadPanel({
 
         {isAtSessionLimit ? (
           <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            You have 3 docs in this session. Remove one to upload another.
+            You have 10 docs in this session. Remove one to upload another.
           </div>
         ) : null}
 
         <Separator />
 
         <div className="space-y-3">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="eyebrow">Session docs</p>
-              <p className="mt-1 text-sm text-zinc-500">
-                {documents.length ? "Collapsed by default to keep the workspace focused." : "No docs loaded yet."}
-              </p>
+          <div className="grid gap-3">
+            <div className="flex min-w-0 items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="eyebrow">Session docs</p>
+                <p className="mt-1 text-sm text-zinc-500">{documents.length ? "Remove stale docs before running a new case." : "No docs loaded yet."}</p>
+              </div>
+              <Badge variant="secondary" className="shrink-0">
+                {documents.length}/{maxSessionDocs}
+              </Badge>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-zinc-500">
-                {documents.length} loaded
-              </span>
-              <Button type="button" variant="ghost" size="icon" onClick={() => setShowDocs((value) => !value)} aria-label="Toggle session docs">
+
+            <div className="flex flex-wrap items-center gap-2">
+              <Button type="button" variant="outline" size="sm" onClick={() => setShowDocs((value) => !value)}>
                 <ChevronDown className={`h-4 w-4 transition ${docsExpanded ? "rotate-180" : ""}`} />
+                {docsExpanded ? "Hide docs" : "Show docs"}
               </Button>
               {documents.length ? (
                 <Button type="button" variant="ghost" size="sm" onClick={onClearDocuments}>
@@ -173,18 +176,18 @@ export function UploadPanel({
                 {documents.length ? (
                   documents.map((document) => (
                     <div key={document.id} className="surface-muted p-3">
-                      <div className="flex items-start justify-between gap-3">
+                      <div className="grid gap-3">
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
-                            <FileText className="h-4 w-4 text-zinc-500" />
+                            <FileText className="h-4 w-4 shrink-0 text-zinc-500" />
                             <p className="truncate text-sm font-medium text-zinc-950">{document.filename}</p>
                           </div>
-                          <p className="mt-2 text-xs uppercase tracking-[0.18em] text-zinc-500">{document.contentType ?? "unknown"}</p>
                         </div>
-                        <div className="flex shrink-0 items-center gap-2">
+                        <div className="flex items-center justify-between gap-2">
                           <Badge variant={statusTone(document.status)}>{document.status}</Badge>
-                          <Button type="button" variant="ghost" size="sm" onClick={() => onDeleteDocument(document.id)}>
-                            Remove
+                          <Button type="button" variant="ghost" size="sm" onClick={() => onDeleteDocument(document.id)} aria-label={`Remove ${document.filename}`}>
+                            <Trash2 className="h-4 w-4" />
+                            Remove doc
                           </Button>
                         </div>
                       </div>

@@ -136,6 +136,10 @@
       grid-template-columns: 304px minmax(0, 1fr);
     }
 
+    .workbench-layout--with-evidence {
+      grid-template-columns: 280px minmax(0, 1fr) 300px;
+    }
+
     .stats-layout {
       grid-template-columns: repeat(4, minmax(0, 1fr));
     }

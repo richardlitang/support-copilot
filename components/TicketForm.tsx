@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, FlaskConical, Pencil, SearchCheck } from "lucide-react";
+import { ChevronDown, FlaskConical, Pencil, Plus, SearchCheck } from "lucide-react";
 import type { DemoScenario } from "@/components/SupportCopilotShell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,7 @@ export function TicketForm({
   onSelectAccount,
   onInvestigationContextChange,
   onLoadScenario,
+  onNewTicket,
   onToggleRag,
   onTicketChange,
   onSubmit
@@ -49,6 +50,7 @@ export function TicketForm({
   onSelectAccount: (value: string | null) => void;
   onInvestigationContextChange: (value: string) => void;
   onLoadScenario: (scenario: DemoScenario) => void;
+  onNewTicket: () => void;
   onToggleRag: (value: boolean) => void;
   onTicketChange: (value: string) => void;
   onSubmit: () => void;
@@ -112,6 +114,12 @@ export function TicketForm({
                   Retrieving evidence
                 </div>
               ) : null}
+              {!isInvestigating ? (
+                <Button type="button" variant="outline" size="sm" onClick={onNewTicket}>
+                  <Plus className="h-4 w-4" />
+                  New ticket
+                </Button>
+              ) : null}
               <Button type="button" variant="outline" size="sm" onClick={onEdit}>
                 <Pencil className="h-4 w-4" />
                 Edit
@@ -135,14 +143,20 @@ export function TicketForm({
       }`}
     >
       <CardHeader className="pb-3">
-        <div className="flex items-start justify-between gap-3">
-          <div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
             <p className="eyebrow">Investigation composer</p>
             <CardTitle className="mt-2 text-2xl tracking-[-0.04em]">What should Support Copilot investigate?</CardTitle>
             <CardDescription className="mt-2 text-xs leading-5">
               Paste the customer issue first. The app will retrieve evidence and produce cited claims only after you run it.
             </CardDescription>
           </div>
+          {ticket.trim() || investigationContext.trim() ? (
+            <Button type="button" variant="outline" size="sm" className="shrink-0" onClick={onNewTicket}>
+              <Plus className="h-4 w-4" />
+              New ticket
+            </Button>
+          ) : null}
         </div>
       </CardHeader>
       <CardContent className="space-y-4">

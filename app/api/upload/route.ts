@@ -6,7 +6,7 @@ import { parseUploadedFile } from "@/lib/parse";
 import { ensureSessionId } from "@/lib/session";
 import type { UploadOutcome } from "@/lib/types";
 
-const MAX_FILES = 3;
+const MAX_FILES = 10;
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
 export const runtime = "nodejs";
 
