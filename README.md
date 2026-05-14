@@ -117,6 +117,13 @@ npm run db:migrate
 npm run verify:milestone1
 ```
 
+If host ports are already in use, override them without changing defaults:
+
+```bash
+APP_PORT=3001 POSTGRES_PORT=5433 REDIS_PORT=6380 npm run docker:up
+APP_URL=http://localhost:3001 DATABASE_URL=postgresql://postgres:postgres@localhost:5433/support_copilot REDIS_URL=redis://localhost:6380 npm run verify:milestone1
+```
+
 The upload path is asynchronous in this mode:
 
 1. `/api/upload` stores the raw file in local durable storage and creates a document with `uploaded` status.
