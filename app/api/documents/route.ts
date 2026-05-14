@@ -8,6 +8,7 @@ import {
   SAMPLE_DOCUMENT_OPT_OUT_COOKIE
 } from "@/lib/sample-document";
 import { ensureSessionId } from "@/lib/session";
+import { captureServerException } from "@/src/server/observability/sentry";
 
 export async function GET() {
   const logger = createRequestLogger("/api/documents:get");
@@ -22,6 +23,15 @@ export async function GET() {
         await ingestBundledSampleDocument(sessionId);
         documents = await listDocuments(sessionId);
       } catch (sampleError) {
+        captureServerException(sampleError, {
+          tags: {
+            route: "/api/documents:get",
+            requestId: logger.requestId
+          },
+          extra: {
+            sessionId
+          }
+        });
         logger.error("bundled_sample_ingest_failed", {
           message: sampleError instanceof Error ? sampleError.message : "Failed to ingest bundled sample document."
         });
@@ -38,6 +48,12 @@ export async function GET() {
     return response;
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to load documents.";
+    captureServerException(error, {
+      tags: {
+        route: "/api/documents:get",
+        requestId: logger.requestId
+      }
+    });
     logger.error("documents_get_failed", { message });
     logger.finish({ outcome: "request_error" });
     const response = NextResponse.json(
@@ -105,6 +121,12 @@ export async function DELETE(request: Request) {
     return response;
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to delete document.";
+    captureServerException(error, {
+      tags: {
+        route: "/api/documents:delete",
+        requestId: logger.requestId
+      }
+    });
     logger.error("documents_delete_failed", { message });
     logger.finish({ outcome: "request_error" });
     const response = NextResponse.json(

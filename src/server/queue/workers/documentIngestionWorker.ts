@@ -11,6 +11,7 @@ import {
   updateDocumentStatusWithClient
 } from "@/src/server/db/documents";
 import { recordPipelineEvent, sanitizeError } from "@/src/server/db/pipelineEvents";
+import { captureServerException } from "@/src/server/observability/sentry";
 import { getLocalObject } from "@/src/server/storage/localObjectStorage";
 import { getRedisConnection } from "@/src/server/queue/client";
 import type { DocumentIngestionJob } from "@/src/server/queue/jobs";
@@ -148,6 +149,18 @@ async function processDocumentIngestion(jobData: DocumentIngestionJob, jobId?: s
     });
   } catch (error) {
     const safeError = sanitizeError(error);
+    captureServerException(error, {
+      tags: {
+        route: "document-ingestion-worker",
+        jobName: JOB_NAMES.documentIngestion,
+        documentId: jobData.documentId,
+        jobId: jobId ?? "unknown"
+      },
+      extra: {
+        errorCode: safeError.errorCode,
+        sessionId: jobData.sessionId ?? null
+      }
+    });
 
     await updateDocumentStatusDirect({
       documentId: jobData.documentId,

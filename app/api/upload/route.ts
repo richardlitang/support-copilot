@@ -5,6 +5,7 @@ import { createRequestLogger } from "@/lib/log";
 import { ensureSessionId } from "@/lib/session";
 import type { UploadOutcome } from "@/lib/types";
 import { recordPipelineEvent } from "@/src/server/db/pipelineEvents";
+import { captureServerException } from "@/src/server/observability/sentry";
 import { enqueueDocumentIngestionJob } from "@/src/server/queue/client";
 import { putLocalObject } from "@/src/server/storage/localObjectStorage";
 
@@ -134,6 +135,17 @@ export async function POST(request: Request) {
           sizeBytes: file.size
         });
       } catch (error) {
+        captureServerException(error, {
+          tags: {
+            route: "/api/upload",
+            requestId: logger.requestId
+          },
+          extra: {
+            filename: file.name,
+            contentType: file.type || "unknown",
+            sizeBytes: file.size
+          }
+        });
         outcomes.push({
           filename: file.name,
           status: "failed",
@@ -164,6 +176,12 @@ export async function POST(request: Request) {
     return response;
   } catch (error) {
     const message = error instanceof Error ? error.message : "Upload failed.";
+    captureServerException(error, {
+      tags: {
+        route: "/api/upload",
+        requestId: logger.requestId
+      }
+    });
     logger.error("upload_request_failed", { message });
     logger.finish({ outcome: "request_error" });
     const response = NextResponse.json(

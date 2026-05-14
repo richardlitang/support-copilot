@@ -4,6 +4,7 @@ import { InvestigationRequestError, normalizeInvestigationRequest } from "@/lib/
 import { createRequestLogger } from "@/lib/log";
 import { ensureSessionId } from "@/lib/session";
 import { recordPipelineEvent } from "@/src/server/db/pipelineEvents";
+import { captureServerException } from "@/src/server/observability/sentry";
 
 export async function POST(request: Request) {
   const logger = createRequestLogger("/api/investigate");
@@ -74,6 +75,17 @@ export async function POST(request: Request) {
   } catch (error) {
     const message = error instanceof Error ? error.message : "Investigation failed.";
     const status = error instanceof InvestigationRequestError ? 400 : 500;
+    if (status >= 500) {
+      captureServerException(error, {
+        tags: {
+          route: "/api/investigate",
+          requestId: logger.requestId
+        },
+        extra: {
+          status
+        }
+      });
+    }
     logger.error("investigate_request_failed", { message });
     logger.finish({ outcome: status === 400 ? "validation_error" : "request_error" });
     await recordPipelineEvent({

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { listAccountsSafe } from "@/lib/db";
 import { createRequestLogger } from "@/lib/log";
+import { captureServerException } from "@/src/server/observability/sentry";
 
 export async function GET() {
   const logger = createRequestLogger("/api/debug/accounts:get");
@@ -16,6 +17,12 @@ export async function GET() {
     return response;
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to load debug accounts.";
+    captureServerException(error, {
+      tags: {
+        route: "/api/debug/accounts:get",
+        requestId: logger.requestId
+      }
+    });
     logger.error("debug_accounts_get_failed", { message });
     logger.finish({ outcome: "request_error" });
     const response = NextResponse.json(
