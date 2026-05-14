@@ -35,7 +35,7 @@ export async function enqueueDocumentIngestionJob(job: DocumentIngestionJob) {
   const queue = getDocumentIngestionQueue();
 
   return queue.add(JOB_NAMES.documentIngestion, job, {
-    jobId: `document:${job.documentId}`,
+    jobId: `document-${job.documentId}`,
     attempts: 3,
     backoff: {
       type: "exponential",
