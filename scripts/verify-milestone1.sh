@@ -8,7 +8,7 @@ export AI_PROVIDER=mock
 export SUPPORT_MATCH_THRESHOLD="${SUPPORT_MATCH_THRESHOLD:-0}"
 
 COOKIE_JAR="$(mktemp)"
-FIXTURE_FILE="$(mktemp --suffix=.md)"
+FIXTURE_FILE="$(mktemp "${TMPDIR:-/tmp}/milestone-fixture.XXXXXX.md")"
 
 cleanup() {
   rm -f "$COOKIE_JAR" "$FIXTURE_FILE"
