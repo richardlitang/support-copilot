@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
-import { getDocumentCount, listDocuments } from "@/lib/db";
-import { ingestParsedDocument } from "@/lib/ingest";
+import { getDocumentCount, listDocuments, createDocumentRecord } from "@/lib/db";
+import { getRuntimeConfig } from "@/lib/env";
 import { createRequestLogger } from "@/lib/log";
-import { parseUploadedFile } from "@/lib/parse";
 import { ensureSessionId } from "@/lib/session";
 import type { UploadOutcome } from "@/lib/types";
+import { recordPipelineEvent } from "@/src/server/db/pipelineEvents";
+import { enqueueDocumentIngestionJob } from "@/src/server/queue/client";
+import { putLocalObject } from "@/src/server/storage/localObjectStorage";
 
 const MAX_FILES = 10;
-const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
@@ -15,6 +16,8 @@ export async function POST(request: Request) {
 
   try {
     const sessionId = await ensureSessionId();
+    const config = getRuntimeConfig();
+    const maxFileSizeBytes = config.maxUploadMb * 1024 * 1024;
     const formData = await request.formData();
     const files = formData.getAll("files").filter((value): value is File => value instanceof File);
     logger.info("upload_received", {
@@ -58,45 +61,87 @@ export async function POST(request: Request) {
         sizeBytes: file.size
       });
 
-      if (file.size > MAX_FILE_SIZE_BYTES) {
+      if (file.size > maxFileSizeBytes) {
         outcomes.push({
           filename: file.name,
           status: "failed",
-          message: "File exceeds the 5 MB demo limit."
+          message: `File exceeds the ${config.maxUploadMb} MB upload limit.`
         });
         logger.info("file_rejected_size_limit", {
           filename: file.name,
           sizeBytes: file.size,
-          maxSizeBytes: MAX_FILE_SIZE_BYTES
+          maxSizeBytes: maxFileSizeBytes
         });
         continue;
       }
 
       try {
-        const parsed = await parseUploadedFile(file);
-        const result = await ingestParsedDocument({
-          parsedDocument: parsed,
+        const buffer = Buffer.from(await file.arrayBuffer());
+        const stored = await putLocalObject({
+          buffer,
+          filename: file.name,
+          contentType: file.type || "application/octet-stream"
+        });
+        const document = await createDocumentRecord({
+          sessionId,
+          filename: file.name,
+          contentType: file.type || null,
+          status: "uploaded",
+          storagePath: stored.storagePath,
+          sizeBytes: file.size
+        });
+
+        await recordPipelineEvent({
+          eventType: "DOCUMENT_UPLOADED",
+          status: "completed",
+          entityType: "document",
+          entityId: document.id,
+          sessionId,
+          metadata: {
+            filename: file.name,
+            contentType: file.type || "unknown",
+            sizeBytes: file.size
+          }
+        }).catch(() => undefined);
+
+        const job = await enqueueDocumentIngestionJob({
+          documentId: document.id,
           sessionId
         });
+
+        await recordPipelineEvent({
+          eventType: "DOCUMENT_INGESTION_ENQUEUED",
+          status: "completed",
+          entityType: "document",
+          entityId: document.id,
+          sessionId,
+          metadata: {
+            jobId: job.id,
+            queueName: "document-ingestion"
+          }
+        }).catch(() => undefined);
+
         outcomes.push({
           filename: file.name,
-          status: "ready",
-          message: `Ingested ${result.chunkCount} retrievable chunks.`
+          documentId: document.id,
+          status: "uploaded",
+          message: "Document accepted for background processing."
         });
-        logger.info("file_ingested", {
+        logger.info("file_accepted", {
           filename: file.name,
-          chunkCount: result.chunkCount
+          documentId: document.id,
+          jobId: job.id,
+          sizeBytes: file.size
         });
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Upload failed.";
         outcomes.push({
           filename: file.name,
           status: "failed",
-          message
+          message: "Upload failed before ingestion could start."
         });
         logger.error("file_ingest_failed", {
           filename: file.name,
-          message
+          message: error instanceof Error ? error.message : "Upload failed."
         });
       }
     }
@@ -113,7 +158,7 @@ export async function POST(request: Request) {
         documents,
         outcomes
       },
-      { status: hasFailure ? 207 : 200 }
+      { status: hasFailure ? 207 : 202 }
     );
     response.headers.set("x-request-id", logger.requestId);
     return response;

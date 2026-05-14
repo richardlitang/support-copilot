@@ -173,6 +173,7 @@ export function SupportCopilotShell({
   const showDebugToggle = process.env.NEXT_PUBLIC_DEBUG_RAG === "true";
   const hasRunState = Boolean(result) || isInvestigating;
   const activeStep = documents.length === 0 ? "docs" : ticket.trim() ? "investigate" : "ticket";
+  const hasPendingDocuments = documents.some((document) => document.status === "uploaded" || document.status === "processing");
 
   const refreshDocuments = useCallback(async (options?: { silent?: boolean }) => {
     const response = await fetch("/api/documents");
@@ -215,6 +216,18 @@ export function SupportCopilotShell({
       void refreshAccounts({ silent: true });
     }
   }, [refreshAccounts, refreshDocuments, showDebugToggle]);
+
+  useEffect(() => {
+    if (!hasPendingDocuments) {
+      return;
+    }
+
+    const interval = window.setInterval(() => {
+      void refreshDocuments({ silent: true });
+    }, 2000);
+
+    return () => window.clearInterval(interval);
+  }, [hasPendingDocuments, refreshDocuments]);
 
   useEffect(() => {
     setHistoryItems(readStoredHistory());
@@ -302,6 +315,7 @@ export function SupportCopilotShell({
 
       setDocuments(payload.documents ?? []);
       setUploadOutcomes(payload.outcomes ?? []);
+      void refreshDocuments({ silent: true });
     } catch (uploadError) {
       setError(uploadError instanceof Error ? uploadError.message : "Upload failed.");
     } finally {

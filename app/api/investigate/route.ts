@@ -3,6 +3,7 @@ import { investigateTicket } from "@/lib/investigate";
 import { InvestigationRequestError, normalizeInvestigationRequest } from "@/lib/investigation-request";
 import { createRequestLogger } from "@/lib/log";
 import { ensureSessionId } from "@/lib/session";
+import { recordPipelineEvent } from "@/src/server/db/pipelineEvents";
 
 export async function POST(request: Request) {
   const logger = createRequestLogger("/api/investigate");
@@ -19,6 +20,19 @@ export async function POST(request: Request) {
       selectedAccountId: payload.selectedAccountId,
       investigationContextLength: payload.investigationContext?.length ?? 0
     });
+    await recordPipelineEvent({
+      eventType: "INVESTIGATION_STARTED",
+      status: "started",
+      entityType: "session",
+      entityId: sessionId,
+      sessionId,
+      metadata: {
+        executionMode: payload.executionMode,
+        ragEnabled: payload.ragEnabled,
+        ticketLength: payload.ticket.length,
+        investigationContextLength: payload.investigationContext?.length ?? 0
+      }
+    }).catch(() => undefined);
 
     const result = await investigateTicket({
       ticket: payload.ticket,
@@ -40,6 +54,20 @@ export async function POST(request: Request) {
         [...result.customerReply.claims, ...result.internalDiagnosis.claims].flatMap((claim) => claim.citations)
       ).size
     });
+    await recordPipelineEvent({
+      eventType: "ANSWER_GENERATED",
+      status: "completed",
+      entityType: "investigation",
+      entityId: result.investigationId,
+      sessionId,
+      metadata: {
+        mode: result.mode,
+        reviewStatus: result.reviewStatus,
+        supportLevel: result.supportLevel,
+        evidenceCount: result.docEvidence.length,
+        toolEvidenceCount: result.toolEvidence.length
+      }
+    }).catch(() => undefined);
     const response = NextResponse.json(result);
     response.headers.set("x-request-id", logger.requestId);
     return response;
@@ -48,6 +76,17 @@ export async function POST(request: Request) {
     const status = error instanceof InvestigationRequestError ? 400 : 500;
     logger.error("investigate_request_failed", { message });
     logger.finish({ outcome: status === 400 ? "validation_error" : "request_error" });
+    await recordPipelineEvent({
+      eventType: "INVESTIGATION_FAILED",
+      status: "failed",
+      entityType: "request",
+      entityId: logger.requestId,
+      metadata: {
+        status
+      },
+      errorCode: status === 400 ? "INVESTIGATION_REQUEST_INVALID" : "INVESTIGATION_REQUEST_FAILED",
+      errorMessageSafe: status === 400 ? "Investigation request was invalid" : "Investigation request failed"
+    }).catch(() => undefined);
     const response = NextResponse.json(
       {
         error: message

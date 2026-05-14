@@ -21,6 +21,7 @@ returns table (
 )
 language sql
 stable
+set search_path = public, extensions
 as $$
   select
     document_chunks.id,

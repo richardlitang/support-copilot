@@ -137,7 +137,7 @@ export function UploadPanel({
               size="sm"
               className="mt-3 rounded-md"
             >
-              {isAtSessionLimit ? "Limit reached" : isUploading ? "Ingesting…" : "Choose files"}
+              {isAtSessionLimit ? "Limit reached" : isUploading ? "Uploading..." : "Choose files"}
             </Button>
             <input
               ref={inputRef}
@@ -165,7 +165,11 @@ export function UploadPanel({
                 <div className="min-w-0">
                   <p className="eyebrow">Session docs</p>
                   <p className="mt-1 text-sm text-zinc-500">
-                    {documents.length ? "Ready for retrieval." : "No docs loaded yet."}
+                    {documents.length
+                      ? documents.some((document) => document.status === "uploaded" || document.status === "processing")
+                        ? "Processing uploads."
+                        : "Ready for retrieval."
+                      : "No docs loaded yet."}
                   </p>
                 </div>
                 <Badge variant="secondary" className="shrink-0">
@@ -243,7 +247,7 @@ export function UploadPanel({
                     <div key={`${outcome.filename}-${outcome.status}`} className="surface-muted p-3 text-sm">
                       <div className="grid gap-2">
                         <p className="truncate text-zinc-700">{outcome.filename}</p>
-                        <p className={outcome.status === "ready" ? "text-emerald-700" : "text-red-700"}>{outcome.message}</p>
+                        <p className={outcome.status === "failed" ? "text-red-700" : "text-emerald-700"}>{outcome.message}</p>
                       </div>
                     </div>
                   ))}

@@ -1,5 +1,19 @@
 import { createClient } from "@supabase/supabase-js";
-import { ensureEnvLoaded } from "@/lib/env";
+import { ensureEnvLoaded, hasDirectDatabaseConfig } from "@/lib/env";
+import {
+  createDocumentDirect,
+  deleteDocumentDirect,
+  deleteDocumentsBySessionDirect,
+  getDocumentCountDirect,
+  listDocumentsDirect,
+  updateDocumentStatusDirect
+} from "@/src/server/db/documents";
+import {
+  matchDocumentChunksDirect,
+  matchLiteralDocumentChunksDirect,
+  replaceDocumentChunks
+} from "@/src/server/db/chunks";
+import { withPgClient } from "@/src/server/db/client";
 import type {
   AccountRecord,
   ErrorEventRecord,
@@ -26,6 +40,11 @@ type DbDocumentRow = {
   content_type: string | null;
   status: DocumentStatus;
   created_at: string;
+  storage_path?: string | null;
+  size_bytes?: number | null;
+  error_code?: string | null;
+  error_message_safe?: string | null;
+  processed_at?: string | null;
 };
 
 type MatchRow = {
@@ -173,7 +192,12 @@ function mapDocumentRow(row: DbDocumentRow): DocumentRecord {
     filename: row.filename,
     contentType: row.content_type,
     status: row.status,
-    createdAt: row.created_at
+    createdAt: row.created_at,
+    storagePath: row.storage_path ?? null,
+    sizeBytes: row.size_bytes ?? null,
+    errorCode: row.error_code ?? null,
+    errorMessageSafe: row.error_message_safe ?? null,
+    processedAt: row.processed_at ?? null
   };
 }
 
@@ -214,6 +238,10 @@ function mapErrorEventRow(row: DbErrorEventRow): ErrorEventRecord {
 }
 
 export async function listDocuments(sessionId: string) {
+  if (hasDirectDatabaseConfig()) {
+    return listDocumentsDirect(sessionId);
+  }
+
   const supabase = getSupabaseAdminClient();
   const { data, error } = await supabase
     .from("documents")
@@ -258,6 +286,10 @@ export async function listDocumentsSafe(sessionId?: string | null) {
 }
 
 export async function getDocumentCount(sessionId: string) {
+  if (hasDirectDatabaseConfig()) {
+    return getDocumentCountDirect(sessionId);
+  }
+
   const supabase = getSupabaseAdminClient();
   const { count, error } = await supabase
     .from("documents")
@@ -276,7 +308,20 @@ export async function createDocumentRecord(input: {
   filename: string;
   contentType: string | null;
   status?: DocumentStatus;
+  storagePath?: string | null;
+  sizeBytes?: number | null;
 }) {
+  if (hasDirectDatabaseConfig()) {
+    return createDocumentDirect({
+      sessionId: input.sessionId,
+      filename: input.filename,
+      contentType: input.contentType,
+      status: input.status ?? "processing",
+      storagePath: input.storagePath ?? null,
+      sizeBytes: input.sizeBytes ?? null
+    });
+  }
+
   const supabase = getSupabaseAdminClient();
   const { data, error } = await supabase
     .from("documents")
@@ -284,7 +329,9 @@ export async function createDocumentRecord(input: {
       session_id: input.sessionId,
       filename: input.filename,
       content_type: input.contentType,
-      status: input.status ?? "processing"
+      status: input.status ?? "processing",
+      storage_path: input.storagePath ?? null,
+      size_bytes: input.sizeBytes ?? null
     })
     .select("id, session_id, filename, content_type, status, created_at")
     .single();
@@ -297,6 +344,10 @@ export async function createDocumentRecord(input: {
 }
 
 export async function updateDocumentStatus(documentId: string, status: DocumentStatus) {
+  if (hasDirectDatabaseConfig()) {
+    return updateDocumentStatusDirect({ documentId, status });
+  }
+
   const supabase = getSupabaseAdminClient();
   const { error } = await supabase.from("documents").update({ status }).eq("id", documentId);
 
@@ -320,6 +371,10 @@ export async function deleteDocumentsByFilenameAndStatus(filename: string, statu
 }
 
 export async function deleteDocumentById(documentId: string, sessionId: string) {
+  if (hasDirectDatabaseConfig()) {
+    return deleteDocumentDirect(documentId, sessionId);
+  }
+
   const supabase = getSupabaseAdminClient();
   const { error } = await supabase.from("documents").delete().eq("id", documentId).eq("session_id", sessionId);
 
@@ -329,6 +384,10 @@ export async function deleteDocumentById(documentId: string, sessionId: string) 
 }
 
 export async function deleteDocumentsBySessionId(sessionId: string) {
+  if (hasDirectDatabaseConfig()) {
+    return deleteDocumentsBySessionDirect(sessionId);
+  }
+
   const supabase = getSupabaseAdminClient();
   const { error } = await supabase.from("documents").delete().eq("session_id", sessionId);
 
@@ -340,6 +399,27 @@ export async function deleteDocumentsBySessionId(sessionId: string) {
 export async function insertDocumentChunks(
   rows: Array<ChunkCandidate & { documentId: string; embedding: number[] }>
 ) {
+  if (hasDirectDatabaseConfig()) {
+    const documentId = rows[0]?.documentId;
+
+    if (!documentId) {
+      return;
+    }
+
+    await replaceDocumentChunks({
+      documentId,
+      chunks: rows.map((row) => ({
+        chunkIndex: row.chunkIndex,
+        sectionTitle: row.sectionTitle,
+        content: row.content,
+        tokenCount: row.tokenCount,
+        metadata: row.metadata,
+        embedding: row.embedding
+      }))
+    });
+    return;
+  }
+
   const supabase = getSupabaseAdminClient();
   const { error } = await supabase.from("document_chunks").insert(
     rows.map((row) => ({
@@ -492,6 +572,66 @@ export async function persistInvestigationRun(input: {
     output: unknown;
   }>;
 }) {
+  if (hasDirectDatabaseConfig()) {
+    return withPgClient(async (client) => {
+      const result = await client.query<{ ticket_id: string; investigation_id: string }>(
+        `
+          select *
+          from create_investigation_run(
+            $1,
+            $2,
+            $3,
+            $4,
+            $5,
+            $6,
+            $7,
+            $8,
+            $9::jsonb,
+            $10::jsonb,
+            $11::jsonb,
+            $12::jsonb
+          )
+        `,
+        [
+          input.ticketText,
+          input.status,
+          input.answerMarkdown,
+          input.supportLevel,
+          input.mode,
+          input.reviewStatus,
+          input.routingReason,
+          input.accountId ?? null,
+          JSON.stringify(input.customerReplyJson),
+          JSON.stringify(input.internalDiagnosisJson),
+          JSON.stringify(
+            input.sources.map((source) => ({
+              document_chunk_id: source.documentChunkId,
+              rank: source.rank,
+              score: source.score
+            }))
+          ),
+          JSON.stringify(
+            input.toolCalls.map((toolCall) => ({
+              tool_name: toolCall.toolName,
+              tool_input_json: toolCall.input,
+              tool_output_json: toolCall.output
+            }))
+          )
+        ]
+      );
+      const row = result.rows[0];
+
+      if (!row) {
+        throw new Error("Failed to persist investigation run: no row returned.");
+      }
+
+      return {
+        ticketId: row.ticket_id,
+        investigationId: row.investigation_id
+      };
+    });
+  }
+
   const supabase = getSupabaseAdminClient();
   const rpcResult = await supabase
     .rpc("create_investigation_run", {
@@ -547,6 +687,10 @@ export async function matchDocumentChunks(input: {
   matchCount: number;
   matchThreshold: number;
 }): Promise<EvidenceChunk[]> {
+  if (hasDirectDatabaseConfig()) {
+    return matchDocumentChunksDirect(input);
+  }
+
   const supabase = getSupabaseAdminClient();
   const { data, error } = await supabase.rpc("match_document_chunks", {
     session_id_filter: input.sessionId,
@@ -576,6 +720,10 @@ export async function matchLiteralDocumentChunks(input: {
   literals: string[];
   matchCount: number;
 }): Promise<EvidenceChunk[]> {
+  if (hasDirectDatabaseConfig()) {
+    return matchLiteralDocumentChunksDirect(input);
+  }
+
   const supabase = getSupabaseAdminClient();
   const rowsById = new Map<string, EvidenceChunk & { literalMatches: string[] }>();
 
@@ -609,6 +757,7 @@ export async function matchLiteralDocumentChunks(input: {
       .from("document_chunks")
       .select("id, document_id, section_title, content, chunk_index, documents!inner(filename, session_id)")
       .eq("documents.session_id", input.sessionId)
+      .eq("documents.status", "ready")
       .ilike("content", pattern)
       .limit(input.matchCount);
 
@@ -622,6 +771,7 @@ export async function matchLiteralDocumentChunks(input: {
       .from("document_chunks")
       .select("id, document_id, section_title, content, chunk_index, documents!inner(filename, session_id)")
       .eq("documents.session_id", input.sessionId)
+      .eq("documents.status", "ready")
       .ilike("section_title", pattern)
       .limit(input.matchCount);
 

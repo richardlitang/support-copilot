@@ -1,4 +1,4 @@
-export type DocumentStatus = "processing" | "ready" | "failed";
+export type DocumentStatus = "uploaded" | "processing" | "ready" | "failed" | "archived";
 export type SupportLevel = "high" | "medium" | "low" | "insufficient_support";
 
 export interface DocumentRecord {
@@ -8,6 +8,11 @@ export interface DocumentRecord {
   contentType: string | null;
   status: DocumentStatus;
   createdAt: string;
+  storagePath?: string | null;
+  sizeBytes?: number | null;
+  errorCode?: string | null;
+  errorMessageSafe?: string | null;
+  processedAt?: string | null;
 }
 
 export interface ParsedSection {
@@ -84,6 +89,7 @@ export interface InvestigationResult {
 
 export interface UploadOutcome {
   filename: string;
-  status: "ready" | "failed";
+  status: "uploaded" | "processing" | "ready" | "failed";
+  documentId?: string;
   message: string;
 }

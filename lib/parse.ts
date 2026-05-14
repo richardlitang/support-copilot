@@ -112,6 +112,44 @@ async function parsePdfDocument(file: File) {
   });
 }
 
+async function parsePdfBuffer(input: { buffer: Buffer; filename: string; contentType: string }) {
+  const pdfParseModule = await import("pdf-parse/lib/pdf-parse.js");
+  const candidate = (pdfParseModule as { default?: unknown }).default ?? (pdfParseModule as unknown);
+
+  if (typeof candidate !== "function") {
+    throw new Error("Unsupported pdf parser module shape. Expected parser function export.");
+  }
+
+  const parsed = await candidate(input.buffer);
+  const text = (parsed as { text?: string }).text ?? "";
+
+  return parseTextDocument({
+    filename: input.filename,
+    contentType: input.contentType || "application/pdf",
+    text,
+    sourceType: "upload"
+  });
+}
+
+export async function parseUploadedBuffer(input: { buffer: Buffer; filename: string; contentType: string }) {
+  const extension = getExtension(input.filename);
+
+  if (!SUPPORTED_EXTENSIONS.has(extension)) {
+    throw new Error(`Unsupported file type for ${input.filename}. Upload .md, .txt, or .pdf files.`);
+  }
+
+  if (extension === "pdf") {
+    return parsePdfBuffer(input);
+  }
+
+  return parseTextDocument({
+    filename: input.filename,
+    contentType: input.contentType || (extension === "md" ? "text/markdown" : "text/plain"),
+    text: input.buffer.toString("utf8"),
+    sourceType: "upload"
+  });
+}
+
 export async function parseUploadedFile(file: File) {
   const extension = getExtension(file.name);
 

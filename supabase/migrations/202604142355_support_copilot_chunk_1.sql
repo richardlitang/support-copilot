@@ -1,5 +1,22 @@
+create schema if not exists extensions;
 create extension if not exists pgcrypto with schema extensions;
 create extension if not exists vector with schema extensions;
+
+do $$
+begin
+  if not exists (select from pg_roles where rolname = 'anon') then
+    create role anon;
+  end if;
+
+  if not exists (select from pg_roles where rolname = 'authenticated') then
+    create role authenticated;
+  end if;
+
+  if not exists (select from pg_roles where rolname = 'service_role') then
+    create role service_role;
+  end if;
+end
+$$;
 
 create table if not exists documents (
   id uuid primary key default extensions.gen_random_uuid(),
@@ -64,6 +81,7 @@ returns table (
 )
 language sql
 stable
+set search_path = public, extensions
 as $$
   select
     document_chunks.id,

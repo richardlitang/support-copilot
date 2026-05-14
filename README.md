@@ -64,7 +64,18 @@ For a fuller walkthrough, see [`docs/architecture.md`](docs/architecture.md).
 npm install
 ```
 
-2. Copy `.env.example` to `.env.local` and fill in:
+2. Copy `.env.example` to `.env.local`.
+
+For local-first Milestone 1 development, the required values are:
+
+- `DATABASE_URL=postgresql://postgres:postgres@localhost:5432/support_copilot`
+- `REDIS_URL=redis://localhost:6379`
+- `AI_PROVIDER=mock`
+- `UPLOAD_DIR=uploads`
+
+`AI_PROVIDER=mock` uses deterministic 1536-dimensional embeddings so tests and local verification do not require paid APIs. Set `AI_PROVIDER=openai` only when you want live model quality, then provide `OPENAI_API_KEY`.
+
+Hosted Supabase mode remains optional. If using hosted Supabase instead of local Docker Postgres, fill in:
 
 - `OPENAI_API_KEY`
 - `SUPABASE_URL`
@@ -90,6 +101,36 @@ npm run dev
 ```bash
 npm run seed:demo
 ```
+
+## Run Locally with Docker
+
+Milestone 1 local infrastructure runs app, worker, Postgres with pgvector, and Redis:
+
+```bash
+npm run docker:up
+```
+
+In another terminal:
+
+```bash
+npm run db:migrate
+npm run verify:milestone1
+```
+
+The upload path is asynchronous in this mode:
+
+1. `/api/upload` stores the raw file in local durable storage and creates a document with `uploaded` status.
+2. BullMQ enqueues a `DOCUMENT_INGESTION` job containing IDs only.
+3. The worker reads `documents.storage_path`, parses/chunks/embeds the document, replaces chunks idempotently, and marks the document `ready` or `failed`.
+4. `/api/investigate` retrieves only `ready` documents.
+
+`/api/health` verifies the app process is alive. `/api/ready` checks required dependencies without exposing secrets.
+
+## Safe Observability
+
+Logs and pipeline events may include IDs, statuses, counts, durations, provider names, and sanitized error codes/messages. They must not include raw uploaded files, extracted text, full prompts, full model responses, embeddings, secrets, headers, cookies, or request bodies.
+
+Pipeline events are stored in `pipeline_events` and are intended as a safe operational audit trail for ingestion and investigation state transitions.
 
 ## Demo Data
 

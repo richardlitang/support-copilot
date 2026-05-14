@@ -1,4 +1,5 @@
 import { buildCitationReferences, normalizeCitationLabels, normalizeSourceLabels } from "@/lib/citations";
+import { getRuntimeConfig } from "@/lib/env";
 import { getAnswerModel, getOpenAIClient } from "@/lib/openai";
 import type {
   CitationId,
@@ -167,6 +168,30 @@ async function requestGroundedAnswer(input: {
   evidence: EvidenceChunk[];
   stricterRetry: boolean;
 }) {
+  if (getRuntimeConfig().aiProvider === "mock") {
+    const citations = buildCitationReferences(input.evidence);
+    const firstCitation = citations[0];
+
+    if (!firstCitation) {
+      return buildInsufficientSupportAnswer();
+    }
+
+    const claimText = firstCitation.excerpt.slice(0, 180);
+
+    return {
+      answer: claimText,
+      claims: [
+        {
+          text: claimText,
+          citationIds: [firstCitation.label]
+        }
+      ],
+      supportLevel: "medium",
+      citations: [firstCitation.label],
+      insufficientSupport: false
+    } satisfies StructuredAnswer;
+  }
+
   const client = getOpenAIClient();
   const model = getAnswerModel();
   const citations = buildCitationReferences(input.evidence);
@@ -626,6 +651,57 @@ async function requestInvestigationAnswer(input: {
   toolEvidence: ToolEvidenceItem[];
   stricterRetry: boolean;
 }) {
+  if (getRuntimeConfig().aiProvider === "mock") {
+    const firstDoc = input.docEvidence[0];
+    const firstTool = input.toolEvidence[0];
+
+    if (!firstDoc && !firstTool) {
+      return {
+        customerReplyClaims: [],
+        internalDiagnosisClaims: [],
+        openQuestions: ["Add ready documentation or support context for this case."],
+        insufficientSupport: true
+      } satisfies StructuredInvestigationDraft;
+    }
+
+    if (firstDoc) {
+      const claimText = firstDoc.excerpt.slice(0, 180);
+      return {
+        customerReplyClaims: [
+          {
+            text: claimText,
+            citations: [firstDoc.id]
+          }
+        ],
+        internalDiagnosisClaims: [
+          {
+            text: claimText,
+            citations: [firstDoc.id]
+          }
+        ],
+        openQuestions: [],
+        insufficientSupport: false
+      } satisfies StructuredInvestigationDraft;
+    }
+
+    return {
+      customerReplyClaims: [
+        {
+          text: `The available support context points to ${firstTool?.title ?? "the selected account context"}.`,
+          citations: [firstTool?.id ?? "T1"]
+        }
+      ],
+      internalDiagnosisClaims: [
+        {
+          text: `The investigation used support context from ${firstTool?.title ?? "the selected account context"}.`,
+          citations: [firstTool?.id ?? "T1"]
+        }
+      ],
+      openQuestions: [],
+      insufficientSupport: false
+    } satisfies StructuredInvestigationDraft;
+  }
+
   const client = getOpenAIClient();
   const model = getAnswerModel();
   const docBlock = input.docEvidence.length
