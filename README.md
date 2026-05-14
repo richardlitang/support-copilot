@@ -139,6 +139,8 @@ Logs and pipeline events may include IDs, statuses, counts, durations, provider 
 
 Pipeline events are stored in `pipeline_events` and are intended as a safe operational audit trail for ingestion and investigation state transitions.
 
+Optional error tracking is supported through `SENTRY_DSN`. When configured, server and worker exceptions are captured with safe tags/context (route, request/job IDs, status/error codes) and without raw document content, prompts, embeddings, or secrets. Sentry-compatible backends such as GlitchTip can be used by setting `SENTRY_DSN` to the compatible ingest DSN.
+
 ## Demo Data
 
 - `demo/docs/paybridge-api-support-guide.md`: bundled PayBridge sample support guide for the default app walkthrough
