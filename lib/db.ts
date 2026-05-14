@@ -586,10 +586,12 @@ export async function persistInvestigationRun(input: {
             $6,
             $7,
             $8,
-            $9::jsonb,
-            $10::jsonb,
+            $9,
+            $10,
             $11::jsonb,
-            $12::jsonb
+            $12::jsonb,
+            $13::jsonb,
+            $14::jsonb
           )
         `,
         [
@@ -599,6 +601,8 @@ export async function persistInvestigationRun(input: {
           input.supportLevel,
           input.mode,
           input.reviewStatus,
+          input.reviewDecision.reasonCode,
+          input.reviewDecision.action,
           input.routingReason,
           input.accountId ?? null,
           JSON.stringify(input.customerReplyJson),
