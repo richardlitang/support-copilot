@@ -193,3 +193,14 @@ npm run test
 npm run build
 npm run eval:demo
 ```
+
+## CI and Security Automation
+
+GitHub Actions now includes:
+
+- `.github/workflows/ci.yml`: lint, typecheck, unit tests, production build, and Docker build on PR/push.
+- `.github/workflows/security.yml`: Trivy filesystem and image scans on PR/push, plus weekly scheduled scan.
+
+Dependency update automation:
+
+- `.github/dependabot.yml`: weekly update PRs for npm packages and GitHub Actions workflows.
