@@ -30,7 +30,9 @@ export function normalizeInvestigationRequest(body: unknown): InvestigationReque
       ? input.investigationContext.trim()
       : null;
   const selectedAccountId =
-    typeof input.selectedAccountId === "string" && input.selectedAccountId.trim() ? input.selectedAccountId.trim() : null;
+    typeof input.selectedAccountId === "string" && input.selectedAccountId.trim()
+      ? input.selectedAccountId.trim()
+      : null;
   const executionMode = input.executionMode === "evidence_only" ? "evidence_only" : "draft_answer";
 
   if (!ticket) {
@@ -38,12 +40,14 @@ export function normalizeInvestigationRequest(body: unknown): InvestigationReque
   }
 
   if (ticket.length > MAX_TICKET_LENGTH) {
-    throw new InvestigationRequestError(`Ticket is too long. Keep it under ${MAX_TICKET_LENGTH.toLocaleString()} characters.`);
+    throw new InvestigationRequestError(
+      `Ticket is too long. Keep it under ${MAX_TICKET_LENGTH.toLocaleString()} characters.`,
+    );
   }
 
   if (investigationContext && investigationContext.length > MAX_INVESTIGATION_CONTEXT_LENGTH) {
     throw new InvestigationRequestError(
-      `Investigation context is too long. Keep it under ${MAX_INVESTIGATION_CONTEXT_LENGTH.toLocaleString()} characters.`
+      `Investigation context is too long. Keep it under ${MAX_INVESTIGATION_CONTEXT_LENGTH.toLocaleString()} characters.`,
     );
   }
 
@@ -56,6 +60,6 @@ export function normalizeInvestigationRequest(body: unknown): InvestigationReque
     executionMode,
     ragEnabled: typeof input.ragEnabled === "boolean" ? input.ragEnabled : true,
     selectedAccountId,
-    investigationContext
+    investigationContext,
   };
 }

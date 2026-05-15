@@ -5,13 +5,16 @@ import type {
   FeatureFlagRecord,
   ToolCallRecord,
   ToolEvidenceItem,
-  ToolName
+  ToolName,
 } from "@/lib/types/investigation";
 
 export type ToolRunnerDependencies = {
   getAccountContext: (accountId: string) => Promise<AccountRecord | null>;
   getFeatureFlags: (accountId: string) => Promise<FeatureFlagRecord[]>;
-  getRecentErrors: (input: { accountId: string; productArea: string | null }) => Promise<ErrorEventRecord[]>;
+  getRecentErrors: (input: {
+    accountId: string;
+    productArea: string | null;
+  }) => Promise<ErrorEventRecord[]>;
 };
 
 export function inferProductArea(ticket: string) {
@@ -44,7 +47,10 @@ function formatLimits(limits: Record<string, unknown>) {
   }
 
   return entries
-    .map(([key, value]) => `${key}=${typeof value === "string" || typeof value === "number" ? value : JSON.stringify(value)}`)
+    .map(
+      ([key, value]) =>
+        `${key}=${typeof value === "string" || typeof value === "number" ? value : JSON.stringify(value)}`,
+    )
     .join(", ");
 }
 
@@ -53,7 +59,7 @@ function summarizeAccountContext(account: AccountRecord | null) {
     return {
       title: "Account not found",
       excerpt: "No matching account record was found for the selected account id.",
-      raw: { status: "not_found" }
+      raw: { status: "not_found" },
     };
   }
 
@@ -63,7 +69,7 @@ function summarizeAccountContext(account: AccountRecord | null) {
       `Plan: ${account.planTier}. Status: ${account.status}. ` +
       `Enabled modules: ${account.enabledModules.join(", ") || "none"}. ` +
       `Limits: ${formatLimits(account.limits)}.`,
-    raw: account
+    raw: account,
   };
 }
 
@@ -72,16 +78,19 @@ function summarizeFeatureFlags(flags: FeatureFlagRecord[]) {
     return {
       title: "No feature flags found",
       excerpt: "No feature flags were returned for this account.",
-      raw: []
+      raw: [],
     };
   }
 
   return {
     title: "Feature flags",
     excerpt: flags
-      .map((flag) => `${flag.flagKey}=${flag.flagValue}${flag.description ? ` (${flag.description})` : ""}`)
+      .map(
+        (flag) =>
+          `${flag.flagKey}=${flag.flagValue}${flag.description ? ` (${flag.description})` : ""}`,
+      )
       .join("; "),
-    raw: flags
+    raw: flags,
   };
 }
 
@@ -90,14 +99,16 @@ function summarizeRecentErrors(errors: ErrorEventRecord[], productArea: string |
     return {
       title: "No recent errors found",
       excerpt: `No recent ${productArea ?? "product"} errors were returned for this account.`,
-      raw: []
+      raw: [],
     };
   }
 
   return {
     title: "Recent errors",
-    excerpt: errors.map((error) => `${error.errorCode}: ${error.summary} (${error.occurredAt})`).join("; "),
-    raw: errors
+    excerpt: errors
+      .map((error) => `${error.errorCode}: ${error.summary} (${error.occurredAt})`)
+      .join("; "),
+    raw: errors,
   };
 }
 
@@ -115,13 +126,13 @@ export function createSyntheticToolEvidence(input: {
       toolName: input.toolName,
       title: input.title,
       excerpt: input.excerpt,
-      raw: input.raw
+      raw: input.raw,
     } satisfies ToolEvidenceItem,
     call: {
       toolName: input.toolName,
       input: {},
-      output: input.raw
-    } satisfies ToolCallRecord
+      output: input.raw,
+    } satisfies ToolCallRecord,
   };
 }
 
@@ -149,15 +160,15 @@ export async function collectToolArtifacts(input: {
         title: "Provided investigation context",
         excerpt: contextText || "No investigation context was provided.",
         raw: {
-          context: contextText || null
-        }
+          context: contextText || null,
+        },
       });
       toolEvidence.push(synthetic.evidence);
       toolCalls.push({
         ...synthetic.call,
         input: {
-          context: contextText || null
-        }
+          context: contextText || null,
+        },
       });
       toolRank += 1;
       continue;
@@ -168,18 +179,19 @@ export async function collectToolArtifacts(input: {
         toolName,
         rank: toolRank,
         title: "Tool not run",
-        excerpt: "Seeded account context is required for this tool, but no debug account was selected for this investigation.",
+        excerpt:
+          "Seeded account context is required for this tool, but no debug account was selected for this investigation.",
         raw: {
           status: "not_run",
-          reason: "missing_seeded_account"
-        }
+          reason: "missing_seeded_account",
+        },
       });
       toolEvidence.push(synthetic.evidence);
       toolCalls.push({
         ...synthetic.call,
         input: {
-          accountId: null
-        }
+          accountId: null,
+        },
       });
       toolRank += 1;
       continue;
@@ -194,12 +206,12 @@ export async function collectToolArtifacts(input: {
         toolName,
         title: summary.title,
         excerpt: summary.excerpt,
-        raw: summary.raw
+        raw: summary.raw,
       });
       toolCalls.push({
         toolName,
         input: { accountId: input.selectedAccountId },
-        output: summary.raw
+        output: summary.raw,
       });
       toolRank += 1;
       continue;
@@ -214,12 +226,12 @@ export async function collectToolArtifacts(input: {
         toolName,
         title: summary.title,
         excerpt: summary.excerpt,
-        raw: summary.raw
+        raw: summary.raw,
       });
       toolCalls.push({
         toolName,
         input: { accountId: input.selectedAccountId },
-        output: summary.raw
+        output: summary.raw,
       });
       toolRank += 1;
       continue;
@@ -227,7 +239,7 @@ export async function collectToolArtifacts(input: {
 
     errors = await input.dependencies.getRecentErrors({
       accountId: input.selectedAccountId,
-      productArea
+      productArea,
     });
     const summary = summarizeRecentErrors(errors, productArea);
     toolEvidence.push({
@@ -236,12 +248,12 @@ export async function collectToolArtifacts(input: {
       toolName,
       title: summary.title,
       excerpt: summary.excerpt,
-      raw: summary.raw
+      raw: summary.raw,
     });
     toolCalls.push({
       toolName,
       input: { accountId: input.selectedAccountId, productArea },
-      output: summary.raw
+      output: summary.raw,
     });
     toolRank += 1;
   }
@@ -252,6 +264,6 @@ export async function collectToolArtifacts(input: {
     account,
     flags,
     errors,
-    productArea
+    productArea,
   };
 }

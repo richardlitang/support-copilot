@@ -11,16 +11,19 @@ const ACCOUNT_SPECIFIC_PATTERN =
   /\b(this customer|that customer|our workspace|my workspace|this workspace|our account|my account|this account)\b/i;
 const FAILURE_PATTERN =
   /\b(fail|failing|failed|stall|stalled|stuck|not working|won't|cannot|can't|unable|error|issue|after setup)\b/i;
-const PROCEDURAL_PATTERN = /\b(how do i|how to|enable|set up|setup|configure|steps|install|where can i|what is required)\b/i;
+const PROCEDURAL_PATTERN =
+  /\b(how do i|how to|enable|set up|setup|configure|steps|install|where can i|what is required)\b/i;
 const FEATURE_FLAG_PATTERN =
   /\b(flag|rollout|not visible|missing feature|feature hidden|hidden feature)\b|\bfeature\b.{0,40}\bdisabled\b|\bdisabled\b.{0,40}\bfeature\b/i;
-const ACCESS_PATTERN = /\b(can't access|cannot access|missing|not visible|unavailable|not showing)\b/i;
+const ACCESS_PATTERN =
+  /\b(can't access|cannot access|missing|not visible|unavailable|not showing)\b/i;
 const PLAN_PATTERN = /\b(plan|tier|limit|limits|starter|basic|pro|enterprise)\b/i;
 
 export function summarizeRetrievalStrength(evidence: EvidenceChunk[]) {
   const topScore = evidence[0]?.score ?? 0;
   const secondScore = evidence[1]?.score ?? 0;
-  const strong = evidence.length > 0 && topScore >= 0.72 && (evidence.length === 1 || secondScore >= 0.58);
+  const strong =
+    evidence.length > 0 && topScore >= 0.72 && (evidence.length === 1 || secondScore >= 0.58);
   const weak = !evidence.length || topScore < 0.5;
 
   return {
@@ -28,7 +31,7 @@ export function summarizeRetrievalStrength(evidence: EvidenceChunk[]) {
     topScore,
     secondScore,
     strong,
-    weak
+    weak,
   };
 }
 
@@ -46,9 +49,11 @@ export function classifyInvestigation(input: {
   const mentionsFailure = FAILURE_PATTERN.test(ticket);
   const looksProcedural = PROCEDURAL_PATTERN.test(ticket);
   const needsFeatureFlags = FEATURE_FLAG_PATTERN.test(ticket);
-  const needsAccessChecks = ACCESS_PATTERN.test(ticket) || (/\baccess\b/i.test(ticket) && !looksProcedural);
+  const needsAccessChecks =
+    ACCESS_PATTERN.test(ticket) || (/\baccess\b/i.test(ticket) && !looksProcedural);
   const needsPlanContext = PLAN_PATTERN.test(ticket);
-  const accountSpecificPlanContext = needsPlanContext && (mentionsAccountSpecificState || needsAccessChecks);
+  const accountSpecificPlanContext =
+    needsPlanContext && (mentionsAccountSpecificState || needsAccessChecks);
   const selectedAccountPlanContext = needsPlanContext && hasSeededAccount;
   const failureNeedsTools = mentionsFailure && (hasSeededAccount || hasProvidedContext);
   const requiresTools =
@@ -73,21 +78,28 @@ export function classifyInvestigation(input: {
     requiredTools.push("getFeatureFlags");
   }
 
-  if ((failureNeedsTools || /\b(import|export|sync|job)\b/i.test(ticket) && hasSeededAccount) && hasSeededAccount) {
+  if (
+    (failureNeedsTools || (/\b(import|export|sync|job)\b/i.test(ticket) && hasSeededAccount)) &&
+    hasSeededAccount
+  ) {
     requiredTools.push("getRecentErrors");
   }
 
   const dedupedTools = Array.from(new Set(requiredTools));
 
   if (
-    (mentionsAccountSpecificState || accountSpecificPlanContext || needsFeatureFlags || needsAccessChecks) &&
+    (mentionsAccountSpecificState ||
+      accountSpecificPlanContext ||
+      needsFeatureFlags ||
+      needsAccessChecks) &&
     !hasSeededAccount &&
     !hasProvidedContext
   ) {
     return {
       mode: "needs_human_review",
       requiredTools: dedupedTools,
-      routingReason: "Structured product or account context is required for this ticket, but none was provided."
+      routingReason:
+        "Structured product or account context is required for this ticket, but none was provided.",
     };
   }
 
@@ -97,7 +109,7 @@ export function classifyInvestigation(input: {
       accountSpecificPlanContext || selectedAccountPlanContext ? "plan/limits language" : null,
       needsFeatureFlags ? "feature/flag language" : null,
       mentionsAccountSpecificState ? "account-specific phrasing" : null,
-      hasProvidedContext ? "provided investigation context" : null
+      hasProvidedContext ? "provided investigation context" : null,
     ]
       .filter(Boolean)
       .join(", ");
@@ -105,7 +117,7 @@ export function classifyInvestigation(input: {
     return {
       mode: "docs_plus_tools",
       requiredTools: dedupedTools,
-      routingReason: `Ticket requires structured investigation context because it includes ${basis || "account-specific state"}.`
+      routingReason: `Ticket requires structured investigation context because it includes ${basis || "account-specific state"}.`,
     };
   }
 
@@ -113,7 +125,8 @@ export function classifyInvestigation(input: {
     return {
       mode: "docs_only",
       requiredTools: [],
-      routingReason: "Strong retrieval and procedural language indicate documentation alone should be sufficient."
+      routingReason:
+        "Strong retrieval and procedural language indicate documentation alone should be sufficient.",
     };
   }
 
@@ -122,6 +135,6 @@ export function classifyInvestigation(input: {
     requiredTools: [],
     routingReason: retrieval.weak
       ? "Routing stayed docs-only, but retrieval support is weak and may require human review."
-      : "Routing stayed docs-only because no account-specific evidence was required."
+      : "Routing stayed docs-only because no account-specific evidence was required.",
   };
 }

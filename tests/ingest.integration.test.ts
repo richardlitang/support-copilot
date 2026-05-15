@@ -1,38 +1,38 @@
-import { ingestParsedDocument } from "@/lib/ingest";
+import { directIngestParsedDocument } from "@/lib/ingest";
 import { parseTextDocument } from "@/lib/parse";
 
-describe("ingestParsedDocument", () => {
+describe("directIngestParsedDocument", () => {
   it("chunks, embeds, and persists a parsed document", async () => {
     const parsed = parseTextDocument({
       filename: "exports.md",
       contentType: "text/markdown",
-      text: "# Common export failures\nCheck billing setup.\n\n## Permissions required\nNeed Exports: Write."
+      text: "# Common export failures\nCheck billing setup.\n\n## Permissions required\nNeed Exports: Write.",
     });
     const statuses: string[] = [];
     const insertedRows: Array<{ content: string; documentId: string; embedding: number[] }> = [];
 
-    const result = await ingestParsedDocument(
+    const result = await directIngestParsedDocument(
       {
         parsedDocument: parsed,
-        sessionId: "test-session"
+        sessionId: "test-session",
       },
       {
-      createDocumentRecord: async () => ({
-        id: "doc-1",
-        sessionId: "test-session",
-        filename: parsed.filename,
-        contentType: parsed.contentType,
-        status: "processing",
-        createdAt: new Date().toISOString()
-      }),
-      updateDocumentStatus: async (_documentId, status) => {
-        statuses.push(status);
+        createDocumentRecord: async () => ({
+          id: "doc-1",
+          sessionId: "test-session",
+          filename: parsed.filename,
+          contentType: parsed.contentType,
+          status: "processing",
+          createdAt: new Date().toISOString(),
+        }),
+        updateDocumentStatus: async (_documentId, status) => {
+          statuses.push(status);
+        },
+        insertDocumentChunks: async (rows) => {
+          insertedRows.push(...rows);
+        },
+        embedTexts: async (texts) => texts.map((_, index) => [index + 0.1, index + 0.2]),
       },
-      insertDocumentChunks: async (rows) => {
-        insertedRows.push(...rows);
-      },
-      embedTexts: async (texts) => texts.map((_, index) => [index + 0.1, index + 0.2])
-      }
     );
 
     expect(result.documentId).toBe("doc-1");

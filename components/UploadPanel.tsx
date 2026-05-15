@@ -31,7 +31,7 @@ export function UploadPanel({
   isActiveStep,
   onFilesSelected,
   onDeleteDocument,
-  onClearDocuments
+  onClearDocuments,
 }: {
   documents: DocumentRecord[];
   uploadOutcomes: UploadOutcome[];
@@ -123,13 +123,15 @@ export function UploadPanel({
               isAtSessionLimit
                 ? "cursor-not-allowed border-zinc-200 bg-zinc-100/80 opacity-75"
                 : isDragActive
-                ? "border-zinc-950 bg-zinc-50"
-                : "border-zinc-300 bg-zinc-50/70"
+                  ? "border-zinc-950 bg-zinc-50"
+                  : "border-zinc-300 bg-zinc-50/70"
             }`}
           >
             <UploadCloud className="h-4 w-4 text-zinc-500" />
             <p className="mt-3 text-sm font-medium text-zinc-950">Add docs</p>
-            <p className="mt-2 text-xs leading-5 text-zinc-600">Drop files here, or choose `.md`, `.txt`, or text-based `.pdf` files.</p>
+            <p className="mt-2 text-xs leading-5 text-zinc-600">
+              Drop files here, or choose `.md`, `.txt`, or text-based `.pdf` files.
+            </p>
             <Button
               type="button"
               onClick={() => inputRef.current?.click()}
@@ -166,7 +168,10 @@ export function UploadPanel({
                   <p className="eyebrow">Session docs</p>
                   <p className="mt-1 text-sm text-zinc-500">
                     {documents.length
-                      ? documents.some((document) => document.status === "uploaded" || document.status === "processing")
+                      ? documents.some(
+                          (document) =>
+                            document.status === "uploaded" || document.status === "processing",
+                        )
                         ? "Processing uploads."
                         : "Ready for retrieval."
                       : "No docs loaded yet."}
@@ -192,7 +197,9 @@ export function UploadPanel({
                   onClick={() => setShowDocs((value) => !value)}
                   aria-label={docsExpanded ? "Hide session docs" : "Show session docs"}
                 >
-                  <ChevronDown className={`h-4 w-4 transition ${docsExpanded ? "rotate-180" : ""}`} />
+                  <ChevronDown
+                    className={`h-4 w-4 transition ${docsExpanded ? "rotate-180" : ""}`}
+                  />
                 </Button>
               </div>
             </div>
@@ -207,12 +214,16 @@ export function UploadPanel({
                           <div className="min-w-0">
                             <div className="flex items-center gap-2">
                               <FileText className="h-4 w-4 shrink-0 text-zinc-500" />
-                              <p className="truncate text-sm font-medium text-zinc-950">{document.filename}</p>
+                              <p className="truncate text-sm font-medium text-zinc-950">
+                                {document.filename}
+                              </p>
                             </div>
                           </div>
                           <div className="flex items-center justify-between gap-2">
                             <Badge variant={statusTone(document.status)}>{document.status}</Badge>
-                            {document.filename === bundledSampleFilename ? <Badge variant="outline">sample</Badge> : null}
+                            {document.filename === bundledSampleFilename ? (
+                              <Badge variant="outline">sample</Badge>
+                            ) : null}
                             <Button
                               type="button"
                               variant="ghost"
@@ -227,7 +238,9 @@ export function UploadPanel({
                       </div>
                     ))
                   ) : (
-                    <div className="surface-muted p-4 text-sm text-zinc-500">No docs loaded yet.</div>
+                    <div className="surface-muted p-4 text-sm text-zinc-500">
+                      No docs loaded yet.
+                    </div>
                   )}
                 </div>
               </ScrollArea>
@@ -244,10 +257,19 @@ export function UploadPanel({
                 </div>
                 <div className="space-y-2">
                   {uploadOutcomes.map((outcome) => (
-                    <div key={`${outcome.filename}-${outcome.status}`} className="surface-muted p-3 text-sm">
+                    <div
+                      key={`${outcome.filename}-${outcome.status}`}
+                      className="surface-muted p-3 text-sm"
+                    >
                       <div className="grid gap-2">
                         <p className="truncate text-zinc-700">{outcome.filename}</p>
-                        <p className={outcome.status === "failed" ? "text-red-700" : "text-emerald-700"}>{outcome.message}</p>
+                        <p
+                          className={
+                            outcome.status === "failed" ? "text-red-700" : "text-emerald-700"
+                          }
+                        >
+                          {outcome.message}
+                        </p>
                       </div>
                     </div>
                   ))}

@@ -9,7 +9,7 @@ export async function GET() {
   const checks: Record<string, CheckStatus> = {
     database: "skipped",
     redis: "skipped",
-    aiProvider: "skipped"
+    aiProvider: "skipped",
   };
   const config = getRuntimeConfig();
 
@@ -37,8 +37,8 @@ export async function GET() {
     {
       status: ready ? "ok" : "error",
       checks,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     },
-    { status: ready ? 200 : 503 }
+    { status: ready ? 200 : 503 },
   );
 }

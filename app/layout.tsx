@@ -3,11 +3,11 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Support Copilot",
-  description: "A grounded support investigation assistant with visible evidence."
+  description: "A grounded support investigation assistant with visible evidence.",
 };
 
 export default function RootLayout({
-  children
+  children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {

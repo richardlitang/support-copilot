@@ -9,10 +9,23 @@ export type ReviewReasonCode =
   | "missing_account_context"
   | "unresolved_evidence_conflict"
   | "grounding_validation_failed";
-export type ReviewActionKind = "none" | "add_context" | "add_docs" | "inspect_conflict" | "review_claims";
-export type ToolName = "getAccountContext" | "getFeatureFlags" | "getRecentErrors" | "getProvidedContext";
+export type ReviewActionKind =
+  | "none"
+  | "add_context"
+  | "add_docs"
+  | "inspect_conflict"
+  | "review_claims";
+export type ToolName =
+  | "getAccountContext"
+  | "getFeatureFlags"
+  | "getRecentErrors"
+  | "getProvidedContext";
 export type CitationId = `S${number}` | `T${number}`;
-export type DocsGapType = "unsupported_by_docs" | "missing_context" | "evidence_conflict" | "grounding_failed";
+export type DocsGapType =
+  | "unsupported_by_docs"
+  | "missing_context"
+  | "evidence_conflict"
+  | "grounding_failed";
 
 export interface ReviewDecision {
   status: ReviewStatus;

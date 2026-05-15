@@ -13,7 +13,7 @@ export function getRedisConnection() {
   }
 
   connection = new IORedis(getRuntimeConfig().redisUrl, {
-    maxRetriesPerRequest: null
+    maxRetriesPerRequest: null,
   });
 
   return connection;
@@ -25,7 +25,7 @@ export function getDocumentIngestionQueue() {
   }
 
   documentIngestionQueue = new Queue<DocumentIngestionJob>(QUEUE_NAMES.documentIngestion, {
-    connection: getRedisConnection()
+    connection: getRedisConnection(),
   });
 
   return documentIngestionQueue;
@@ -39,10 +39,10 @@ export async function enqueueDocumentIngestionJob(job: DocumentIngestionJob) {
     attempts: 3,
     backoff: {
       type: "exponential",
-      delay: 1000
+      delay: 1000,
     },
     removeOnComplete: true,
-    removeOnFail: false
+    removeOnFail: false,
   });
 }
 

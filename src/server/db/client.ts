@@ -17,7 +17,7 @@ export function getPgPool() {
   }
 
   pool = new Pool({
-    connectionString: databaseUrl
+    connectionString: databaseUrl,
   });
 
   return pool;

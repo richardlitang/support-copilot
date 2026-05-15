@@ -14,22 +14,22 @@ export type ClassifyInvestigationDependencies = {
 };
 
 const defaultDependencies: ClassifyInvestigationDependencies = {
-  classifyInvestigation: classifyInvestigationAdapter
+  classifyInvestigation: classifyInvestigationAdapter,
 };
 
 export function classifyInvestigationNode(
   state: InvestigationGraphState,
-  dependencies: Partial<ClassifyInvestigationDependencies> = {}
+  dependencies: Partial<ClassifyInvestigationDependencies> = {},
 ): InvestigationGraphState {
   const deps = {
     ...defaultDependencies,
-    ...dependencies
+    ...dependencies,
   };
   const routing = deps.classifyInvestigation({
     ticketText: state.input.ticket,
     selectedAccountId: state.input.selectedAccountId,
     investigationContext: state.input.investigationContext,
-    evidence: state.retrievedEvidence
+    evidence: state.retrievedEvidence,
   });
   const missingRequiredContext =
     routing.mode === "needs_human_review" &&
@@ -40,8 +40,8 @@ export function classifyInvestigationNode(
     {
       ...state,
       routing,
-      missingRequiredContext
+      missingRequiredContext,
     },
-    "classified_investigation"
+    "classified_investigation",
   );
 }

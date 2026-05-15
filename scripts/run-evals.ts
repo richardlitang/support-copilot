@@ -7,7 +7,10 @@ import { applyReviewPolicyNode } from "../lib/graph/nodes/apply-review-policy";
 import { classifyInvestigationNode } from "../lib/graph/nodes/classify-investigation";
 import { generateClaimsNode } from "../lib/graph/nodes/generate-claims";
 import { retrieveDocumentationNode } from "../lib/graph/nodes/retrieve-documentation";
-import { defaultRunContextToolsAdapters, runContextToolsNode } from "../lib/graph/nodes/run-context-tools";
+import {
+  defaultRunContextToolsAdapters,
+  runContextToolsNode,
+} from "../lib/graph/nodes/run-context-tools";
 import { validateGroundingNode } from "../lib/graph/nodes/validate-grounding";
 import { investigateTicket } from "../lib/investigate";
 import type { EvidenceChunk, StructuredAnswer } from "../lib/types";
@@ -16,7 +19,7 @@ import type {
   ErrorEventRecord,
   FeatureFlagRecord,
   ReviewActionKind,
-  ReviewReasonCode
+  ReviewReasonCode,
 } from "../lib/types/investigation";
 
 type EvalCase = {
@@ -85,7 +88,8 @@ type EvalSummary = {
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const offlineMode = process.argv.includes("--offline") || process.env.SUPPORT_EVAL_OFFLINE === "true";
+const offlineMode =
+  process.argv.includes("--offline") || process.env.SUPPORT_EVAL_OFFLINE === "true";
 
 const offlineAccounts = new Map<string, AccountRecord>([
   [
@@ -97,8 +101,8 @@ const offlineAccounts = new Map<string, AccountRecord>([
       status: "active",
       enabledModules: ["imports"],
       limits: { csvImportRows: 10000 },
-      createdAt: "2026-04-15T00:00:00.000Z"
-    }
+      createdAt: "2026-04-15T00:00:00.000Z",
+    },
   ],
   [
     "22222222-2222-4222-8222-222222222222",
@@ -109,8 +113,8 @@ const offlineAccounts = new Map<string, AccountRecord>([
       status: "active",
       enabledModules: ["exports", "imports"],
       limits: { exportRows: 50000 },
-      createdAt: "2026-04-15T00:00:00.000Z"
-    }
+      createdAt: "2026-04-15T00:00:00.000Z",
+    },
   ],
   [
     "33333333-3333-4333-8333-333333333333",
@@ -121,8 +125,8 @@ const offlineAccounts = new Map<string, AccountRecord>([
       status: "active",
       enabledModules: ["exports", "imports", "audit_logs"],
       limits: {},
-      createdAt: "2026-04-15T00:00:00.000Z"
-    }
+      createdAt: "2026-04-15T00:00:00.000Z",
+    },
   ],
   [
     "44444444-4444-4444-8444-444444444444",
@@ -133,8 +137,8 @@ const offlineAccounts = new Map<string, AccountRecord>([
       status: "billing_hold",
       enabledModules: ["exports"],
       limits: {},
-      createdAt: "2026-04-15T00:00:00.000Z"
-    }
+      createdAt: "2026-04-15T00:00:00.000Z",
+    },
   ],
   [
     "55555555-5555-4555-8555-555555555555",
@@ -145,9 +149,9 @@ const offlineAccounts = new Map<string, AccountRecord>([
       status: "active",
       enabledModules: ["imports"],
       limits: { csvImportRows: 100000 },
-      createdAt: "2026-04-15T00:00:00.000Z"
-    }
-  ]
+      createdAt: "2026-04-15T00:00:00.000Z",
+    },
+  ],
 ]);
 
 const offlineFlags: FeatureFlagRecord[] = [
@@ -158,7 +162,7 @@ const offlineFlags: FeatureFlagRecord[] = [
     flagValue: false,
     description: "Exports are hidden for Starter accounts.",
     rolloutNotes: null,
-    createdAt: "2026-04-15T00:00:00.000Z"
+    createdAt: "2026-04-15T00:00:00.000Z",
   },
   {
     id: "flag-222-export",
@@ -167,7 +171,7 @@ const offlineFlags: FeatureFlagRecord[] = [
     flagValue: true,
     description: "Exports are visible for Growth accounts.",
     rolloutNotes: null,
-    createdAt: "2026-04-15T00:00:00.000Z"
+    createdAt: "2026-04-15T00:00:00.000Z",
   },
   {
     id: "flag-333-export",
@@ -176,8 +180,8 @@ const offlineFlags: FeatureFlagRecord[] = [
     flagValue: true,
     description: "Exports are visible for Enterprise accounts.",
     rolloutNotes: null,
-    createdAt: "2026-04-15T00:00:00.000Z"
-  }
+    createdAt: "2026-04-15T00:00:00.000Z",
+  },
 ];
 
 const offlineErrors: ErrorEventRecord[] = [
@@ -188,7 +192,7 @@ const offlineErrors: ErrorEventRecord[] = [
     errorCode: "ERR-219",
     summary: "Missing export permission on the actor role.",
     occurredAt: "2026-04-15T00:00:00.000Z",
-    createdAt: "2026-04-15T00:00:00.000Z"
+    createdAt: "2026-04-15T00:00:00.000Z",
   },
   {
     id: "err-444-billing",
@@ -197,7 +201,7 @@ const offlineErrors: ErrorEventRecord[] = [
     errorCode: "BILLING-HOLD",
     summary: "Payment failed yesterday and account is in grace-period billing hold.",
     occurredAt: "2026-04-15T00:00:00.000Z",
-    createdAt: "2026-04-15T00:00:00.000Z"
+    createdAt: "2026-04-15T00:00:00.000Z",
   },
   {
     id: "err-555-import",
@@ -206,8 +210,8 @@ const offlineErrors: ErrorEventRecord[] = [
     errorCode: "CSV-ROW-LIMIT",
     summary: "Import stalled after row validation near the configured row limit.",
     occurredAt: "2026-04-15T00:00:00.000Z",
-    createdAt: "2026-04-15T00:00:00.000Z"
-  }
+    createdAt: "2026-04-15T00:00:00.000Z",
+  },
 ];
 
 function getErrorMessage(error: unknown) {
@@ -225,7 +229,7 @@ function formatRuntimeFailure(error: unknown) {
     return [
       "Eval environment failure: a Supabase or OpenAI network request failed.",
       "Check that .env.local has valid keys, the Supabase project is reachable, migrations are applied, and demo data is seeded.",
-      `Underlying error: ${message}`
+      `Underlying error: ${message}`,
     ].join("\n");
   }
 
@@ -233,7 +237,7 @@ function formatRuntimeFailure(error: unknown) {
     return [
       "Eval environment failure: Supabase configuration is missing.",
       "Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY or SUPABASE_SECRET_KEY in .env.local.",
-      `Underlying error: ${message}`
+      `Underlying error: ${message}`,
     ].join("\n");
   }
 
@@ -245,11 +249,15 @@ function buildOfflineEvidence(testCase: EvalCase): EvidenceChunk[] {
     return [];
   }
 
-  const keywords = testCase.expectedEvidenceKeywords?.length ? testCase.expectedEvidenceKeywords : ["support"];
+  const keywords = testCase.expectedEvidenceKeywords?.length
+    ? testCase.expectedEvidenceKeywords
+    : ["support"];
   const content = [
     `Offline eval evidence for ${testCase.id}.`,
-    ...keywords.map((keyword) => `${keyword} guidance is present in the seeded support documentation.`),
-    "Use only cited evidence when generating the reply."
+    ...keywords.map(
+      (keyword) => `${keyword} guidance is present in the seeded support documentation.`,
+    ),
+    "Use only cited evidence when generating the reply.",
   ].join(" ");
 
   return [
@@ -261,19 +269,22 @@ function buildOfflineEvidence(testCase: EvalCase): EvidenceChunk[] {
       content,
       score: 0.86,
       rank: 1,
-      chunkIndex: 0
-    }
+      chunkIndex: 0,
+    },
   ];
 }
 
-function createOfflineGroundedAnswer(testCase: EvalCase, evidence: EvidenceChunk[]): StructuredAnswer {
+function createOfflineGroundedAnswer(
+  testCase: EvalCase,
+  evidence: EvidenceChunk[],
+): StructuredAnswer {
   if (!evidence.length) {
     return {
       answer: "I do not have enough support in the uploaded docs to answer this confidently.",
       claims: [],
       supportLevel: "insufficient_support",
       citations: [],
-      insufficientSupport: true
+      insufficientSupport: true,
     };
   }
 
@@ -286,17 +297,21 @@ function createOfflineGroundedAnswer(testCase: EvalCase, evidence: EvidenceChunk
     claims: [
       {
         text: expectedClaimText,
-        citationIds: ["S1"]
-      }
+        citationIds: ["S1"],
+      },
     ],
     supportLevel: "medium",
     citations: ["S1"],
-    insufficientSupport: false
+    insufficientSupport: false,
   };
 }
 
 function countClaimCitations(result: Awaited<ReturnType<typeof investigateTicket>>) {
-  return new Set([...result.customerReply.claims, ...result.internalDiagnosis.claims].flatMap((claim) => claim.citations)).size;
+  return new Set(
+    [...result.customerReply.claims, ...result.internalDiagnosis.claims].flatMap(
+      (claim) => claim.citations,
+    ),
+  ).size;
 }
 
 function createOfflineDependencies(testCase: EvalCase) {
@@ -305,7 +320,7 @@ function createOfflineDependencies(testCase: EvalCase) {
   return {
     persistInvestigationRun: async () => ({
       ticketId: `${testCase.id}-ticket`,
-      investigationId: `${testCase.id}-investigation`
+      investigationId: `${testCase.id}-investigation`,
     }),
     retrieveEvidence: async () => evidence,
     generateGroundedAnswer: async () => createOfflineGroundedAnswer(testCase, evidence),
@@ -317,28 +332,35 @@ function createOfflineDependencies(testCase: EvalCase) {
             text: testCase.expectedClaimKeywords?.length
               ? `The investigation found cited support for ${testCase.expectedClaimKeywords.join(", ")}.`
               : "The investigation found cited support for the customer-facing response.",
-            citations: ["S1" as const, "T1" as const]
-          }
-        ]
+            citations: ["S1" as const, "T1" as const],
+          },
+        ],
       },
       internalDiagnosis: {
         summary: "Offline tool evidence was combined with retrieved documentation.",
         claims: [
           {
             text: "Offline tool evidence was combined with retrieved documentation.",
-            citations: ["S1" as const, "T1" as const]
-          }
+            citations: ["S1" as const, "T1" as const],
+          },
         ],
-        openQuestions: []
+        openQuestions: [],
       },
-      insufficientSupport: false
+      insufficientSupport: false,
     }),
     getAccountContext: async (accountId: string) => offlineAccounts.get(accountId) ?? null,
-    getFeatureFlags: async (accountId: string) => offlineFlags.filter((flag) => flag.accountId === accountId),
-    getRecentErrors: async (input: { accountId: string; productArea?: string | null; limit?: number }) =>
+    getFeatureFlags: async (accountId: string) =>
+      offlineFlags.filter((flag) => flag.accountId === accountId),
+    getRecentErrors: async (input: {
+      accountId: string;
+      productArea?: string | null;
+      limit?: number;
+    }) =>
       offlineErrors.filter(
-        (error) => error.accountId === input.accountId && (!input.productArea || error.productArea === input.productArea)
-      )
+        (error) =>
+          error.accountId === input.accountId &&
+          (!input.productArea || error.productArea === input.productArea),
+      ),
   };
 }
 
@@ -351,19 +373,19 @@ async function runOfflineGraphParity(input: {
     ticket: input.testCase.ticket,
     sessionId: input.evalSessionId,
     ragEnabled: true,
-    selectedAccountId: input.testCase.selectedAccountId ?? null
+    selectedAccountId: input.testCase.selectedAccountId ?? null,
   });
   const retrieved = await retrieveDocumentationNode(initialState, {
-    retrieveEvidence: input.dependencies.retrieveEvidence
+    retrieveEvidence: input.dependencies.retrieveEvidence,
   });
   const classified = classifyInvestigationNode(retrieved);
   const withTools = await runContextToolsNode(classified, {
     ...input.dependencies,
-    ...defaultRunContextToolsAdapters
+    ...defaultRunContextToolsAdapters,
   });
   const generated = await generateClaimsNode(withTools, {
     generateGroundedAnswer: input.dependencies.generateGroundedAnswer,
-    generateInvestigationAnswer: input.dependencies.generateInvestigationAnswer
+    generateInvestigationAnswer: input.dependencies.generateInvestigationAnswer,
   });
   const grounded = validateGroundingNode(generated);
   const reviewed = applyReviewPolicyNode(grounded);
@@ -375,13 +397,15 @@ async function runOfflineGraphParity(input: {
   return {
     mode: reviewed.review.finalMode,
     reviewStatus: reviewed.review.reviewStatus,
-    reviewDecision: reviewed.review.reviewDecision
+    reviewDecision: reviewed.review.reviewDecision,
   };
 }
 
 async function main() {
   if (!offlineMode && !hasDatabaseConfig()) {
-    throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY. `npm run eval:demo` requires a reachable seeded Supabase project.");
+    throw new Error(
+      "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY. `npm run eval:demo` requires a reachable seeded Supabase project.",
+    );
   }
 
   const evalPath = path.join(__dirname, "..", "demo", "evals.json");
@@ -397,17 +421,19 @@ async function main() {
         ticket: testCase.ticket,
         ragEnabled: true,
         sessionId: evalSessionId,
-        selectedAccountId: testCase.selectedAccountId ?? null
+        selectedAccountId: testCase.selectedAccountId ?? null,
       },
-      offlineDependencies ?? {}
+      offlineDependencies ?? {},
     ).catch((error: unknown) => {
-      throw new Error(`Eval case ${testCase.id} failed before assertions:\n${formatRuntimeFailure(error)}`);
+      throw new Error(
+        `Eval case ${testCase.id} failed before assertions:\n${formatRuntimeFailure(error)}`,
+      );
     });
     const graphResult = offlineDependencies
       ? await runOfflineGraphParity({
           testCase,
           evalSessionId,
-          dependencies: offlineDependencies
+          dependencies: offlineDependencies,
         })
       : null;
     const graphParityPassed = graphResult
@@ -427,24 +453,32 @@ async function main() {
       result.customerReply.summary,
       ...result.customerReply.claims.map((claim) => claim.text),
       result.internalDiagnosis.summary,
-      ...result.internalDiagnosis.claims.map((claim) => claim.text)
+      ...result.internalDiagnosis.claims.map((claim) => claim.text),
     ]
       .filter(Boolean)
       .join("\n")
       .toLowerCase();
     const missingEvidenceKeywords = expectedEvidenceKeywords.filter(
-      (keyword) => !evidenceHaystack.includes(keyword.toLowerCase())
+      (keyword) => !evidenceHaystack.includes(keyword.toLowerCase()),
     );
-    const missingClaimKeywords = expectedClaimKeywords.filter((keyword) => !claimHaystack.includes(keyword.toLowerCase()));
+    const missingClaimKeywords = expectedClaimKeywords.filter(
+      (keyword) => !claimHaystack.includes(keyword.toLowerCase()),
+    );
     const presentForbiddenClaimKeywords = forbiddenClaimKeywords.filter((keyword) =>
-      claimHaystack.includes(keyword.toLowerCase())
+      claimHaystack.includes(keyword.toLowerCase()),
     );
     const routePassed = !testCase.expectedMode || result.mode === testCase.expectedMode;
-    const reviewPassed = !testCase.expectedReviewStatus || result.reviewStatus === testCase.expectedReviewStatus;
+    const reviewPassed =
+      !testCase.expectedReviewStatus || result.reviewStatus === testCase.expectedReviewStatus;
     const reviewReasonCodePassed =
-      !testCase.expectedReviewReasonCode || result.reviewDecision.reasonCode === testCase.expectedReviewReasonCode;
-    const reviewActionPassed = !testCase.expectedReviewAction || result.reviewDecision.action === testCase.expectedReviewAction;
-    const retrievalPassed = (testCase.minDocEvidence ?? 0) <= result.docEvidence.length && missingEvidenceKeywords.length === 0;
+      !testCase.expectedReviewReasonCode ||
+      result.reviewDecision.reasonCode === testCase.expectedReviewReasonCode;
+    const reviewActionPassed =
+      !testCase.expectedReviewAction ||
+      result.reviewDecision.action === testCase.expectedReviewAction;
+    const retrievalPassed =
+      (testCase.minDocEvidence ?? 0) <= result.docEvidence.length &&
+      missingEvidenceKeywords.length === 0;
     const claimPassed = missingClaimKeywords.length === 0;
     const forbiddenClaimPassed = presentForbiddenClaimKeywords.length === 0;
     const toolPassed = !testCase.requireToolEvidence || result.toolEvidence.length > 0;
@@ -454,33 +488,45 @@ async function main() {
     }
 
     if (!reviewPassed) {
-      failures.push(`${testCase.id}: expected reviewStatus ${testCase.expectedReviewStatus}, got ${result.reviewStatus}`);
+      failures.push(
+        `${testCase.id}: expected reviewStatus ${testCase.expectedReviewStatus}, got ${result.reviewStatus}`,
+      );
     }
 
     if (!reviewReasonCodePassed) {
       failures.push(
-        `${testCase.id}: expected review reason code ${testCase.expectedReviewReasonCode}, got ${result.reviewDecision.reasonCode}`
+        `${testCase.id}: expected review reason code ${testCase.expectedReviewReasonCode}, got ${result.reviewDecision.reasonCode}`,
       );
     }
 
     if (!reviewActionPassed) {
-      failures.push(`${testCase.id}: expected review action ${testCase.expectedReviewAction}, got ${result.reviewDecision.action}`);
+      failures.push(
+        `${testCase.id}: expected review action ${testCase.expectedReviewAction}, got ${result.reviewDecision.action}`,
+      );
     }
 
     if ((testCase.minDocEvidence ?? 0) > result.docEvidence.length) {
-      failures.push(`${testCase.id}: expected at least ${testCase.minDocEvidence} doc evidence item(s), got ${result.docEvidence.length}`);
+      failures.push(
+        `${testCase.id}: expected at least ${testCase.minDocEvidence} doc evidence item(s), got ${result.docEvidence.length}`,
+      );
     }
 
     if (missingEvidenceKeywords.length) {
-      failures.push(`${testCase.id}: missing expected evidence keyword(s): ${missingEvidenceKeywords.join(", ")}`);
+      failures.push(
+        `${testCase.id}: missing expected evidence keyword(s): ${missingEvidenceKeywords.join(", ")}`,
+      );
     }
 
     if (missingClaimKeywords.length) {
-      failures.push(`${testCase.id}: missing expected claim keyword(s): ${missingClaimKeywords.join(", ")}`);
+      failures.push(
+        `${testCase.id}: missing expected claim keyword(s): ${missingClaimKeywords.join(", ")}`,
+      );
     }
 
     if (presentForbiddenClaimKeywords.length) {
-      failures.push(`${testCase.id}: included forbidden claim keyword(s): ${presentForbiddenClaimKeywords.join(", ")}`);
+      failures.push(
+        `${testCase.id}: included forbidden claim keyword(s): ${presentForbiddenClaimKeywords.join(", ")}`,
+      );
     }
 
     if (!toolPassed) {
@@ -489,7 +535,7 @@ async function main() {
 
     if (graphParityPassed === false && graphResult) {
       failures.push(
-        `${testCase.id}: graph parity failed, direct ${result.mode}/${result.reviewStatus}/${result.reviewDecision.reasonCode}/${result.reviewDecision.action}, graph ${graphResult.mode}/${graphResult.reviewStatus}/${graphResult.reviewDecision.reasonCode}/${graphResult.reviewDecision.action}`
+        `${testCase.id}: graph parity failed, direct ${result.mode}/${result.reviewStatus}/${result.reviewDecision.reasonCode}/${result.reviewDecision.action}, graph ${graphResult.mode}/${graphResult.reviewStatus}/${graphResult.reviewDecision.reasonCode}/${graphResult.reviewDecision.action}`,
       );
     }
 
@@ -544,9 +590,9 @@ async function main() {
         id: item.id,
         filename: item.filename,
         sectionTitle: item.sectionTitle,
-        score: Number(item.score.toFixed(4))
+        score: Number(item.score.toFixed(4)),
       })),
-      expectation: testCase.expectation
+      expectation: testCase.expectation,
     });
   }
 
@@ -581,10 +627,15 @@ async function main() {
   for (const item of summary) {
     const status = item.passed ? "PASS" : "FAIL";
     const topDocList = item.topDocs.length
-      ? item.topDocs.map((doc) => `${doc.id}:${doc.filename}${doc.sectionTitle ? `#${doc.sectionTitle}` : ""}@${doc.score}`).join(", ")
+      ? item.topDocs
+          .map(
+            (doc) =>
+              `${doc.id}:${doc.filename}${doc.sectionTitle ? `#${doc.sectionTitle}` : ""}@${doc.score}`,
+          )
+          .join(", ")
       : "none";
     console.log(
-      `- ${status} ${item.id} [${item.bucket}] mode=${item.mode} review=${item.reviewStatus} reason=${item.reviewReasonCode} action=${item.reviewAction} docs=${item.docEvidence} tools=${item.toolEvidence} top=${topDocList}`
+      `- ${status} ${item.id} [${item.bucket}] mode=${item.mode} review=${item.reviewStatus} reason=${item.reviewReasonCode} action=${item.reviewAction} docs=${item.docEvidence} tools=${item.toolEvidence} top=${topDocList}`,
     );
     if (item.missingEvidenceKeywords.length) {
       console.log(`  missing evidence keywords: ${item.missingEvidenceKeywords.join(", ")}`);
@@ -593,7 +644,9 @@ async function main() {
       console.log(`  missing claim keywords: ${item.missingClaimKeywords.join(", ")}`);
     }
     if (item.presentForbiddenClaimKeywords.length) {
-      console.log(`  forbidden claim keywords present: ${item.presentForbiddenClaimKeywords.join(", ")}`);
+      console.log(
+        `  forbidden claim keywords present: ${item.presentForbiddenClaimKeywords.join(", ")}`,
+      );
     }
     if (!item.reviewReasonCodePassed) {
       console.log(`  expected review reason code: ${item.expectedReviewReasonCode ?? "none"}`);

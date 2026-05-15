@@ -8,7 +8,7 @@ const account: AccountRecord = {
   status: "active",
   enabledModules: ["exports"],
   limits: {},
-  createdAt: "2026-01-01T00:00:00Z"
+  createdAt: "2026-01-01T00:00:00Z",
 };
 
 const docEvidence: DocEvidenceItem[] = [
@@ -20,8 +20,8 @@ const docEvidence: DocEvidenceItem[] = [
     sectionTitle: "Exports",
     excerpt: "Exports are available when the account has the module and required permission.",
     score: 0.85,
-    chunkIndex: 0
-  }
+    chunkIndex: 0,
+  },
 ];
 
 const enabledExportFlag: FeatureFlagRecord = {
@@ -31,7 +31,7 @@ const enabledExportFlag: FeatureFlagRecord = {
   flagValue: true,
   description: null,
   rolloutNotes: null,
-  createdAt: "2026-01-01T00:00:00Z"
+  createdAt: "2026-01-01T00:00:00Z",
 };
 
 describe("conflict-policy", () => {
@@ -51,11 +51,11 @@ describe("conflict-policy", () => {
         account,
         flags: [enabledExportFlag],
         errors: [],
-        missingRequiredContext: false
-      })
+        missingRequiredContext: false,
+      }),
     ).toEqual({
       hasConflict: true,
-      reason: "Docs and current tool state do not explain the reported issue."
+      reason: "Docs and current tool state do not explain the reported issue.",
     });
   });
 
@@ -67,15 +67,15 @@ describe("conflict-policy", () => {
         docEvidence,
         account: {
           ...account,
-          enabledModules: []
+          enabledModules: [],
         },
         flags: [enabledExportFlag],
         errors: [],
-        missingRequiredContext: false
-      })
+        missingRequiredContext: false,
+      }),
     ).toEqual({
       hasConflict: false,
-      reason: null
+      reason: null,
     });
   });
 });

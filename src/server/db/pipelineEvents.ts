@@ -19,7 +19,7 @@ const forbiddenMetadataKeys = new Set([
   "cookies",
   "apiKey",
   "secret",
-  "token"
+  "token",
 ]);
 
 function sanitizeMetadata(metadata: Record<string, unknown> = {}) {
@@ -30,7 +30,7 @@ function sanitizeMetadata(metadata: Record<string, unknown> = {}) {
       }
 
       return typeof value !== "function" && typeof value !== "symbol";
-    })
+    }),
   );
 }
 
@@ -40,20 +40,20 @@ export function sanitizeError(error: unknown) {
   if (/openai|embedding|provider|fetch|network|timeout/i.test(message)) {
     return {
       errorCode: "PROVIDER_REQUEST_FAILED",
-      errorMessageSafe: "Provider request failed"
+      errorMessageSafe: "Provider request failed",
     };
   }
 
   if (/parse|pdf|text/i.test(message)) {
     return {
       errorCode: "DOCUMENT_PARSE_FAILED",
-      errorMessageSafe: "Document parsing failed"
+      errorMessageSafe: "Document parsing failed",
     };
   }
 
   return {
     errorCode: "INTERNAL_ERROR",
-    errorMessageSafe: "Internal processing failed"
+    errorMessageSafe: "Internal processing failed",
   };
 }
 
@@ -105,8 +105,8 @@ export async function recordPipelineEvent(input: {
         input.durationMs ?? null,
         JSON.stringify(metadata),
         input.errorCode ?? null,
-        input.errorMessageSafe ?? null
-      ]
+        input.errorMessageSafe ?? null,
+      ],
     );
   });
 }

@@ -28,7 +28,7 @@ function mapDocument(row: DocumentRow): DocumentRecord {
     sizeBytes: row.size_bytes === null ? null : Number(row.size_bytes),
     errorCode: row.error_code,
     errorMessageSafe: row.error_message_safe,
-    processedAt: row.processed_at ? new Date(row.processed_at).toISOString() : null
+    processedAt: row.processed_at ? new Date(row.processed_at).toISOString() : null,
   };
 }
 
@@ -46,7 +46,7 @@ export async function createUploadedDocument(input: {
 }) {
   return createDocumentDirect({
     ...input,
-    status: "uploaded"
+    status: "uploaded",
   });
 }
 
@@ -71,8 +71,8 @@ export async function createDocumentDirect(input: {
         input.contentType,
         input.status,
         input.storagePath ?? null,
-        input.sizeBytes ?? null
-      ]
+        input.sizeBytes ?? null,
+      ],
     );
 
     return mapDocument(result.rows[0] as DocumentRow);
@@ -88,7 +88,7 @@ export async function listDocumentsDirect(sessionId: string) {
         where session_id = $1
         order by created_at desc
       `,
-      [sessionId]
+      [sessionId],
     );
 
     return result.rows.map(mapDocument);
@@ -97,9 +97,10 @@ export async function listDocumentsDirect(sessionId: string) {
 
 export async function getDocumentCountDirect(sessionId: string) {
   return withPgClient(async (client) => {
-    const result = await client.query<{ count: string }>("select count(*) from documents where session_id = $1", [
-      sessionId
-    ]);
+    const result = await client.query<{ count: string }>(
+      "select count(*) from documents where session_id = $1",
+      [sessionId],
+    );
 
     return Number(result.rows[0]?.count ?? 0);
   });
@@ -117,7 +118,7 @@ export async function getDocumentForIngestionWithClient(client: PoolClient, docu
       where id = $1
       limit 1
     `,
-    [documentId]
+    [documentId],
   );
 
   const row = result.rows[0];
@@ -142,7 +143,7 @@ export async function updateDocumentStatusWithClient(
     status: DocumentStatus;
     errorCode?: string | null;
     errorMessageSafe?: string | null;
-  }
+  },
 ) {
   await client.query(
     `
@@ -154,13 +155,16 @@ export async function updateDocumentStatusWithClient(
         processed_at = case when $2 in ('ready', 'failed') then timezone('utc', now()) else processed_at end
       where id = $1
     `,
-    [input.documentId, input.status, input.errorCode ?? null, input.errorMessageSafe ?? null]
+    [input.documentId, input.status, input.errorCode ?? null, input.errorMessageSafe ?? null],
   );
 }
 
 export async function deleteDocumentDirect(documentId: string, sessionId: string) {
   return withPgClient(async (client) => {
-    await client.query("delete from documents where id = $1 and session_id = $2", [documentId, sessionId]);
+    await client.query("delete from documents where id = $1 and session_id = $2", [
+      documentId,
+      sessionId,
+    ]);
   });
 }
 

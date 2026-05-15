@@ -8,8 +8,8 @@ worker.on("ready", () => {
       ts: new Date().toISOString(),
       level: "info",
       route: "worker",
-      event: "worker_ready"
-    })
+      event: "worker_ready",
+    }),
   );
 });
 
@@ -22,8 +22,8 @@ worker.on("failed", (job, error) => {
       event: "job_failed",
       jobId: job?.id,
       jobName: job?.name,
-      message: error.message
-    })
+      message: error.message,
+    }),
   );
 });
 

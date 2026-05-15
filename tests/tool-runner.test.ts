@@ -8,7 +8,7 @@ const account: AccountRecord = {
   status: "active",
   enabledModules: ["exports"],
   limits: { exportRows: 50000 },
-  createdAt: "2026-01-01T00:00:00Z"
+  createdAt: "2026-01-01T00:00:00Z",
 };
 
 const flags: FeatureFlagRecord[] = [
@@ -19,8 +19,8 @@ const flags: FeatureFlagRecord[] = [
     flagValue: true,
     description: "Exports UI enabled",
     rolloutNotes: null,
-    createdAt: "2026-01-01T00:00:00Z"
-  }
+    createdAt: "2026-01-01T00:00:00Z",
+  },
 ];
 
 const errors: ErrorEventRecord[] = [
@@ -31,8 +31,8 @@ const errors: ErrorEventRecord[] = [
     errorCode: "ERR-219",
     summary: "Missing export permission",
     occurredAt: "2026-01-01T00:00:00Z",
-    createdAt: "2026-01-01T00:00:00Z"
-  }
+    createdAt: "2026-01-01T00:00:00Z",
+  },
 ];
 
 describe("tool-runner", () => {
@@ -52,8 +52,8 @@ describe("tool-runner", () => {
       dependencies: {
         getAccountContext: async () => account,
         getFeatureFlags: async () => flags,
-        getRecentErrors: async () => errors
-      }
+        getRecentErrors: async () => errors,
+      },
     });
 
     expect(result.productArea).toBe("exports");
@@ -73,8 +73,8 @@ describe("tool-runner", () => {
       dependencies: {
         getAccountContext: async () => account,
         getFeatureFlags: async () => flags,
-        getRecentErrors: async () => errors
-      }
+        getRecentErrors: async () => errors,
+      },
     });
 
     expect(result.toolEvidence[0]).toMatchObject({
@@ -82,8 +82,8 @@ describe("tool-runner", () => {
       title: "Tool not run",
       raw: {
         status: "not_run",
-        reason: "missing_seeded_account"
-      }
+        reason: "missing_seeded_account",
+      },
     });
     expect(result.toolCalls[0]?.input).toEqual({ accountId: null });
   });

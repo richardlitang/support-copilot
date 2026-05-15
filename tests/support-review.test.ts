@@ -12,7 +12,7 @@ describe("determineSupportLevel", () => {
       internalClaimCount: 2,
       hasConflict: false,
       missingRequiredContext: false,
-      validationFailed: false
+      validationFailed: false,
     });
 
     expect(result).toBe("high");
@@ -28,7 +28,7 @@ describe("determineSupportLevel", () => {
       internalClaimCount: 1,
       hasConflict: false,
       missingRequiredContext: true,
-      validationFailed: false
+      validationFailed: false,
     });
 
     expect(result).toBe("insufficient_support");
@@ -44,7 +44,7 @@ describe("determineSupportLevel", () => {
       internalClaimCount: 1,
       hasConflict: false,
       missingRequiredContext: false,
-      validationFailed: false
+      validationFailed: false,
     });
 
     expect(result).toBe("low");
@@ -60,7 +60,7 @@ describe("determineSupportLevel", () => {
       internalClaimCount: 2,
       hasConflict: false,
       missingRequiredContext: false,
-      validationFailed: false
+      validationFailed: false,
     });
 
     expect(result).toBe("low");
@@ -75,8 +75,8 @@ describe("review policy", () => {
         supportLevel: "insufficient_support",
         hasConflict: false,
         missingRequiredContext: false,
-        validationFailed: false
-      })
+        validationFailed: false,
+      }),
     ).toBe("needs_human_review");
   });
 
@@ -86,8 +86,8 @@ describe("review policy", () => {
         hasConflict: true,
         missingRequiredContext: false,
         supportLevel: "medium",
-        validationFailed: false
-      })
+        validationFailed: false,
+      }),
     ).toBe(true);
   });
 });

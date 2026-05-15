@@ -9,13 +9,17 @@ import type { InvestigationResult } from "@/lib/types/investigation";
 
 export function EvidencePanel({
   result,
-  isInvestigating
+  isInvestigating,
 }: {
   result: InvestigationResult | null;
   isInvestigating: boolean;
 }) {
   const citations = new Set(
-    result ? [...result.customerReply.claims, ...result.internalDiagnosis.claims].flatMap((claim) => claim.citations) : []
+    result
+      ? [...result.customerReply.claims, ...result.internalDiagnosis.claims].flatMap(
+          (claim) => claim.citations,
+        )
+      : [],
   );
 
   return (
@@ -51,7 +55,9 @@ export function EvidencePanel({
                       <FileSearch className="h-4 w-4 text-zinc-500" />
                       <p className="eyebrow">Documentation</p>
                     </div>
-                    <Badge variant="secondary">{result.docEvidence.length} chunk{result.docEvidence.length === 1 ? "" : "s"}</Badge>
+                    <Badge variant="secondary">
+                      {result.docEvidence.length} chunk{result.docEvidence.length === 1 ? "" : "s"}
+                    </Badge>
                   </div>
 
                   {result.docEvidence.length ? (
@@ -65,11 +71,21 @@ export function EvidencePanel({
                               <div className="flex flex-wrap items-center gap-2">
                                 <Badge variant="outline">{item.id}</Badge>
                                 {cited ? <Badge variant="success">cited</Badge> : null}
-                                <Badge variant={item.retrievalSource === "literal" ? "warn" : item.retrievalSource === "hybrid" ? "secondary" : "outline"}>
+                                <Badge
+                                  variant={
+                                    item.retrievalSource === "literal"
+                                      ? "warn"
+                                      : item.retrievalSource === "hybrid"
+                                        ? "secondary"
+                                        : "outline"
+                                  }
+                                >
                                   {(item.retrievalSource ?? "vector").replaceAll("_", " ")}
                                 </Badge>
                               </div>
-                              <p className="mt-3 text-sm font-medium text-zinc-950">{item.filename}</p>
+                              <p className="mt-3 text-sm font-medium text-zinc-950">
+                                {item.filename}
+                              </p>
                               <p className="mt-1 text-xs uppercase tracking-[0.18em] text-zinc-500">
                                 {item.sectionTitle ?? "General section"}
                               </p>
@@ -80,9 +96,13 @@ export function EvidencePanel({
                               ) : null}
                             </div>
                             <div className="flex shrink-0 flex-col items-end gap-1">
-                              <Badge variant="secondary">{Math.round(item.score * 100)}% match</Badge>
+                              <Badge variant="secondary">
+                                {Math.round(item.score * 100)}% match
+                              </Badge>
                               {item.rerankScore !== undefined ? (
-                                <span className="text-[11px] font-medium text-zinc-500">reranked</span>
+                                <span className="text-[11px] font-medium text-zinc-500">
+                                  reranked
+                                </span>
                               ) : null}
                             </div>
                           </div>
@@ -106,7 +126,8 @@ export function EvidencePanel({
                       <p className="eyebrow">Context evidence</p>
                     </div>
                     <Badge variant="secondary">
-                      {result.toolEvidence.length} tool source{result.toolEvidence.length === 1 ? "" : "s"}
+                      {result.toolEvidence.length} tool source
+                      {result.toolEvidence.length === 1 ? "" : "s"}
                     </Badge>
                   </div>
 
@@ -122,8 +143,12 @@ export function EvidencePanel({
                                 <Badge variant="outline">{item.id}</Badge>
                                 {cited ? <Badge variant="warn">cited</Badge> : null}
                               </div>
-                              <p className="mt-3 text-sm font-medium text-zinc-950">{item.toolName}</p>
-                              <p className="mt-1 text-xs uppercase tracking-[0.18em] text-zinc-500">{item.title}</p>
+                              <p className="mt-3 text-sm font-medium text-zinc-950">
+                                {item.toolName}
+                              </p>
+                              <p className="mt-1 text-xs uppercase tracking-[0.18em] text-zinc-500">
+                                {item.title}
+                              </p>
                             </div>
                           </div>
                           <p className="mt-4 text-sm leading-6 text-zinc-700">{item.excerpt}</p>
@@ -153,14 +178,18 @@ export function EvidencePanel({
                       <Database className="h-4 w-4 text-zinc-500" />
                       <p className="eyebrow">Tool call records</p>
                     </div>
-                    <Badge variant="secondary">{result.toolCalls.length} call{result.toolCalls.length === 1 ? "" : "s"}</Badge>
+                    <Badge variant="secondary">
+                      {result.toolCalls.length} call{result.toolCalls.length === 1 ? "" : "s"}
+                    </Badge>
                   </div>
 
                   {result.toolCalls.length ? (
                     result.toolCalls.map((toolCall, index) => (
                       <div key={`${toolCall.toolName}-${index}`} className="surface-muted p-4">
                         <div className="flex items-center justify-between gap-3">
-                          <p className="text-sm font-medium uppercase tracking-[0.14em] text-zinc-900">{toolCall.toolName}</p>
+                          <p className="text-sm font-medium uppercase tracking-[0.14em] text-zinc-900">
+                            {toolCall.toolName}
+                          </p>
                           <Badge variant="outline">Call {index + 1}</Badge>
                         </div>
                         <details className="mt-4">
@@ -175,14 +204,16 @@ export function EvidencePanel({
                     ))
                   ) : (
                     <div className="surface-muted border-dashed p-4 text-sm text-zinc-500">
-                      Tool execution records appear here when the router invokes account or product tools.
+                      Tool execution records appear here when the router invokes account or product
+                      tools.
                     </div>
                   )}
                 </section>
               </>
             ) : (
               <div className="surface-muted p-4 text-sm leading-6 text-zinc-600">
-                Run an investigation to see retrieved chunks, structured context evidence, and raw tool-call records here.
+                Run an investigation to see retrieved chunks, structured context evidence, and raw
+                tool-call records here.
               </div>
             )}
           </div>

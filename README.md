@@ -9,8 +9,22 @@ Support Copilot is a single-app Next.js support investigation workspace built to
 - Structured outputs with claim-level citations instead of freeform answer blobs
 - A debug surface that makes retrieval, evidence, and fallback behavior inspectable
 
-<img width="1280" height="694" alt="chrome-capture-2026-05-05" src="https://github.com/user-attachments/assets/ddde7941-f7d4-4344-b5ac-81ecbb2ebdf2" />
+## Why this project matters
 
+- It treats trust as a product requirement, not a post-processing layer.
+- It makes retrieval, evidence, and review states inspectable end-to-end.
+- It favors deterministic control flow for critical routing/review boundaries.
+- It encodes AI fallibility as a first-class state (`needs_human_review`) instead of masking uncertainty.
+
+## Reviewer quickstart
+
+1. Read [`docs/code-map.md`](docs/code-map.md) for runtime boundaries.
+2. Read [`docs/architecture.md`](docs/architecture.md) for system flow and trust model.
+3. Read ADRs in [`docs/adr`](docs/adr) for decision rationale.
+4. Run `npm run eval:demo:offline` for deterministic behavior checks.
+5. Run `npm run eval:demo` for live retrieval-quality checks.
+
+<img width="1280" height="694" alt="chrome-capture-2026-05-05" src="https://github.com/user-attachments/assets/ddde7941-f7d4-4344-b5ac-81ecbb2ebdf2" />
 
 ## Project Goals
 
@@ -32,6 +46,7 @@ Support Copilot is a single-app Next.js support investigation workspace built to
 ## Architecture
 
 For a fuller walkthrough, see [`docs/architecture.md`](docs/architecture.md).
+For a file-by-file orientation, see [`docs/code-map.md`](docs/code-map.md).
 
 - `app/api/upload/route.ts`: upload, parse, chunk, embed, and persist documents
 - `app/api/investigate/route.ts`: retrieve docs, deterministically decide whether tools are needed, run tool-backed investigation, and store structured investigation metadata
@@ -43,7 +58,9 @@ For a fuller walkthrough, see [`docs/architecture.md`](docs/architecture.md).
 - `lib/answer.ts`: chunk-1 grounded answer generation plus chunk-2 mixed-evidence structured claim generation
 - `lib/classify.ts`: deterministic routing for docs-only vs docs-plus-tools vs human-review
 - `lib/tools/*`: Postgres-backed read-only investigation tools for account context, feature flags, and recent errors
-- `lib/ingest.ts` and `lib/investigate.ts`: orchestration boundaries that keep adapters testable and LangGraph-ready later
+- `lib/investigate.ts`: current investigation orchestration boundary
+- `lib/claim-generation.ts`: shared structured-claim generation boundary used by the direct pipeline and graph parity wrappers
+- `lib/ingest.ts`: direct seed/demo ingestion helper; user uploads use the queue-backed worker path
 
 ## Retrieval Surfacing
 
@@ -181,9 +198,11 @@ For restricted/offline environments, use:
 npm run eval:demo:offline
 ```
 
-The offline eval uses mocked retrieved evidence and tool outputs. It also checks graph-node parity for route and review outcomes. It is useful for validating routing/reporting code, but the live eval is still the real retrieval-quality gate.
+The offline eval uses mocked retrieved evidence and tool outputs. It also checks graph-node parity for route and review outcomes. `lib/graph/**` is parity scaffolding for future orchestration, not the active runtime path. The live eval is still the real retrieval-quality gate.
 
 The eval runner now reports route correctness, review status, retrieval evidence keywords, tool evidence, and top retrieved docs. It exits non-zero if the grounded behavior drifts.
+
+For release gates and failure interpretation, see [`docs/evals.md`](docs/evals.md).
 
 ## Verification
 
@@ -191,6 +210,7 @@ Run these before claiming the slice is ready:
 
 ```bash
 npm run lint
+npm run format:check
 npm run test
 npm run build
 npm run eval:demo
@@ -200,7 +220,7 @@ npm run eval:demo
 
 GitHub Actions now includes:
 
-- `.github/workflows/ci.yml`: lint, typecheck, unit tests, production build, and Docker build on PR/push.
+- `.github/workflows/ci.yml`: lint, format check, typecheck, unit tests, production build, and Docker build on PR/push.
 - `.github/workflows/security.yml`: Trivy filesystem and image scans on PR/push, plus weekly scheduled scan.
 
 Dependency update automation:

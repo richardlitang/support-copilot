@@ -4,34 +4,38 @@ import type { EvidenceChunk } from "@/lib/types";
 import type { InvestigationGraphState } from "@/lib/graph/investigation-state";
 
 export type RetrieveDocumentationDependencies = {
-  retrieveEvidence: (input: { question: string; sessionId: string; limit?: number }) => Promise<EvidenceChunk[]>;
+  retrieveEvidence: (input: {
+    question: string;
+    sessionId: string;
+    limit?: number;
+  }) => Promise<EvidenceChunk[]>;
 };
 
 const defaultDependencies: RetrieveDocumentationDependencies = {
-  retrieveEvidence: retrieveEvidenceAdapter
+  retrieveEvidence: retrieveEvidenceAdapter,
 };
 
 export async function retrieveDocumentationNode(
   state: InvestigationGraphState,
-  dependencies: Partial<RetrieveDocumentationDependencies> = {}
+  dependencies: Partial<RetrieveDocumentationDependencies> = {},
 ): Promise<InvestigationGraphState> {
   const deps = {
     ...defaultDependencies,
-    ...dependencies
+    ...dependencies,
   };
   const retrievedEvidence = state.input.ragEnabled
     ? await deps.retrieveEvidence({
         question: state.input.ticket,
         sessionId: state.input.sessionId,
-        limit: 8
+        limit: 8,
       })
     : [];
 
   return markInvestigationGraphStep(
     {
       ...state,
-      retrievedEvidence
+      retrievedEvidence,
     },
-    "retrieved_documentation"
+    "retrieved_documentation",
   );
 }

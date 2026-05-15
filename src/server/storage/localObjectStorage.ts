@@ -10,7 +10,9 @@ function extensionFromFilename(filename: string) {
 
 function resolveUploadRoot() {
   const configured = getRuntimeConfig().uploadDir;
-  return path.isAbsolute(configured) ? configured : path.join(/* turbopackIgnore: true */ process.cwd(), configured);
+  return path.isAbsolute(configured)
+    ? configured
+    : path.join(/* turbopackIgnore: true */ process.cwd(), configured);
 }
 
 function resolveStoragePath(storagePath: string) {

@@ -17,8 +17,8 @@ const evidence: EvidenceChunk[] = [
     content: "Exports require billing setup and export permission.",
     score: 0.74,
     rank: 1,
-    chunkIndex: 0
-  }
+    chunkIndex: 0,
+  },
 ];
 
 const account: AccountRecord = {
@@ -28,7 +28,7 @@ const account: AccountRecord = {
   status: "active",
   enabledModules: ["exports"],
   limits: { exportRows: 50000 },
-  createdAt: "2026-01-01T00:00:00Z"
+  createdAt: "2026-01-01T00:00:00Z",
 };
 
 const flags: FeatureFlagRecord[] = [
@@ -39,8 +39,8 @@ const flags: FeatureFlagRecord[] = [
     flagValue: true,
     description: "Exports UI enabled",
     rolloutNotes: null,
-    createdAt: "2026-01-01T00:00:00Z"
-  }
+    createdAt: "2026-01-01T00:00:00Z",
+  },
 ];
 
 describe("investigation graph nodes", () => {
@@ -48,7 +48,7 @@ describe("investigation graph nodes", () => {
     const initial = createInitialInvestigationGraphState({
       ticket: "How do I enable exports?",
       sessionId: "session-1",
-      ragEnabled: true
+      ragEnabled: true,
     });
 
     const retrieved = await retrieveDocumentationNode(initial, {
@@ -56,10 +56,10 @@ describe("investigation graph nodes", () => {
         expect(input).toEqual({
           question: "How do I enable exports?",
           sessionId: "session-1",
-          limit: 8
+          limit: 8,
         });
         return evidence;
-      }
+      },
     });
     const classified = classifyInvestigationNode(retrieved, {
       classifyInvestigation: (input) => {
@@ -67,14 +67,19 @@ describe("investigation graph nodes", () => {
         return {
           mode: "docs_only",
           requiredTools: [],
-          routingReason: "Strong retrieval and procedural language indicate documentation alone should be sufficient."
+          routingReason:
+            "Strong retrieval and procedural language indicate documentation alone should be sufficient.",
         };
-      }
+      },
     });
 
     expect(classified.retrievedEvidence).toEqual(evidence);
     expect(classified.routing?.mode).toBe("docs_only");
-    expect(classified.steps).toEqual(["initialized", "retrieved_documentation", "classified_investigation"]);
+    expect(classified.steps).toEqual([
+      "initialized",
+      "retrieved_documentation",
+      "classified_investigation",
+    ]);
   });
 
   it("wraps context tools and conflict detection into graph state", async () => {
@@ -84,17 +89,17 @@ describe("investigation graph nodes", () => {
           ticket: "Exports are failing for this account.",
           sessionId: "session-1",
           ragEnabled: true,
-          selectedAccountId: "acct-1"
+          selectedAccountId: "acct-1",
         }),
-        retrievedEvidence: evidence
+        retrievedEvidence: evidence,
       },
       {
         classifyInvestigation: () => ({
           mode: "docs_plus_tools",
           requiredTools: ["getAccountContext", "getFeatureFlags"],
-          routingReason: "Ticket requires account context."
-        })
-      }
+          routingReason: "Ticket requires account context.",
+        }),
+      },
     );
 
     const withTools = await runContextToolsNode(state, {
@@ -109,28 +114,28 @@ describe("investigation graph nodes", () => {
             toolName: "getAccountContext",
             title: "Acme",
             excerpt: "Plan: Growth. Status: active.",
-            raw: account
-          }
+            raw: account,
+          },
         ],
         toolCalls: [
           {
             toolName: "getAccountContext",
             input: { accountId: "acct-1" },
-            output: account
-          }
+            output: account,
+          },
         ],
         account,
         flags,
         errors: [],
-        productArea: "exports"
+        productArea: "exports",
       }),
       detectConflict: (input) => {
         expect(input.docEvidence[0]?.id).toBe("S1");
         return {
           hasConflict: false,
-          reason: null
+          reason: null,
         };
-      }
+      },
     });
 
     expect(withTools.docEvidence[0]?.id).toBe("S1");
@@ -147,17 +152,17 @@ describe("investigation graph nodes", () => {
             ticket: "Exports are failing for this account.",
             sessionId: "session-1",
             ragEnabled: true,
-            selectedAccountId: "acct-1"
+            selectedAccountId: "acct-1",
           }),
-          retrievedEvidence: evidence
+          retrievedEvidence: evidence,
         },
         {
           classifyInvestigation: () => ({
             mode: "docs_plus_tools",
             requiredTools: ["getAccountContext"],
-            routingReason: "Ticket requires account context."
-          })
-        }
+            routingReason: "Ticket requires account context.",
+          }),
+        },
       ),
       {
         getAccountContext: async () => account,
@@ -171,32 +176,36 @@ describe("investigation graph nodes", () => {
               toolName: "getAccountContext",
               title: "Acme",
               excerpt: "Plan: Growth. Status: active.",
-              raw: account
-            }
+              raw: account,
+            },
           ],
           toolCalls: [],
           account,
           flags: [],
           errors: [],
-          productArea: "exports"
+          productArea: "exports",
         }),
         detectConflict: () => ({
           hasConflict: false,
-          reason: null
-        })
-      }
+          reason: null,
+        }),
+      },
     );
     const generated = await generateClaimsNode(withTools, {
       generateInvestigationAnswer: async () => ({
         customerReply: {
-          claims: [{ text: "Exports require setup and account verification.", citations: ["S1", "T1"] }]
+          claims: [
+            { text: "Exports require setup and account verification.", citations: ["S1", "T1"] },
+          ],
         },
         internalDiagnosis: {
-          claims: [{ text: "Docs and account context are both available.", citations: ["S1", "T1"] }],
-          openQuestions: []
+          claims: [
+            { text: "Docs and account context are both available.", citations: ["S1", "T1"] },
+          ],
+          openQuestions: [],
         },
-        insufficientSupport: false
-      })
+        insufficientSupport: false,
+      }),
     });
     const grounded = validateGroundingNode(generated);
     const reviewed = applyReviewPolicyNode(grounded);
@@ -204,7 +213,7 @@ describe("investigation graph nodes", () => {
     expect(reviewed.grounding).toEqual({
       validationFailed: false,
       validCitationIds: ["S1", "T1"],
-      missingCitationIds: []
+      missingCitationIds: [],
     });
     expect(reviewed.review).toMatchObject({
       supportLevel: "medium",
@@ -212,9 +221,9 @@ describe("investigation graph nodes", () => {
       reviewDecision: {
         status: "ready",
         reasonCode: "none",
-        action: "none"
+        action: "none",
       },
-      finalMode: "docs_plus_tools"
+      finalMode: "docs_plus_tools",
     });
     expect(reviewed.steps).toEqual([
       "initialized",
@@ -222,7 +231,7 @@ describe("investigation graph nodes", () => {
       "ran_context_tools",
       "generated_claims",
       "validated_grounding",
-      "applied_review_policy"
+      "applied_review_policy",
     ]);
   });
 });

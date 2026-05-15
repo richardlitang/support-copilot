@@ -1,11 +1,7 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
-  content: [
-    "./app/**/*.{ts,tsx}",
-    "./components/**/*.{ts,tsx}",
-    "./lib/**/*.{ts,tsx}"
-  ],
+  content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./lib/**/*.{ts,tsx}"],
   theme: {
     extend: {
       colors: {
@@ -16,30 +12,22 @@ const config: Config = {
         sage: "var(--sage)",
         copper: "var(--copper)",
         signal: "var(--signal)",
-        ember: "var(--ember)"
+        ember: "var(--ember)",
       },
       boxShadow: {
         panel: "0 24px 80px rgba(19, 21, 20, 0.08)",
-        evidence: "0 18px 42px rgba(19, 21, 20, 0.06)"
+        evidence: "0 18px 42px rgba(19, 21, 20, 0.06)",
       },
       borderRadius: {
-        panel: "28px"
+        panel: "28px",
       },
       fontFamily: {
-        sans: [
-          "Avenir Next",
-          "Segoe UI",
-          "sans-serif"
-        ],
-        serif: [
-          "Iowan Old Style",
-          "Georgia",
-          "serif"
-        ]
-      }
-    }
+        sans: ["Avenir Next", "Segoe UI", "sans-serif"],
+        serif: ["Iowan Old Style", "Georgia", "serif"],
+      },
+    },
   },
-  plugins: []
+  plugins: [],
 };
 
 export default config;

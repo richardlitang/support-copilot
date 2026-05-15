@@ -1,16 +1,23 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { History, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { AnswerPanel } from "@/components/AnswerPanel";
 import { EvidencePanel } from "@/components/EvidencePanel";
+import {
+  RecentInvestigations,
+  type InvestigationHistoryItem,
+} from "@/components/RecentInvestigations";
 import { TicketForm } from "@/components/TicketForm";
 import { UploadPanel } from "@/components/UploadPanel";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import type { DocumentRecord, UploadOutcome } from "@/lib/types";
-import type { AccountRecord, InvestigationExecutionMode, InvestigationResult } from "@/lib/types/investigation";
+import type {
+  AccountRecord,
+  InvestigationExecutionMode,
+  InvestigationResult,
+} from "@/lib/types/investigation";
 
 type UploadResponse = {
   documents: DocumentRecord[];
@@ -34,17 +41,6 @@ export type DemoScenario = {
   rawText: string;
   investigationContext?: string;
   selectedAccountId?: string;
-};
-
-type InvestigationHistoryItem = {
-  investigationId: string;
-  ticket: string;
-  investigationContext: string;
-  selectedAccountId: string | null;
-  executionMode: InvestigationExecutionMode;
-  ragEnabled: boolean;
-  createdAt: string;
-  result: InvestigationResult;
 };
 
 const historyStorageKey = "support-copilot:recent-investigations";
@@ -72,81 +68,10 @@ function writeStoredHistory(items: InvestigationHistoryItem[]) {
   }
 }
 
-function formatHistoryTime(value: string) {
-  return new Intl.DateTimeFormat(undefined, {
-    hour: "2-digit",
-    minute: "2-digit"
-  }).format(new Date(value));
-}
-
-function RecentInvestigations({
-  currentInvestigationId,
-  items,
-  onClear,
-  onSelect
-}: {
-  currentInvestigationId?: string | null;
-  items: InvestigationHistoryItem[];
-  onClear: () => void;
-  onSelect: (item: InvestigationHistoryItem) => void;
-}) {
-  return (
-    <Card className="surface-shell">
-      <CardContent className="p-3">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-2">
-            <History className="h-4 w-4 shrink-0 text-zinc-500" />
-            <div className="min-w-0">
-              <p className="eyebrow">Recent</p>
-              <p className="mt-1 text-xs text-zinc-500">{items.length ? `${items.length} recent run${items.length === 1 ? "" : "s"}` : "No runs yet"}</p>
-            </div>
-          </div>
-          {items.length ? (
-            <Button type="button" variant="ghost" size="sm" onClick={onClear}>
-              Clear history
-            </Button>
-          ) : null}
-        </div>
-
-        <div className="mt-3 grid gap-2">
-          {items.length ? (
-            items.map((item) => {
-              const isCurrent = item.investigationId === currentInvestigationId;
-
-              return (
-                <button
-                  key={item.investigationId}
-                  type="button"
-                  onClick={() => onSelect(item)}
-                  className={`surface-muted min-w-0 p-3 text-left transition hover:border-zinc-300 ${
-                    isCurrent ? "border-zinc-950/40 bg-white" : ""
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs font-medium text-zinc-500">{formatHistoryTime(item.createdAt)}</span>
-                    <Badge variant={item.result.executionMode === "evidence_only" ? "outline" : item.result.reviewStatus === "needs_human_review" ? "danger" : "secondary"}>
-                      {item.result.executionMode === "evidence_only" ? "Evidence" : item.result.reviewStatus === "needs_human_review" ? "Review" : "Ready"}
-                    </Badge>
-                  </div>
-                  <p className="mt-2 line-clamp-2 text-sm leading-5 text-zinc-800">{item.ticket}</p>
-                </button>
-              );
-            })
-          ) : (
-            <div className="surface-muted border-dashed p-3 text-xs leading-5 text-zinc-500">
-              Run a ticket to save it here.
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
 export function SupportCopilotShell({
   initialAccounts,
   initialDocuments,
-  demoScenarios
+  demoScenarios,
 }: {
   initialAccounts: AccountRecord[];
   initialDocuments: DocumentRecord[];
@@ -173,7 +98,9 @@ export function SupportCopilotShell({
   const showDebugToggle = process.env.NEXT_PUBLIC_DEBUG_RAG === "true";
   const hasRunState = Boolean(result) || isInvestigating;
   const activeStep = documents.length === 0 ? "docs" : ticket.trim() ? "investigate" : "ticket";
-  const hasPendingDocuments = documents.some((document) => document.status === "uploaded" || document.status === "processing");
+  const hasPendingDocuments = documents.some(
+    (document) => document.status === "uploaded" || document.status === "processing",
+  );
 
   const refreshDocuments = useCallback(async (options?: { silent?: boolean }) => {
     const response = await fetch("/api/documents");
@@ -190,24 +117,27 @@ export function SupportCopilotShell({
     setDocuments(payload.documents);
   }, []);
 
-  const refreshAccounts = useCallback(async (options?: { silent?: boolean }) => {
-    if (!showDebugToggle) {
-      return;
-    }
-
-    const response = await fetch("/api/debug/accounts");
-    const payload = (await response.json()) as AccountsResponse;
-
-    if (!response.ok) {
-      if (!options?.silent) {
-        throw new Error(payload.error ?? "Failed to refresh debug accounts.");
+  const refreshAccounts = useCallback(
+    async (options?: { silent?: boolean }) => {
+      if (!showDebugToggle) {
+        return;
       }
 
-      return;
-    }
+      const response = await fetch("/api/debug/accounts");
+      const payload = (await response.json()) as AccountsResponse;
 
-    setAccounts(payload.accounts);
-  }, [showDebugToggle]);
+      if (!response.ok) {
+        if (!options?.silent) {
+          throw new Error(payload.error ?? "Failed to refresh debug accounts.");
+        }
+
+        return;
+      }
+
+      setAccounts(payload.accounts);
+    },
+    [showDebugToggle],
+  );
 
   useEffect(() => {
     void refreshDocuments({ silent: true });
@@ -245,9 +175,9 @@ export function SupportCopilotShell({
       const response = await fetch("/api/documents", {
         method: "DELETE",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ documentId })
+        body: JSON.stringify({ documentId }),
       });
       const payload = (await response.json()) as DocumentsResponse & { error?: string };
 
@@ -268,9 +198,9 @@ export function SupportCopilotShell({
       const response = await fetch("/api/documents", {
         method: "DELETE",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ clearAll: true })
+        body: JSON.stringify({ clearAll: true }),
       });
       const payload = (await response.json()) as DocumentsResponse & { error?: string };
 
@@ -302,14 +232,16 @@ export function SupportCopilotShell({
     try {
       const response = await fetch("/api/upload", {
         method: "POST",
-        body: formData
+        body: formData,
       });
       const payload = (await response.json()) as UploadResponse;
       const requestId = response.headers.get("x-request-id");
 
       if (!response.ok && !payload.outcomes) {
         throw new Error(
-          requestId ? `${payload.error ?? "Upload failed."} (requestId: ${requestId})` : payload.error ?? "Upload failed."
+          requestId
+            ? `${payload.error ?? "Upload failed."} (requestId: ${requestId})`
+            : (payload.error ?? "Upload failed."),
         );
       }
 
@@ -338,15 +270,15 @@ export function SupportCopilotShell({
       const response = await fetch("/api/investigate", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           ticket,
           executionMode: nextExecutionMode,
           ragEnabled,
           selectedAccountId,
-          investigationContext
-        })
+          investigationContext,
+        }),
       });
       const payload = (await response.json()) as InvestigationResult & { error?: string };
       const requestId = response.headers.get("x-request-id");
@@ -355,7 +287,7 @@ export function SupportCopilotShell({
         throw new Error(
           requestId
             ? `${payload.error ?? "Investigation failed."} (requestId: ${requestId})`
-            : payload.error ?? "Investigation failed."
+            : (payload.error ?? "Investigation failed."),
         );
       }
 
@@ -371,9 +303,9 @@ export function SupportCopilotShell({
             executionMode: payload.executionMode,
             ragEnabled,
             createdAt: new Date().toISOString(),
-            result: payload
+            result: payload,
           },
-          ...items.filter((item) => item.investigationId !== payload.investigationId)
+          ...items.filter((item) => item.investigationId !== payload.investigationId),
         ].slice(0, historyLimit);
 
         writeStoredHistory(next);
@@ -381,7 +313,9 @@ export function SupportCopilotShell({
       });
       await refreshDocuments();
     } catch (investigateError) {
-      setError(investigateError instanceof Error ? investigateError.message : "Investigation failed.");
+      setError(
+        investigateError instanceof Error ? investigateError.message : "Investigation failed.",
+      );
     } finally {
       setIsInvestigating(false);
     }
@@ -464,7 +398,11 @@ export function SupportCopilotShell({
                 <Badge variant={executionMode === "evidence_only" ? "outline" : "default"}>
                   {executionMode === "evidence_only" ? "Evidence only" : "Draft answer"}
                 </Badge>
-                {showDebugToggle ? <Badge variant={ragEnabled ? "secondary" : "outline"}>{ragEnabled ? "Retrieval on" : "Retrieval off"}</Badge> : null}
+                {showDebugToggle ? (
+                  <Badge variant={ragEnabled ? "secondary" : "outline"}>
+                    {ragEnabled ? "Retrieval on" : "Retrieval off"}
+                  </Badge>
+                ) : null}
               </div>
             </div>
           </CardContent>
@@ -476,7 +414,13 @@ export function SupportCopilotShell({
           </Card>
         ) : null}
 
-        <section className={hasRunState && showDebugToggle ? "workbench-layout workbench-layout--with-evidence" : "workbench-layout"}>
+        <section
+          className={
+            hasRunState && showDebugToggle
+              ? "workbench-layout workbench-layout--with-evidence"
+              : "workbench-layout"
+          }
+        >
           <div className="left-stack">
             <RecentInvestigations
               currentInvestigationId={result?.investigationId}
@@ -532,7 +476,9 @@ export function SupportCopilotShell({
                 isInvestigating={isInvestigating}
                 investigationContext={investigationContext}
                 result={result}
-                isReviewAcknowledged={Boolean(result && reviewedInvestigationId === result.investigationId)}
+                isReviewAcknowledged={Boolean(
+                  result && reviewedInvestigationId === result.investigationId,
+                )}
                 isReviewRetryActive={isReviewRetryActive}
                 onMarkReviewed={handleMarkReviewed}
                 onDraftFromEvidence={() => void handleInvestigate("draft_answer")}
@@ -542,7 +488,9 @@ export function SupportCopilotShell({
             ) : null}
           </div>
 
-          {hasRunState && showDebugToggle ? <EvidencePanel result={result} isInvestigating={isInvestigating} /> : null}
+          {hasRunState && showDebugToggle ? (
+            <EvidencePanel result={result} isInvestigating={isInvestigating} />
+          ) : null}
         </section>
       </div>
     </main>

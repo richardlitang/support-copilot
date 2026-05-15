@@ -8,7 +8,7 @@ const GENERIC_LITERAL_TOKENS = new Set([
   "XML",
   "CSV",
   "PDF",
-  "ID"
+  "ID",
 ]);
 
 const literalPatterns = [
@@ -17,7 +17,7 @@ const literalPatterns = [
   /\b[a-z]+-[a-z0-9-]+\b/g,
   /\b[a-z0-9]+_id\b/gi,
   /\b[a-z]{2,}_[A-Za-z0-9_]{6,}\b/g,
-  /\b[A-Z][A-Z0-9_]{3,}\b/g
+  /\b[A-Z][A-Z0-9_]{3,}\b/g,
 ];
 
 function normalizeLiteral(value: string) {
@@ -41,4 +41,3 @@ export function extractLikelyLiterals(input: string) {
 
   return Array.from(literals).slice(0, 8);
 }
-

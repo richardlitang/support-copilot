@@ -6,7 +6,7 @@ import { getRecentErrors } from "@/lib/tools/recent-errors";
 const dbMock = vi.hoisted(() => ({
   getAccountById: vi.fn(),
   listFeatureFlagsByAccountId: vi.fn(),
-  listRecentErrorsByAccountId: vi.fn()
+  listRecentErrorsByAccountId: vi.fn(),
 }));
 
 vi.mock("@/lib/db", () => dbMock);
@@ -24,12 +24,12 @@ describe("tool modules", () => {
       status: "active",
       enabledModules: ["exports"],
       limits: {},
-      createdAt: "2026-04-15T00:00:00.000Z"
+      createdAt: "2026-04-15T00:00:00.000Z",
     });
 
     await expect(getAccountContext("acct-1")).resolves.toMatchObject({
       id: "acct-1",
-      planTier: "Growth"
+      planTier: "Growth",
     });
   });
 
@@ -42,8 +42,8 @@ describe("tool modules", () => {
         flagValue: false,
         description: null,
         rolloutNotes: null,
-        createdAt: "2026-04-15T00:00:00.000Z"
-      }
+        createdAt: "2026-04-15T00:00:00.000Z",
+      },
     ]);
 
     await expect(getFeatureFlags("acct-1")).resolves.toHaveLength(1);
@@ -58,10 +58,12 @@ describe("tool modules", () => {
         errorCode: "ERR-219",
         summary: "Missing permission.",
         occurredAt: "2026-04-15T00:00:00.000Z",
-        createdAt: "2026-04-15T00:00:00.000Z"
-      }
+        createdAt: "2026-04-15T00:00:00.000Z",
+      },
     ]);
 
-    await expect(getRecentErrors({ accountId: "acct-1", productArea: "exports" })).resolves.toHaveLength(1);
+    await expect(
+      getRecentErrors({ accountId: "acct-1", productArea: "exports" }),
+    ).resolves.toHaveLength(1);
   });
 });

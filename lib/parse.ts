@@ -3,7 +3,11 @@ import type { ParsedDocument, ParsedSection } from "@/lib/types";
 const SUPPORTED_EXTENSIONS = new Set(["md", "txt", "pdf"]);
 
 function normalizeText(text: string) {
-  return text.replace(/\r\n/g, "\n").replace(/\u0000/g, "").replace(/\n{3,}/g, "\n\n").trim();
+  return text
+    .replace(/\r\n/g, "\n")
+    .replace(/\u0000/g, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
 function getExtension(filename: string) {
@@ -21,7 +25,7 @@ function splitMarkdownSections(text: string): ParsedSection[] {
     if (content) {
       sections.push({
         title: currentTitle,
-        content
+        content,
       });
     }
     currentLines = [];
@@ -55,7 +59,7 @@ function splitPlainSections(text: string): ParsedSection[] {
 
   return blocks.map((content, index) => ({
     title: index === 0 ? "Overview" : null,
-    content
+    content,
   }));
 }
 
@@ -85,17 +89,18 @@ export function parseTextDocument(input: {
       : [
           {
             title: null,
-            content: normalized
-          }
+            content: normalized,
+          },
         ],
-    sourceType: input.sourceType ?? "upload"
+    sourceType: input.sourceType ?? "upload",
   } satisfies ParsedDocument;
 }
 
 async function parsePdfDocument(file: File) {
   const pdfParseModule = await import("pdf-parse/lib/pdf-parse.js");
   const buffer = Buffer.from(await file.arrayBuffer());
-  const candidate = (pdfParseModule as { default?: unknown }).default ?? (pdfParseModule as unknown);
+  const candidate =
+    (pdfParseModule as { default?: unknown }).default ?? (pdfParseModule as unknown);
 
   if (typeof candidate !== "function") {
     throw new Error("Unsupported pdf parser module shape. Expected parser function export.");
@@ -108,13 +113,14 @@ async function parsePdfDocument(file: File) {
     filename: file.name,
     contentType: file.type || "application/pdf",
     text,
-    sourceType: "upload"
+    sourceType: "upload",
   });
 }
 
 async function parsePdfBuffer(input: { buffer: Buffer; filename: string; contentType: string }) {
   const pdfParseModule = await import("pdf-parse/lib/pdf-parse.js");
-  const candidate = (pdfParseModule as { default?: unknown }).default ?? (pdfParseModule as unknown);
+  const candidate =
+    (pdfParseModule as { default?: unknown }).default ?? (pdfParseModule as unknown);
 
   if (typeof candidate !== "function") {
     throw new Error("Unsupported pdf parser module shape. Expected parser function export.");
@@ -127,15 +133,21 @@ async function parsePdfBuffer(input: { buffer: Buffer; filename: string; content
     filename: input.filename,
     contentType: input.contentType || "application/pdf",
     text,
-    sourceType: "upload"
+    sourceType: "upload",
   });
 }
 
-export async function parseUploadedBuffer(input: { buffer: Buffer; filename: string; contentType: string }) {
+export async function parseUploadedBuffer(input: {
+  buffer: Buffer;
+  filename: string;
+  contentType: string;
+}) {
   const extension = getExtension(input.filename);
 
   if (!SUPPORTED_EXTENSIONS.has(extension)) {
-    throw new Error(`Unsupported file type for ${input.filename}. Upload .md, .txt, or .pdf files.`);
+    throw new Error(
+      `Unsupported file type for ${input.filename}. Upload .md, .txt, or .pdf files.`,
+    );
   }
 
   if (extension === "pdf") {
@@ -146,7 +158,7 @@ export async function parseUploadedBuffer(input: { buffer: Buffer; filename: str
     filename: input.filename,
     contentType: input.contentType || (extension === "md" ? "text/markdown" : "text/plain"),
     text: input.buffer.toString("utf8"),
-    sourceType: "upload"
+    sourceType: "upload",
   });
 }
 
@@ -165,6 +177,6 @@ export async function parseUploadedFile(file: File) {
     filename: file.name,
     contentType: file.type || (extension === "md" ? "text/markdown" : "text/plain"),
     text: await file.text(),
-    sourceType: "upload"
+    sourceType: "upload",
   });
 }

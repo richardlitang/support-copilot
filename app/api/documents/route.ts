@@ -5,7 +5,7 @@ import { createRequestLogger } from "@/lib/log";
 import {
   ingestBundledSampleDocument,
   includesBundledSampleDocument,
-  SAMPLE_DOCUMENT_OPT_OUT_COOKIE
+  SAMPLE_DOCUMENT_OPT_OUT_COOKIE,
 } from "@/lib/sample-document";
 import { ensureSessionId } from "@/lib/session";
 import { captureServerException } from "@/src/server/observability/sentry";
@@ -26,14 +26,17 @@ export async function GET() {
         captureServerException(sampleError, {
           tags: {
             route: "/api/documents:get",
-            requestId: logger.requestId
+            requestId: logger.requestId,
           },
           extra: {
-            sessionId
-          }
+            sessionId,
+          },
         });
         logger.error("bundled_sample_ingest_failed", {
-          message: sampleError instanceof Error ? sampleError.message : "Failed to ingest bundled sample document."
+          message:
+            sampleError instanceof Error
+              ? sampleError.message
+              : "Failed to ingest bundled sample document.",
         });
       }
     }
@@ -41,7 +44,7 @@ export async function GET() {
     logger.finish({
       outcome: "success",
       sessionId,
-      documentCount: documents.length
+      documentCount: documents.length,
     });
     const response = NextResponse.json({ documents });
     response.headers.set("x-request-id", logger.requestId);
@@ -51,16 +54,16 @@ export async function GET() {
     captureServerException(error, {
       tags: {
         route: "/api/documents:get",
-        requestId: logger.requestId
-      }
+        requestId: logger.requestId,
+      },
     });
     logger.error("documents_get_failed", { message });
     logger.finish({ outcome: "request_error" });
     const response = NextResponse.json(
       {
-        error: message
+        error: message,
       },
-      { status: 500 }
+      { status: 500 },
     );
     response.headers.set("x-request-id", logger.requestId);
     return response;
@@ -80,11 +83,11 @@ export async function DELETE(request: Request) {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        maxAge: 60 * 60 * 24 * 14
+        maxAge: 60 * 60 * 24 * 14,
       });
       logger.finish({
         outcome: "success_clear_all",
-        sessionId
+        sessionId,
       });
       const response = NextResponse.json({ documents: [] });
       response.headers.set("x-request-id", logger.requestId);
@@ -107,14 +110,14 @@ export async function DELETE(request: Request) {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        maxAge: 60 * 60 * 24 * 14
+        maxAge: 60 * 60 * 24 * 14,
       });
     }
     logger.finish({
       outcome: "success_delete_one",
       sessionId,
       documentId,
-      documentCount: documents.length
+      documentCount: documents.length,
     });
     const response = NextResponse.json({ documents });
     response.headers.set("x-request-id", logger.requestId);
@@ -124,16 +127,16 @@ export async function DELETE(request: Request) {
     captureServerException(error, {
       tags: {
         route: "/api/documents:delete",
-        requestId: logger.requestId
-      }
+        requestId: logger.requestId,
+      },
     });
     logger.error("documents_delete_failed", { message });
     logger.finish({ outcome: "request_error" });
     const response = NextResponse.json(
       {
-        error: message
+        error: message,
       },
-      { status: 500 }
+      { status: 500 },
     );
     response.headers.set("x-request-id", logger.requestId);
     return response;

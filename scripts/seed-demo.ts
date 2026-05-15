@@ -4,9 +4,9 @@ import { fileURLToPath } from "node:url";
 import {
   deleteDocumentsByFilenameAndStatus,
   getSupabaseAdminClient,
-  listDocuments
+  listDocuments,
 } from "../lib/db";
-import { ingestParsedDocument } from "../lib/ingest";
+import { directIngestParsedDocument } from "../lib/ingest";
 import { parseTextDocument } from "../lib/parse";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -44,7 +44,9 @@ type SupportContextSeed = {
 
 async function seedSupportContext() {
   const supabase = getSupabaseAdminClient();
-  const supportContext = JSON.parse(await readFile(supportContextPath, "utf8")) as SupportContextSeed;
+  const supportContext = JSON.parse(
+    await readFile(supportContextPath, "utf8"),
+  ) as SupportContextSeed;
 
   const { error: accountsError } = await supabase.from("accounts").upsert(
     supportContext.accounts.map((account) => ({
@@ -53,9 +55,9 @@ async function seedSupportContext() {
       plan_tier: account.planTier,
       status: account.status,
       enabled_modules_json: account.enabledModules,
-      limits_json: account.limits
+      limits_json: account.limits,
     })),
-    { onConflict: "id" }
+    { onConflict: "id" },
   );
 
   if (accountsError) {
@@ -69,9 +71,9 @@ async function seedSupportContext() {
       flag_key: flag.flagKey,
       flag_value: flag.flagValue,
       description: flag.description,
-      rollout_notes: flag.rolloutNotes
+      rollout_notes: flag.rolloutNotes,
     })),
-    { onConflict: "id" }
+    { onConflict: "id" },
   );
 
   if (flagsError) {
@@ -85,9 +87,9 @@ async function seedSupportContext() {
       product_area: event.productArea,
       error_code: event.errorCode,
       summary: event.summary,
-      occurred_at: event.occurredAt
+      occurred_at: event.occurredAt,
     })),
-    { onConflict: "id" }
+    { onConflict: "id" },
   );
 
   if (errorEventsError) {
@@ -95,7 +97,7 @@ async function seedSupportContext() {
   }
 
   console.log(
-    `Seeded support context: ${supportContext.accounts.length} accounts, ${supportContext.featureFlags.length} flags, ${supportContext.errorEvents.length} errors.`
+    `Seeded support context: ${supportContext.accounts.length} accounts, ${supportContext.featureFlags.length} flags, ${supportContext.errorEvents.length} errors.`,
   );
 }
 
@@ -104,12 +106,18 @@ async function main() {
 
   const existingDocuments = await listDocuments(DEMO_SESSION_ID);
   const readyFilenames = new Set(
-    existingDocuments.filter((document) => document.status === "ready").map((document) => document.filename)
+    existingDocuments
+      .filter((document) => document.status === "ready")
+      .map((document) => document.filename),
   );
   const failedFilenames = new Set(
-    existingDocuments.filter((document) => document.status === "failed").map((document) => document.filename)
+    existingDocuments
+      .filter((document) => document.status === "failed")
+      .map((document) => document.filename),
   );
-  const filenames = (await readdir(docsDirectory)).filter((filename) => filename.endsWith(".md") || filename.endsWith(".txt"));
+  const filenames = (await readdir(docsDirectory)).filter(
+    (filename) => filename.endsWith(".md") || filename.endsWith(".txt"),
+  );
 
   for (const filename of filenames) {
     if (readyFilenames.has(filename)) {
@@ -128,11 +136,11 @@ async function main() {
       filename,
       contentType: filename.endsWith(".md") ? "text/markdown" : "text/plain",
       text,
-      sourceType: "demo"
+      sourceType: "demo",
     });
-    const result = await ingestParsedDocument({
+    const result = await directIngestParsedDocument({
       parsedDocument: parsed,
-      sessionId: DEMO_SESSION_ID
+      sessionId: DEMO_SESSION_ID,
     });
 
     console.log(`Ingested ${filename}: ${result.chunkCount} chunks.`);

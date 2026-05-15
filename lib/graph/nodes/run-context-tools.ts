@@ -4,7 +4,7 @@ import { markInvestigationGraphStep } from "@/lib/graph/investigation-state";
 import {
   collectToolArtifacts as collectToolArtifactsAdapter,
   createSyntheticToolEvidence,
-  type ToolRunnerDependencies
+  type ToolRunnerDependencies,
 } from "@/lib/tool-runner";
 import type { InvestigationGraphState, ToolArtifactState } from "@/lib/graph/investigation-state";
 
@@ -15,7 +15,7 @@ export type RunContextToolsDependencies = ToolRunnerDependencies & {
 
 export async function runContextToolsNode(
   state: InvestigationGraphState,
-  dependencies: RunContextToolsDependencies
+  dependencies: RunContextToolsDependencies,
 ): Promise<InvestigationGraphState> {
   if (!state.routing) {
     throw new Error("Cannot run context tools before classification.");
@@ -27,7 +27,7 @@ export async function runContextToolsNode(
     selectedAccountId: state.input.selectedAccountId,
     investigationContext: state.input.investigationContext,
     ticket: state.input.ticket,
-    dependencies
+    dependencies,
   });
 
   const nextToolArtifacts: ToolArtifactState = {
@@ -36,7 +36,7 @@ export async function runContextToolsNode(
     account: toolArtifacts.account,
     flags: toolArtifacts.flags,
     errors: toolArtifacts.errors,
-    productArea: toolArtifacts.productArea
+    productArea: toolArtifacts.productArea,
   };
 
   if (state.missingRequiredContext && nextToolArtifacts.toolEvidence.length === 0) {
@@ -44,18 +44,19 @@ export async function runContextToolsNode(
       toolName: "getProvidedContext",
       rank: 1,
       title: "Missing investigation context",
-      excerpt: "This ticket appears to require structured product or account context, but none was provided.",
+      excerpt:
+        "This ticket appears to require structured product or account context, but none was provided.",
       raw: {
         status: "not_provided",
-        context: null
-      }
+        context: null,
+      },
     });
     nextToolArtifacts.toolEvidence.push(synthetic.evidence);
     nextToolArtifacts.toolCalls.push({
       ...synthetic.call,
       input: {
-        context: null
-      }
+        context: null,
+      },
     });
   }
 
@@ -66,7 +67,7 @@ export async function runContextToolsNode(
     account: nextToolArtifacts.account,
     flags: nextToolArtifacts.flags,
     errors: nextToolArtifacts.errors,
-    missingRequiredContext: state.missingRequiredContext
+    missingRequiredContext: state.missingRequiredContext,
   });
 
   return markInvestigationGraphStep(
@@ -75,13 +76,13 @@ export async function runContextToolsNode(
       docEvidence,
       toolArtifacts: nextToolArtifacts,
       hasConflict: conflict.hasConflict,
-      conflictReason: conflict.reason
+      conflictReason: conflict.reason,
     },
-    "ran_context_tools"
+    "ran_context_tools",
   );
 }
 
 export const defaultRunContextToolsAdapters = {
   collectToolArtifacts: collectToolArtifactsAdapter,
-  detectConflict: detectConflictAdapter
+  detectConflict: detectConflictAdapter,
 };

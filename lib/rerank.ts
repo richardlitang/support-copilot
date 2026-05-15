@@ -26,15 +26,15 @@ export async function rerankEvidenceCandidates(input: {
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
-      "X-Client-Name": "support-copilot"
+      "X-Client-Name": "support-copilot",
     },
     body: JSON.stringify({
       model: getRerankModel(),
       query: input.query,
       documents: input.candidates.map((candidate) => candidate.content),
       top_n: Math.min(input.topN, input.candidates.length),
-      max_tokens_per_doc: 1200
-    })
+      max_tokens_per_doc: 1200,
+    }),
   });
 
   if (!response.ok) {
@@ -49,7 +49,6 @@ export async function rerankEvidenceCandidates(input: {
     })
     .map((result) => ({
       index: result.index,
-      score: result.relevance_score
+      score: result.relevance_score,
     }));
 }
-

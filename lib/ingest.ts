@@ -2,7 +2,7 @@ import { chunkParsedDocument as chunkParsedDocumentAdapter } from "@/lib/chunk";
 import {
   createDocumentRecord as createDocumentRecordAdapter,
   insertDocumentChunks as insertDocumentChunksAdapter,
-  updateDocumentStatus as updateDocumentStatusAdapter
+  updateDocumentStatus as updateDocumentStatusAdapter,
 } from "@/lib/db";
 import { embedTexts as embedTextsAdapter } from "@/lib/embed";
 import type { ParsedDocument } from "@/lib/types";
@@ -20,26 +20,26 @@ const defaultDependencies: IngestDependencies = {
   createDocumentRecord: createDocumentRecordAdapter,
   insertDocumentChunks: insertDocumentChunksAdapter,
   updateDocumentStatus: updateDocumentStatusAdapter,
-  embedTexts: embedTextsAdapter
+  embedTexts: embedTextsAdapter,
 };
 
-export async function ingestParsedDocument(
+export async function directIngestParsedDocument(
   input: {
     parsedDocument: ParsedDocument;
     sessionId: string;
   },
-  dependencies: Partial<IngestDependencies> = {}
+  dependencies: Partial<IngestDependencies> = {},
 ) {
   const deps = {
     ...defaultDependencies,
-    ...dependencies
+    ...dependencies,
   };
 
   const document = await deps.createDocumentRecord({
     sessionId: input.sessionId,
     filename: input.parsedDocument.filename,
     contentType: input.parsedDocument.contentType,
-    status: "processing"
+    status: "processing",
   });
 
   try {
@@ -59,15 +59,15 @@ export async function ingestParsedDocument(
       chunks.map((chunk, index) => ({
         ...chunk,
         documentId: document.id,
-        embedding: embeddings[index] as number[]
-      }))
+        embedding: embeddings[index] as number[],
+      })),
     );
 
     await deps.updateDocumentStatus(document.id, "ready");
 
     return {
       documentId: document.id,
-      chunkCount: chunks.length
+      chunkCount: chunks.length,
     };
   } catch (error) {
     await deps.updateDocumentStatus(document.id, "failed");

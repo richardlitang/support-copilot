@@ -24,14 +24,14 @@ export function applyReviewPolicyNode(state: InvestigationGraphState): Investiga
     internalClaimCount: state.claimDraft.internalDiagnosis.claims.length,
     hasConflict: state.hasConflict,
     missingRequiredContext: state.missingRequiredContext,
-    validationFailed
+    validationFailed,
   });
   const reviewStatus = determineReviewStatus({
     mode: state.routing.mode,
     supportLevel,
     hasConflict: state.hasConflict,
     missingRequiredContext: state.missingRequiredContext,
-    validationFailed
+    validationFailed,
   });
   const finalMode: InvestigationMode =
     reviewStatus === "needs_human_review" ||
@@ -39,7 +39,7 @@ export function applyReviewPolicyNode(state: InvestigationGraphState): Investiga
       hasConflict: state.hasConflict,
       missingRequiredContext: state.missingRequiredContext,
       supportLevel,
-      validationFailed
+      validationFailed,
     })
       ? "needs_human_review"
       : state.routing.mode;
@@ -55,12 +55,12 @@ export function applyReviewPolicyNode(state: InvestigationGraphState): Investiga
           supportLevel,
           hasConflict: state.hasConflict,
           missingRequiredContext: state.missingRequiredContext,
-          validationFailed
+          validationFailed,
         }),
         finalMode,
-        routingReason: state.conflictReason ?? state.routing.routingReason
-      }
+        routingReason: state.conflictReason ?? state.routing.routingReason,
+      },
     },
-    "applied_review_policy"
+    "applied_review_policy",
   );
 }

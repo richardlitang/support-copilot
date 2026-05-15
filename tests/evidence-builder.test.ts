@@ -1,4 +1,9 @@
-import { buildLegacyAnswer, collectCitationIds, createDocEvidence, toLegacyClaims } from "@/lib/evidence-builder";
+import {
+  buildAnswerMarkdownFromClaims,
+  collectCitationIds,
+  createDocEvidence,
+  toGroundedClaims,
+} from "@/lib/evidence-builder";
 import type { EvidenceChunk } from "@/lib/types";
 
 describe("evidence-builder", () => {
@@ -12,8 +17,8 @@ describe("evidence-builder", () => {
         content: "Exports require billing setup and export permission.",
         score: 0.82,
         rank: 1,
-        chunkIndex: 0
-      }
+        chunkIndex: 0,
+      },
     ];
 
     expect(createDocEvidence(evidence)).toEqual([
@@ -25,21 +30,23 @@ describe("evidence-builder", () => {
         sectionTitle: "Permissions",
         excerpt: "Exports require billing setup and export permission.",
         score: 0.82,
-        chunkIndex: 0
-      }
+        chunkIndex: 0,
+      },
     ]);
   });
 
-  it("keeps legacy rendering derived from structured claims", () => {
+  it("derives markdown and grounded claim shapes from structured claims", () => {
     const claims = [
       { text: "Exports require setup.", citations: ["S1" as const] },
-      { text: "The account has export context.", citations: ["S1" as const, "T1" as const] }
+      { text: "The account has export context.", citations: ["S1" as const, "T1" as const] },
     ];
 
-    expect(buildLegacyAnswer(claims)).toBe("Exports require setup. [S1]\n\nThe account has export context. [S1][T1]");
-    expect(toLegacyClaims(claims)).toEqual([
+    expect(buildAnswerMarkdownFromClaims(claims)).toBe(
+      "Exports require setup. [S1]\n\nThe account has export context. [S1][T1]",
+    );
+    expect(toGroundedClaims(claims)).toEqual([
       { text: "Exports require setup.", citationIds: ["S1"] },
-      { text: "The account has export context.", citationIds: ["S1", "T1"] }
+      { text: "The account has export context.", citationIds: ["S1", "T1"] },
     ]);
   });
 
@@ -47,15 +54,15 @@ describe("evidence-builder", () => {
     expect(
       collectCitationIds({
         customerReply: {
-          claims: [{ text: "Customer claim.", citations: ["S1"] }]
+          claims: [{ text: "Customer claim.", citations: ["S1"] }],
         },
         internalDiagnosis: {
           claims: [
             { text: "Internal claim.", citations: ["S1", "T1"] },
-            { text: "Another internal claim.", citations: ["T1"] }
-          ]
-        }
-      })
+            { text: "Another internal claim.", citations: ["T1"] },
+          ],
+        },
+      }),
     ).toEqual(["S1", "T1"]);
   });
 });

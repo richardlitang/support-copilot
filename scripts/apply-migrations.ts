@@ -42,9 +42,13 @@ async function main() {
   `);
 
   const applied = new Set(
-    (await client.query<{ filename: string }>("select filename from schema_migrations")).rows.map((row) => row.filename)
+    (await client.query<{ filename: string }>("select filename from schema_migrations")).rows.map(
+      (row) => row.filename,
+    ),
   );
-  const files = (await readdir(migrationsDir)).filter((filename) => filename.endsWith(".sql")).sort();
+  const files = (await readdir(migrationsDir))
+    .filter((filename) => filename.endsWith(".sql"))
+    .sort();
 
   for (const filename of files) {
     if (applied.has(filename)) {

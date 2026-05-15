@@ -16,7 +16,10 @@ function splitLongUnit(text: string, maxChars: number) {
     return splitTableUnit(text, maxChars);
   }
 
-  const sentences = text.match(/[^.!?]+[.!?]?/g)?.map((sentence) => sentence.trim()).filter(Boolean);
+  const sentences = text
+    .match(/[^.!?]+[.!?]?/g)
+    ?.map((sentence) => sentence.trim())
+    .filter(Boolean);
 
   if (!sentences?.length) {
     const chunks: string[] = [];
@@ -34,7 +37,9 @@ function splitLongUnit(text: string, maxChars: number) {
 }
 
 function looksLikeTroubleshootingTable(text: string) {
-  return /MALFUNCTION\/FAULT|POSSIBLE CAUSE|CORRECTIVE ACTION|possible cause|corrective action/i.test(text);
+  return /MALFUNCTION\/FAULT|POSSIBLE CAUSE|CORRECTIVE ACTION|possible cause|corrective action/i.test(
+    text,
+  );
 }
 
 function splitTableUnit(text: string, maxChars: number) {
@@ -80,7 +85,7 @@ export function chunkParsedDocument(
   options?: {
     maxChars?: number;
     overlapChars?: number;
-  }
+  },
 ) {
   const maxChars = options?.maxChars ?? DEFAULT_MAX_CHARS;
   const overlapChars = options?.overlapChars ?? DEFAULT_OVERLAP_CHARS;
@@ -105,8 +110,8 @@ export function chunkParsedDocument(
         metadata: {
           filename: parsedDocument.filename,
           sourceType: parsedDocument.sourceType,
-          sectionIndex
-        }
+          sectionIndex,
+        },
       });
 
       chunkIndex += 1;
@@ -135,8 +140,8 @@ export function chunkParsedDocument(
         metadata: {
           filename: parsedDocument.filename,
           sourceType: parsedDocument.sourceType,
-          sectionIndex
-        }
+          sectionIndex,
+        },
       });
       chunkIndex += 1;
       current = "";

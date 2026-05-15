@@ -12,16 +12,17 @@ const badgeVariants = cva(
         outline: "border-zinc-200 text-zinc-700",
         success: "border-emerald-200 bg-emerald-50 text-emerald-700",
         warn: "border-amber-200 bg-amber-50 text-amber-700",
-        danger: "border-red-200 bg-red-50 text-red-700"
-      }
+        danger: "border-red-200 bg-red-50 text-red-700",
+      },
     },
     defaultVariants: {
-      variant: "default"
-    }
-  }
+      variant: "default",
+    },
+  },
 );
 
-export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement>, VariantProps<typeof badgeVariants> {}
+export interface BadgeProps
+  extends React.HTMLAttributes<HTMLSpanElement>, VariantProps<typeof badgeVariants> {}
 
 function Badge({ className, variant, ...props }: BadgeProps) {
   return <span className={cn(badgeVariants({ variant }), className)} {...props} />;

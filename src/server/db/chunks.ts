@@ -16,7 +16,7 @@ export async function replaceDocumentChunksWithClient(
   input: {
     documentId: string;
     chunks: Array<ChunkCandidate & { embedding: number[] }>;
-  }
+  },
 ) {
   await client.query("delete from document_chunks where document_id = $1", [input.documentId]);
 
@@ -41,8 +41,8 @@ export async function replaceDocumentChunksWithClient(
         chunk.content,
         chunk.tokenCount,
         JSON.stringify(chunk.metadata),
-        toPgVector(chunk.embedding)
-      ]
+        toPgVector(chunk.embedding),
+      ],
     );
   }
 }
@@ -51,7 +51,7 @@ export async function countDocumentChunks(documentId: string) {
   return withPgClient(async (client) => {
     const result = await client.query<{ count: string }>(
       "select count(*) from document_chunks where document_id = $1",
-      [documentId]
+      [documentId],
     );
 
     return Number(result.rows[0]?.count ?? 0);
@@ -78,7 +78,7 @@ export async function matchDocumentChunksDirect(input: {
         select *
         from match_document_chunks($1::extensions.vector, $2, $3, $4)
       `,
-      [toPgVector(input.queryEmbedding), input.matchCount, input.matchThreshold, input.sessionId]
+      [toPgVector(input.queryEmbedding), input.matchCount, input.matchThreshold, input.sessionId],
     );
 
     return result.rows.map(
@@ -90,8 +90,8 @@ export async function matchDocumentChunksDirect(input: {
         content: row.content,
         score: row.score,
         rank: index + 1,
-        chunkIndex: row.chunk_index
-      })
+        chunkIndex: row.chunk_index,
+      }),
     );
   });
 }
@@ -128,7 +128,7 @@ export async function matchLiteralDocumentChunksDirect(input: {
             and document_chunks.content ilike $2
           limit $3
         `,
-        [input.sessionId, `%${literal}%`, input.matchCount]
+        [input.sessionId, `%${literal}%`, input.matchCount],
       );
 
       for (const row of result.rows) {
@@ -149,7 +149,7 @@ export async function matchLiteralDocumentChunksDirect(input: {
           rank: rowsById.size + 1,
           chunkIndex: row.chunk_index,
           retrievalSource: "literal",
-          literalMatches: [literal]
+          literalMatches: [literal],
         });
       }
     }

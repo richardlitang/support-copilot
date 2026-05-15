@@ -1,14 +1,14 @@
 import {
   buildInsufficientSupportAnswer,
   generateGroundedAnswer,
-  validateGroundedAnswer
+  validateGroundedAnswer,
 } from "@/lib/answer";
 
 describe("generateGroundedAnswer", () => {
   it("returns insufficient support when there is no evidence", async () => {
     const result = await generateGroundedAnswer({
       ticket: "Unknown question",
-      evidence: []
+      evidence: [],
     });
 
     expect(result).toEqual(buildInsufficientSupportAnswer());
@@ -22,11 +22,12 @@ describe("validateGroundedAnswer", () => {
       documentId: "doc-1",
       filename: "exports.md",
       sectionTitle: "Common export failures",
-      content: "Exports fail when billing setup is incomplete or the actor lacks Exports: Write permission.",
+      content:
+        "Exports fail when billing setup is incomplete or the actor lacks Exports: Write permission.",
       score: 0.82,
       rank: 1,
-      chunkIndex: 0
-    }
+      chunkIndex: 0,
+    },
   ];
 
   it("accepts short cited claims and rebuilds the answer from them", () => {
@@ -36,14 +37,14 @@ describe("validateGroundedAnswer", () => {
         claims: [
           {
             text: "Exports can fail if billing setup is incomplete.",
-            citationIds: ["s1"]
-          }
+            citationIds: ["s1"],
+          },
         ],
         supportLevel: "medium",
         citations: ["S1"],
-        insufficientSupport: false
+        insufficientSupport: false,
       },
-      evidence
+      evidence,
     });
 
     expect(validated.valid).toBe(true);
@@ -55,8 +56,8 @@ describe("validateGroundedAnswer", () => {
     expect(validated.answer.claims).toEqual([
       {
         text: "Exports can fail if billing setup is incomplete.",
-        citationIds: ["S1"]
-      }
+        citationIds: ["S1"],
+      },
     ]);
     expect(validated.answer.answer).toContain("[S1]");
   });
@@ -68,14 +69,14 @@ describe("validateGroundedAnswer", () => {
         claims: [
           {
             text: "Exports fail for many possible reasons.",
-            citationIds: []
-          }
+            citationIds: [],
+          },
         ],
         supportLevel: "low",
         citations: [],
-        insufficientSupport: false
+        insufficientSupport: false,
       },
-      evidence
+      evidence,
     });
 
     expect(validated.valid).toBe(false);

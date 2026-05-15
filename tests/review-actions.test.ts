@@ -11,20 +11,20 @@ const baseResult: InvestigationResult = {
   reviewDecision: {
     status: "needs_human_review",
     reasonCode: "weak_retrieval",
-    action: "add_docs"
+    action: "add_docs",
   },
   routingReason: "Documentation evidence was too weak to support a grounded answer.",
   customerReply: {
-    claims: []
+    claims: [],
   },
   internalDiagnosis: {
     claims: [],
-    openQuestions: ["Add stronger documentation or rerun with investigation context."]
+    openQuestions: ["Add stronger documentation or rerun with investigation context."],
   },
   docEvidence: [],
   toolEvidence: [],
   toolCalls: [],
-  pipelineTrace: []
+  pipelineTrace: [],
 };
 
 describe("getReviewAction", () => {
@@ -38,9 +38,9 @@ describe("getReviewAction", () => {
         reviewDecision: {
           status: "ready",
           reasonCode: "none",
-          action: "none"
-        }
-      })
+          action: "none",
+        },
+      }),
     ).toBeNull();
   });
 
@@ -51,24 +51,27 @@ describe("getReviewAction", () => {
         reviewDecision: {
           status: "needs_human_review",
           reasonCode: "missing_account_context",
-          action: "add_context"
+          action: "add_context",
         },
-        routingReason: "Structured product or account context is required for this ticket, but none was provided.",
+        routingReason:
+          "Structured product or account context is required for this ticket, but none was provided.",
         internalDiagnosis: {
           claims: [],
-          openQuestions: ["Add investigation context or select a debug account and rerun the investigation."]
-        }
-      })
+          openQuestions: [
+            "Add investigation context or select a debug account and rerun the investigation.",
+          ],
+        },
+      }),
     ).toMatchObject({
       kind: "add_context",
-      primaryActionLabel: "Add context and retry"
+      primaryActionLabel: "Add context and retry",
     });
   });
 
   it("asks for stronger docs when retrieval cannot support the answer", () => {
     expect(getReviewAction(baseResult)).toMatchObject({
       kind: "add_docs",
-      primaryActionLabel: "Add docs and retry"
+      primaryActionLabel: "Add docs and retry",
     });
   });
 
@@ -84,23 +87,23 @@ describe("getReviewAction", () => {
             filename: "exports.md",
             excerpt: "Exports are enabled on Enterprise.",
             score: 0.78,
-            chunkIndex: 0
-          }
+            chunkIndex: 0,
+          },
         ],
         reviewDecision: {
           status: "needs_human_review",
           reasonCode: "unresolved_evidence_conflict",
-          action: "inspect_conflict"
+          action: "inspect_conflict",
         },
         routingReason: "Docs and current tool state do not explain the reported issue.",
         internalDiagnosis: {
           claims: [],
-          openQuestions: ["The docs and current tool state do not explain the issue."]
-        }
-      })
+          openQuestions: ["The docs and current tool state do not explain the issue."],
+        },
+      }),
     ).toMatchObject({
       kind: "inspect_conflict",
-      title: "Resolve the evidence gap"
+      title: "Resolve the evidence gap",
     });
   });
 });

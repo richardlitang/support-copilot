@@ -10,7 +10,7 @@ import type {
   StructuredClaimSet,
   StructuredClaimSetWithOpenQuestions,
   ToolCallRecord,
-  ToolEvidenceItem
+  ToolEvidenceItem,
 } from "@/lib/types/investigation";
 
 export type InvestigationGraphStep =
@@ -82,7 +82,9 @@ export interface InvestigationGraphState {
   conflictReason: string | null;
 }
 
-export function createInitialInvestigationGraphState(input: InvestigationGraphInput): InvestigationGraphState {
+export function createInitialInvestigationGraphState(
+  input: InvestigationGraphInput,
+): InvestigationGraphState {
   return {
     input,
     steps: ["initialized"],
@@ -95,7 +97,7 @@ export function createInitialInvestigationGraphState(input: InvestigationGraphIn
       account: null,
       flags: [],
       errors: [],
-      productArea: null
+      productArea: null,
     },
     claimDraft: null,
     grounding: null,
@@ -103,13 +105,13 @@ export function createInitialInvestigationGraphState(input: InvestigationGraphIn
     persistence: {},
     missingRequiredContext: false,
     hasConflict: false,
-    conflictReason: null
+    conflictReason: null,
   };
 }
 
 export function markInvestigationGraphStep(
   state: InvestigationGraphState,
-  step: InvestigationGraphStep
+  step: InvestigationGraphStep,
 ): InvestigationGraphState {
   if (state.steps.includes(step)) {
     return state;
@@ -117,6 +119,6 @@ export function markInvestigationGraphStep(
 
   return {
     ...state,
-    steps: [...state.steps, step]
+    steps: [...state.steps, step],
   };
 }

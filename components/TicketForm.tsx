@@ -33,7 +33,7 @@ export function TicketForm({
   onNewTicket,
   onToggleRag,
   onTicketChange,
-  onSubmit
+  onSubmit,
 }: {
   accounts: AccountRecord[];
   demoScenarios: DemoScenario[];
@@ -82,7 +82,7 @@ export function TicketForm({
     "failed",
     "failing",
     "stalled",
-    "after setup"
+    "after setup",
   ].some((term) => lowerTicket.includes(term));
 
   useEffect(() => {
@@ -104,7 +104,11 @@ export function TicketForm({
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <p className="eyebrow">Case input</p>
-                {isInvestigating ? <Badge variant="warn">Investigating</Badge> : <Badge variant="secondary">Submitted</Badge>}
+                {isInvestigating ? (
+                  <Badge variant="warn">Investigating</Badge>
+                ) : (
+                  <Badge variant="secondary">Submitted</Badge>
+                )}
               </div>
               <p className="mt-2 line-clamp-2 text-sm leading-6 text-zinc-800">{ticket}</p>
               {investigationContext.trim() ? (
@@ -112,12 +116,12 @@ export function TicketForm({
               ) : null}
             </div>
             <div className="flex shrink-0 items-center gap-2">
-          {isInvestigating ? (
-            <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
-              <SearchCheck className="h-4 w-4 animate-pulse" />
-              {executionMode === "evidence_only" ? "Finding evidence" : "Drafting answer"}
-            </div>
-          ) : null}
+              {isInvestigating ? (
+                <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
+                  <SearchCheck className="h-4 w-4 animate-pulse" />
+                  {executionMode === "evidence_only" ? "Finding evidence" : "Drafting answer"}
+                </div>
+              ) : null}
               {!isInvestigating ? (
                 <Button type="button" variant="outline" size="sm" onClick={onNewTicket}>
                   <Plus className="h-4 w-4" />
@@ -152,11 +156,18 @@ export function TicketForm({
             <p className="eyebrow">Investigation composer</p>
             <CardTitle className="mt-2 text-2xl tracking-[-0.04em]">New support ticket</CardTitle>
             <CardDescription className="mt-2 text-xs leading-5">
-              Paste the customer issue. Add context only when the case depends on plan, feature, or error state.
+              Paste the customer issue. Add context only when the case depends on plan, feature, or
+              error state.
             </CardDescription>
           </div>
           {ticket.trim() || investigationContext.trim() ? (
-            <Button type="button" variant="outline" size="sm" className="shrink-0" onClick={onNewTicket}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+              onClick={onNewTicket}
+            >
               <Plus className="h-4 w-4" />
               New ticket
             </Button>
@@ -187,11 +198,20 @@ export function TicketForm({
               </div>
               <div className="flex items-center gap-2">
                 {!contextExpanded ? (
-                  <Button type="button" variant="ghost" size="sm" onClick={() => setShowContext(true)}>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowContext(true)}
+                  >
                     Add context
                   </Button>
                 ) : null}
-                <span className={ticket.trim() ? "text-xs font-medium text-emerald-700" : "text-xs text-zinc-500"}>
+                <span
+                  className={
+                    ticket.trim() ? "text-xs font-medium text-emerald-700" : "text-xs text-zinc-500"
+                  }
+                >
                   {ticket.trim() ? "Ready" : "Empty"}
                 </span>
               </div>
@@ -208,9 +228,15 @@ export function TicketForm({
             <div className="rounded-lg border border-amber-200 bg-amber-50/80 p-3">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-sm leading-6 text-amber-800">
-                  This sounds account or product-state specific. Add plan, feature, or recent-error context if you have it.
+                  This sounds account or product-state specific. Add plan, feature, or recent-error
+                  context if you have it.
                 </p>
-                <Button type="button" variant="outline" size="sm" onClick={() => setShowContext(true)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowContext(true)}
+                >
                   Add context
                 </Button>
               </div>
@@ -227,8 +253,15 @@ export function TicketForm({
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge variant="warn">{investigationContext.trim() ? "Context added" : "Optional"}</Badge>
-                  <Button type="button" variant="ghost" size="sm" onClick={() => setShowContext(false)}>
+                  <Badge variant="warn">
+                    {investigationContext.trim() ? "Context added" : "Optional"}
+                  </Badge>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowContext(false)}
+                  >
                     Hide
                   </Button>
                 </div>
@@ -241,19 +274,30 @@ export function TicketForm({
                 onChange={(event) => onInvestigationContextChange(event.target.value)}
               />
               <div className="mt-3 flex flex-wrap gap-2">
-                {["Plan: Starter", "Exports UI hidden", "Recent error: ERR-219", "Billing setup completed"].map((chip) => (
+                {[
+                  "Plan: Starter",
+                  "Exports UI hidden",
+                  "Recent error: ERR-219",
+                  "Billing setup completed",
+                ].map((chip) => (
                   <Button
                     key={chip}
                     type="button"
                     variant="secondary"
                     size="sm"
-                    onClick={() => onInvestigationContextChange(investigationContext.trim() ? `${investigationContext}\n${chip}` : chip)}
+                    onClick={() =>
+                      onInvestigationContextChange(
+                        investigationContext.trim() ? `${investigationContext}\n${chip}` : chip,
+                      )
+                    }
                   >
                     + {chip}
                   </Button>
                 ))}
               </div>
-              {accountHint ? <p className="mt-4 text-sm leading-6 text-amber-700">{accountHint}</p> : null}
+              {accountHint ? (
+                <p className="mt-4 text-sm leading-6 text-amber-700">{accountHint}</p>
+              ) : null}
 
               {showDebugToggle ? (
                 <details className="mt-4 rounded-xl border border-zinc-200 bg-white/85 p-4">
@@ -261,7 +305,8 @@ export function TicketForm({
                     Debug seeded account
                   </summary>
                   <p className="mt-3 text-sm leading-6 text-zinc-600">
-                    Use this only for the seeded demo dataset. The main product flow should rely on pasted investigation context.
+                    Use this only for the seeded demo dataset. The main product flow should rely on
+                    pasted investigation context.
                   </p>
                   <select
                     className="mt-3 flex h-10 w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-zinc-300"
@@ -289,11 +334,17 @@ export function TicketForm({
           >
             <div>
               <p className="text-sm font-medium text-zinc-950">Sample test cases</p>
-              <p className="mt-1 text-xs leading-5 text-zinc-600">Run a known case against the seeded docs.</p>
+              <p className="mt-1 text-xs leading-5 text-zinc-600">
+                Run a known case against the seeded docs.
+              </p>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-zinc-500">{demoScenarios.length} cases</span>
-              <ChevronDown className={`h-4 w-4 text-zinc-500 transition ${showDemos ? "rotate-180" : ""}`} />
+              <span className="text-xs font-medium text-zinc-500">
+                {demoScenarios.length} cases
+              </span>
+              <ChevronDown
+                className={`h-4 w-4 text-zinc-500 transition ${showDemos ? "rotate-180" : ""}`}
+              />
             </div>
           </button>
 
@@ -308,10 +359,16 @@ export function TicketForm({
                 >
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-xs font-semibold text-zinc-950">{scenario.label ?? scenario.rawText}</p>
-                      <Badge variant="outline">{(scenario.bucket ?? "demo").replaceAll("_", " ")}</Badge>
+                      <p className="text-xs font-semibold text-zinc-950">
+                        {scenario.label ?? scenario.rawText}
+                      </p>
+                      <Badge variant="outline">
+                        {(scenario.bucket ?? "demo").replaceAll("_", " ")}
+                      </Badge>
                     </div>
-                    <p className="mt-1.5 line-clamp-2 text-xs leading-5 text-zinc-600">{scenario.rawText}</p>
+                    <p className="mt-1.5 line-clamp-2 text-xs leading-5 text-zinc-600">
+                      {scenario.rawText}
+                    </p>
                   </div>
                   <FlaskConical className="mt-0.5 h-4 w-4 shrink-0 text-zinc-500" />
                 </button>
@@ -361,12 +418,24 @@ export function TicketForm({
               Retrieval ablation
             </summary>
             <div className="mt-3 flex items-center justify-between gap-3">
-              <p className="text-sm leading-6 text-zinc-600">Turn retrieval off to verify the fallback path.</p>
+              <p className="text-sm leading-6 text-zinc-600">
+                Turn retrieval off to verify the fallback path.
+              </p>
               <div className="flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 p-1">
-                <Button type="button" size="sm" variant={ragEnabled ? "default" : "ghost"} onClick={() => onToggleRag(true)}>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={ragEnabled ? "default" : "ghost"}
+                  onClick={() => onToggleRag(true)}
+                >
                   On
                 </Button>
-                <Button type="button" size="sm" variant={!ragEnabled ? "default" : "ghost"} onClick={() => onToggleRag(false)}>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={!ragEnabled ? "default" : "ghost"}
+                  onClick={() => onToggleRag(false)}
+                >
                   Off
                 </Button>
               </div>

@@ -1,6 +1,6 @@
 import {
   createInitialInvestigationGraphState,
-  markInvestigationGraphStep
+  markInvestigationGraphStep,
 } from "@/lib/graph/investigation-state";
 import type { InvestigationGraphState } from "@/lib/graph/investigation-state";
 
@@ -11,7 +11,7 @@ describe("investigation graph state", () => {
       sessionId: "session-1",
       ragEnabled: true,
       selectedAccountId: "acct-1",
-      investigationContext: "User reports ERR-219."
+      investigationContext: "User reports ERR-219.",
     });
 
     expect(state).toMatchObject({
@@ -20,7 +20,7 @@ describe("investigation graph state", () => {
         sessionId: "session-1",
         ragEnabled: true,
         selectedAccountId: "acct-1",
-        investigationContext: "User reports ERR-219."
+        investigationContext: "User reports ERR-219.",
       },
       steps: ["initialized"],
       retrievedEvidence: [],
@@ -32,7 +32,7 @@ describe("investigation graph state", () => {
         account: null,
         flags: [],
         errors: [],
-        productArea: null
+        productArea: null,
       },
       claimDraft: null,
       grounding: null,
@@ -40,7 +40,7 @@ describe("investigation graph state", () => {
       persistence: {},
       missingRequiredContext: false,
       hasConflict: false,
-      conflictReason: null
+      conflictReason: null,
     });
   });
 
@@ -48,14 +48,18 @@ describe("investigation graph state", () => {
     const state = createInitialInvestigationGraphState({
       ticket: "How do I enable exports?",
       sessionId: "session-1",
-      ragEnabled: true
+      ragEnabled: true,
     });
 
     const retrieved = markInvestigationGraphStep(state, "retrieved_documentation");
     const duplicate = markInvestigationGraphStep(retrieved, "retrieved_documentation");
     const classified = markInvestigationGraphStep(duplicate, "classified_investigation");
 
-    expect(classified.steps).toEqual(["initialized", "retrieved_documentation", "classified_investigation"]);
+    expect(classified.steps).toEqual([
+      "initialized",
+      "retrieved_documentation",
+      "classified_investigation",
+    ]);
   });
 
   it("keeps future graph node outputs in one typed state contract", () => {
@@ -63,12 +67,12 @@ describe("investigation graph state", () => {
       ...createInitialInvestigationGraphState({
         ticket: "CSV import is stuck.",
         sessionId: "session-1",
-        ragEnabled: true
+        ragEnabled: true,
       }),
       routing: {
         mode: "docs_plus_tools",
         requiredTools: ["getAccountContext", "getRecentErrors"],
-        routingReason: "Ticket includes failure language and account-specific state."
+        routingReason: "Ticket includes failure language and account-specific state.",
       },
       docEvidence: [
         {
@@ -79,8 +83,8 @@ describe("investigation graph state", () => {
           sectionTitle: "CSV import troubleshooting",
           excerpt: "CSV imports can stall when required headers are missing.",
           score: 0.74,
-          chunkIndex: 0
-        }
+          chunkIndex: 0,
+        },
       ],
       toolArtifacts: {
         toolEvidence: [
@@ -90,35 +94,39 @@ describe("investigation graph state", () => {
             toolName: "getRecentErrors",
             title: "Recent errors",
             excerpt: "ERR-CSV-42: Missing required CSV header.",
-            raw: []
-          }
+            raw: [],
+          },
         ],
         toolCalls: [
           {
             toolName: "getRecentErrors",
             input: { accountId: "acct-1", productArea: "imports" },
-            output: []
-          }
+            output: [],
+          },
         ],
         account: null,
         flags: [],
         errors: [],
-        productArea: "imports"
+        productArea: "imports",
       },
       claimDraft: {
         customerReply: {
-          claims: [{ text: "The import may be blocked by missing CSV headers.", citations: ["S1"] }]
+          claims: [
+            { text: "The import may be blocked by missing CSV headers.", citations: ["S1"] },
+          ],
         },
         internalDiagnosis: {
-          claims: [{ text: "Recent tool state shows ERR-CSV-42 for the account.", citations: ["T1"] }],
-          openQuestions: []
+          claims: [
+            { text: "Recent tool state shows ERR-CSV-42 for the account.", citations: ["T1"] },
+          ],
+          openQuestions: [],
         },
-        insufficientSupport: false
+        insufficientSupport: false,
       },
       grounding: {
         validationFailed: false,
         validCitationIds: ["S1", "T1"],
-        missingCitationIds: []
+        missingCitationIds: [],
       },
       review: {
         supportLevel: "medium",
@@ -126,15 +134,15 @@ describe("investigation graph state", () => {
         reviewDecision: {
           status: "ready",
           reasonCode: "none",
-          action: "none"
+          action: "none",
         },
         finalMode: "docs_plus_tools",
-        routingReason: "Ticket includes failure language and account-specific state."
+        routingReason: "Ticket includes failure language and account-specific state.",
       },
       persistence: {
         ticketId: "ticket-1",
-        investigationId: "investigation-1"
-      }
+        investigationId: "investigation-1",
+      },
     };
 
     expect(state.review?.reviewStatus).toBe("ready");

@@ -10,8 +10,8 @@ describe("validateInvestigationAnswer", () => {
       sectionTitle: "Exports",
       excerpt: "Exports are available on Growth and Enterprise plans.",
       score: 0.82,
-      chunkIndex: 0
-    }
+      chunkIndex: 0,
+    },
   ];
 
   const toolEvidence = [
@@ -22,9 +22,9 @@ describe("validateInvestigationAnswer", () => {
       title: "Acme Starter",
       excerpt: "Plan: Starter. Status: active. Enabled modules: imports.",
       raw: {
-        planTier: "Starter"
-      }
-    }
+        planTier: "Starter",
+      },
+    },
   ];
 
   it("accepts mixed doc and tool citations", () => {
@@ -33,20 +33,20 @@ describe("validateInvestigationAnswer", () => {
         customerReplyClaims: [
           {
             text: "Exports are not available on this Starter account.",
-            citations: ["S1", "T1"]
-          }
+            citations: ["S1", "T1"],
+          },
         ],
         internalDiagnosisClaims: [
           {
             text: "The docs restrict exports to Growth and Enterprise, and the selected account is Starter.",
-            citations: ["S1", "T1"]
-          }
+            citations: ["S1", "T1"],
+          },
         ],
         openQuestions: [],
-        insufficientSupport: false
+        insufficientSupport: false,
       },
       docEvidence,
-      toolEvidence
+      toolEvidence,
     });
 
     expect(result.valid).toBe(true);
@@ -62,15 +62,15 @@ describe("validateInvestigationAnswer", () => {
         customerReplyClaims: [
           {
             text: "Exports are blocked for this account.",
-            citations: ["T9"]
-          }
+            citations: ["T9"],
+          },
         ],
         internalDiagnosisClaims: [],
         openQuestions: [],
-        insufficientSupport: false
+        insufficientSupport: false,
       },
       docEvidence,
-      toolEvidence
+      toolEvidence,
     });
 
     expect(result.valid).toBe(false);
@@ -82,20 +82,20 @@ describe("validateInvestigationAnswer", () => {
         customerReplyClaims: [
           {
             text: "Password rotation requires an owner approval workflow.",
-            citations: ["S1"]
-          }
+            citations: ["S1"],
+          },
         ],
         internalDiagnosisClaims: [],
         openQuestions: [],
-        insufficientSupport: false
+        insufficientSupport: false,
       },
       docEvidence,
-      toolEvidence
+      toolEvidence,
     });
 
     expect(result).toEqual({
       valid: false,
-      reason: "Claim does not appear supported by its cited evidence."
+      reason: "Claim does not appear supported by its cited evidence.",
     });
   });
 
@@ -105,12 +105,12 @@ describe("validateInvestigationAnswer", () => {
         customerReplyClaims: [
           {
             text: "The export failed because the actor lacked write permission.",
-            citations: ["T1"]
-          }
+            citations: ["T1"],
+          },
         ],
         internalDiagnosisClaims: [],
         openQuestions: [],
-        insufficientSupport: false
+        insufficientSupport: false,
       },
       docEvidence: [],
       toolEvidence: [
@@ -120,14 +120,14 @@ describe("validateInvestigationAnswer", () => {
           toolName: "getRecentErrors",
           title: "Recent errors",
           excerpt: "ERR-219: Export actor had read access but lacked Exports: Write.",
-          raw: []
-        }
-      ]
+          raw: [],
+        },
+      ],
     });
 
     expect(result).toEqual({
       valid: false,
-      reason: "Missing required diagnostic token ERR-219."
+      reason: "Missing required diagnostic token ERR-219.",
     });
   });
 
@@ -137,12 +137,12 @@ describe("validateInvestigationAnswer", () => {
         customerReplyClaims: [
           {
             text: "Check the latest validation failure before retrying the import.",
-            citations: ["T1"]
-          }
+            citations: ["T1"],
+          },
         ],
         internalDiagnosisClaims: [],
         openQuestions: [],
-        insufficientSupport: false
+        insufficientSupport: false,
       },
       docEvidence: [],
       toolEvidence: [
@@ -152,14 +152,14 @@ describe("validateInvestigationAnswer", () => {
           toolName: "getRecentErrors",
           title: "Recent errors",
           excerpt: "Import stalled after row validation near the configured row limit.",
-          raw: []
-        }
-      ]
+          raw: [],
+        },
+      ],
     });
 
     expect(result).toEqual({
       valid: false,
-      reason: "Missing required diagnostic token row."
+      reason: "Missing required diagnostic token row.",
     });
   });
 });

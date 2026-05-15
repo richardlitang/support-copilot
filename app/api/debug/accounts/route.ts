@@ -10,7 +10,7 @@ export async function GET() {
     const accounts = await listAccountsSafe();
     logger.finish({
       outcome: "success",
-      accountCount: accounts.length
+      accountCount: accounts.length,
     });
     const response = NextResponse.json({ accounts });
     response.headers.set("x-request-id", logger.requestId);
@@ -20,16 +20,16 @@ export async function GET() {
     captureServerException(error, {
       tags: {
         route: "/api/debug/accounts:get",
-        requestId: logger.requestId
-      }
+        requestId: logger.requestId,
+      },
     });
     logger.error("debug_accounts_get_failed", { message });
     logger.finish({ outcome: "request_error" });
     const response = NextResponse.json(
       {
-        error: message
+        error: message,
       },
-      { status: 500 }
+      { status: 500 },
     );
     response.headers.set("x-request-id", logger.requestId);
     return response;

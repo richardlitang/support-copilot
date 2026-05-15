@@ -9,11 +9,11 @@ export function validateGroundingNode(state: InvestigationGraphState): Investiga
 
   const allowedCitationIds = new Set([
     ...state.docEvidence.map((item) => item.id),
-    ...state.toolArtifacts.toolEvidence.map((item) => item.id)
+    ...state.toolArtifacts.toolEvidence.map((item) => item.id),
   ]);
   const citedIds = collectCitationIds({
     customerReply: state.claimDraft.customerReply,
-    internalDiagnosis: state.claimDraft.internalDiagnosis
+    internalDiagnosis: state.claimDraft.internalDiagnosis,
   });
   const missingCitationIds = citedIds.filter((citation) => !allowedCitationIds.has(citation));
   const validationFailed = missingCitationIds.length > 0;
@@ -24,9 +24,9 @@ export function validateGroundingNode(state: InvestigationGraphState): Investiga
       grounding: {
         validationFailed,
         validCitationIds: citedIds.filter((citation) => allowedCitationIds.has(citation)),
-        missingCitationIds
-      }
+        missingCitationIds,
+      },
     },
-    "validated_grounding"
+    "validated_grounding",
   );
 }

@@ -10,15 +10,15 @@ describe("investigateTicket structured", () => {
       content: "Exports are available on Growth and Enterprise plans.",
       score: 0.84,
       rank: 1,
-      chunkIndex: 0
-    }
+      chunkIndex: 0,
+    },
   ];
 
   const baseDeps = {
     persistInvestigationRun: async () => ({
       ticketId: "ticket-structured",
-      investigationId: "investigation-structured"
-    })
+      investigationId: "investigation-structured",
+    }),
   };
 
   it("returns docs plus tools when account context is selected", async () => {
@@ -27,7 +27,7 @@ describe("investigateTicket structured", () => {
         ticket: "Why can't this customer access exports?",
         ragEnabled: true,
         sessionId: "session-1",
-        selectedAccountId: "acct-1"
+        selectedAccountId: "acct-1",
       },
       {
         ...baseDeps,
@@ -41,21 +41,21 @@ describe("investigateTicket structured", () => {
             claims: [
               {
                 text: "Exports are not enabled for this account.",
-                citations: ["S1", "T1", "T2"]
-              }
-            ]
+                citations: ["S1", "T1", "T2"],
+              },
+            ],
           },
           internalDiagnosis: {
             summary: "Starter account with exports disabled.",
             claims: [
               {
                 text: "The docs gate exports by plan, and the account does not meet the requirement.",
-                citations: ["S1", "T1", "T2"]
-              }
+                citations: ["S1", "T1", "T2"],
+              },
             ],
-            openQuestions: []
+            openQuestions: [],
           },
-          insufficientSupport: false
+          insufficientSupport: false,
         }),
         getAccountContext: async () => ({
           id: "acct-1",
@@ -64,7 +64,7 @@ describe("investigateTicket structured", () => {
           status: "active",
           enabledModules: ["imports"],
           limits: { csvImportRows: 10000 },
-          createdAt: "2026-04-15T00:00:00.000Z"
+          createdAt: "2026-04-15T00:00:00.000Z",
         }),
         getFeatureFlags: async () => [
           {
@@ -74,11 +74,11 @@ describe("investigateTicket structured", () => {
             flagValue: false,
             description: "Controls export visibility",
             rolloutNotes: null,
-            createdAt: "2026-04-15T00:00:00.000Z"
-          }
+            createdAt: "2026-04-15T00:00:00.000Z",
+          },
         ],
-        getRecentErrors: async () => []
-      }
+        getRecentErrors: async () => [],
+      },
     );
 
     expect(result.mode).toBe("docs_plus_tools");
@@ -93,7 +93,7 @@ describe("investigateTicket structured", () => {
         ragEnabled: true,
         sessionId: "session-1",
         selectedAccountId: null,
-        investigationContext: "Plan: Starter. Exports UI hidden. Billing setup complete."
+        investigationContext: "Plan: Starter. Exports UI hidden. Billing setup complete.",
       },
       {
         ...baseDeps,
@@ -107,26 +107,26 @@ describe("investigateTicket structured", () => {
             claims: [
               {
                 text: "The provided context indicates a Starter plan where exports remain unavailable.",
-                citations: ["S1", "T1"]
-              }
-            ]
+                citations: ["S1", "T1"],
+              },
+            ],
           },
           internalDiagnosis: {
             summary: "Provided context points to a plan gate.",
             claims: [
               {
                 text: "The docs gate exports by plan, and the provided context says the account is Starter.",
-                citations: ["S1", "T1"]
-              }
+                citations: ["S1", "T1"],
+              },
             ],
-            openQuestions: []
+            openQuestions: [],
           },
-          insufficientSupport: false
+          insufficientSupport: false,
         }),
         getAccountContext: async () => null,
         getFeatureFlags: async () => [],
-        getRecentErrors: async () => []
-      }
+        getRecentErrors: async () => [],
+      },
     );
 
     expect(result.mode).toBe("docs_plus_tools");
@@ -140,14 +140,14 @@ describe("investigateTicket structured", () => {
         ticket: "Why can't this customer access exports?",
         ragEnabled: true,
         sessionId: "session-1",
-        selectedAccountId: "acct-1"
+        selectedAccountId: "acct-1",
       },
       {
         persistInvestigationRun: async (payload) => {
           persistedPayloads.push(payload);
           return {
             ticketId: "ticket-atomic",
-            investigationId: "investigation-atomic"
+            investigationId: "investigation-atomic",
           };
         },
         retrieveEvidence: async () => baseEvidence,
@@ -157,14 +157,21 @@ describe("investigateTicket structured", () => {
         generateInvestigationAnswer: async () => ({
           customerReply: {
             summary: "Exports are not enabled for this account.",
-            claims: [{ text: "Exports are not enabled for this account.", citations: ["S1", "T1", "T2"] }]
+            claims: [
+              { text: "Exports are not enabled for this account.", citations: ["S1", "T1", "T2"] },
+            ],
           },
           internalDiagnosis: {
             summary: "Starter account with exports disabled.",
-            claims: [{ text: "The account does not meet the export requirement.", citations: ["S1", "T1", "T2"] }],
-            openQuestions: []
+            claims: [
+              {
+                text: "The account does not meet the export requirement.",
+                citations: ["S1", "T1", "T2"],
+              },
+            ],
+            openQuestions: [],
           },
-          insufficientSupport: false
+          insufficientSupport: false,
         }),
         getAccountContext: async () => ({
           id: "acct-1",
@@ -173,7 +180,7 @@ describe("investigateTicket structured", () => {
           status: "active",
           enabledModules: ["imports"],
           limits: { csvImportRows: 10000 },
-          createdAt: "2026-04-15T00:00:00.000Z"
+          createdAt: "2026-04-15T00:00:00.000Z",
         }),
         getFeatureFlags: async () => [
           {
@@ -183,11 +190,11 @@ describe("investigateTicket structured", () => {
             flagValue: false,
             description: "Controls export visibility",
             rolloutNotes: null,
-            createdAt: "2026-04-15T00:00:00.000Z"
-          }
+            createdAt: "2026-04-15T00:00:00.000Z",
+          },
         ],
-        getRecentErrors: async () => []
-      }
+        getRecentErrors: async () => [],
+      },
     );
 
     expect(result.ticketId).toBe("ticket-atomic");
@@ -200,17 +207,17 @@ describe("investigateTicket structured", () => {
       reviewDecision: {
         status: "ready",
         reasonCode: "none",
-        action: "none"
+        action: "none",
       },
       sources: [{ documentChunkId: "chunk-1", rank: 1, score: 0.84 }],
       toolCalls: expect.arrayContaining([
         expect.objectContaining({
-          toolName: "getAccountContext"
+          toolName: "getAccountContext",
         }),
         expect.objectContaining({
-          toolName: "getFeatureFlags"
-        })
-      ])
+          toolName: "getFeatureFlags",
+        }),
+      ]),
     });
   });
 
@@ -220,7 +227,7 @@ describe("investigateTicket structured", () => {
         ticket: "Why can't this customer access exports on our account?",
         ragEnabled: true,
         sessionId: "session-1",
-        selectedAccountId: null
+        selectedAccountId: null,
       },
       {
         ...baseDeps,
@@ -233,8 +240,8 @@ describe("investigateTicket structured", () => {
         },
         getAccountContext: async () => null,
         getFeatureFlags: async () => [],
-        getRecentErrors: async () => []
-      }
+        getRecentErrors: async () => [],
+      },
     );
 
     expect(result.mode).toBe("needs_human_review");
@@ -242,7 +249,7 @@ describe("investigateTicket structured", () => {
     expect(result.reviewDecision).toEqual({
       status: "needs_human_review",
       reasonCode: "missing_account_context",
-      action: "add_context"
+      action: "add_context",
     });
     expect(result.routingReason).toContain("none was provided");
     expect(result.toolEvidence.length).toBeGreaterThan(0);
@@ -254,7 +261,7 @@ describe("investigateTicket structured", () => {
         ticket: "This Enterprise workspace says exports are enabled, but the issue still persists.",
         ragEnabled: true,
         sessionId: "session-1",
-        selectedAccountId: "acct-enterprise"
+        selectedAccountId: "acct-enterprise",
       },
       {
         ...baseDeps,
@@ -272,7 +279,7 @@ describe("investigateTicket structured", () => {
           status: "active",
           enabledModules: ["exports", "imports", "audit_logs"],
           limits: {},
-          createdAt: "2026-04-15T00:00:00.000Z"
+          createdAt: "2026-04-15T00:00:00.000Z",
         }),
         getFeatureFlags: async () => [
           {
@@ -282,11 +289,11 @@ describe("investigateTicket structured", () => {
             flagValue: true,
             description: "Controls export visibility",
             rolloutNotes: null,
-            createdAt: "2026-04-15T00:00:00.000Z"
-          }
+            createdAt: "2026-04-15T00:00:00.000Z",
+          },
         ],
-        getRecentErrors: async () => []
-      }
+        getRecentErrors: async () => [],
+      },
     );
 
     expect(result.mode).toBe("needs_human_review");
@@ -294,7 +301,7 @@ describe("investigateTicket structured", () => {
     expect(result.reviewDecision).toEqual({
       status: "needs_human_review",
       reasonCode: "unresolved_evidence_conflict",
-      action: "inspect_conflict"
+      action: "inspect_conflict",
     });
     expect(result.internalDiagnosis.openQuestions.length).toBeGreaterThan(0);
   });

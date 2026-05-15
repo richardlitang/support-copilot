@@ -1,4 +1,8 @@
-import { buildCitationReferences, normalizeCitationLabels, normalizeSourceLabels } from "@/lib/citations";
+import {
+  buildCitationReferences,
+  normalizeCitationLabels,
+  normalizeSourceLabels,
+} from "@/lib/citations";
 import { getRuntimeConfig } from "@/lib/env";
 import { getAnswerModel, getOpenAIClient } from "@/lib/openai";
 import type {
@@ -7,7 +11,7 @@ import type {
   StructuredClaimSet,
   StructuredClaimSetWithOpenQuestions,
   StructuredClaim,
-  ToolEvidenceItem
+  ToolEvidenceItem,
 } from "@/lib/types/investigation";
 import type { EvidenceChunk, GroundedClaim, StructuredAnswer } from "@/lib/types";
 
@@ -19,7 +23,7 @@ const answerSchema = {
     additionalProperties: false,
     properties: {
       answer: {
-        type: "string"
+        type: "string",
       },
       claims: {
         type: "array",
@@ -28,34 +32,34 @@ const answerSchema = {
           additionalProperties: false,
           properties: {
             text: {
-              type: "string"
+              type: "string",
             },
             citationIds: {
               type: "array",
               items: {
-                type: "string"
-              }
-            }
+                type: "string",
+              },
+            },
           },
-          required: ["text", "citationIds"]
-        }
+          required: ["text", "citationIds"],
+        },
       },
       supportLevel: {
         type: "string",
-        enum: ["high", "medium", "low", "insufficient_support"]
+        enum: ["high", "medium", "low", "insufficient_support"],
       },
       citations: {
         type: "array",
         items: {
-          type: "string"
-        }
+          type: "string",
+        },
       },
       insufficientSupport: {
-        type: "boolean"
-      }
+        type: "boolean",
+      },
     },
-    required: ["answer", "claims", "supportLevel", "citations", "insufficientSupport"]
-  }
+    required: ["answer", "claims", "supportLevel", "citations", "insufficientSupport"],
+  },
 } as const;
 
 export function buildInsufficientSupportAnswer(): StructuredAnswer {
@@ -65,7 +69,7 @@ export function buildInsufficientSupportAnswer(): StructuredAnswer {
     claims: [],
     supportLevel: "insufficient_support",
     citations: [],
-    insufficientSupport: true
+    insufficientSupport: true,
   };
 }
 
@@ -84,7 +88,7 @@ function normalizeClaims(claims: GroundedClaim[], allowedLabels: string[]) {
 
     normalized.push({
       text,
-      citationIds
+      citationIds,
     });
     seenTexts.add(key);
   }
@@ -106,14 +110,14 @@ export function validateGroundedAnswer(input: {
   if (input.answer.insufficientSupport) {
     return {
       valid: true,
-      answer: buildInsufficientSupportAnswer()
+      answer: buildInsufficientSupportAnswer(),
     } as const;
   }
 
   if (!claims.length) {
     return {
       valid: false,
-      reason: "No valid grounded claims were returned."
+      reason: "No valid grounded claims were returned.",
     } as const;
   }
 
@@ -121,7 +125,7 @@ export function validateGroundedAnswer(input: {
     if (claim.text.length > 360) {
       return {
         valid: false,
-        reason: "Claim exceeded the allowed length."
+        reason: "Claim exceeded the allowed length.",
       } as const;
     }
 
@@ -131,7 +135,7 @@ export function validateGroundedAnswer(input: {
       if (!evidence) {
         return {
           valid: false,
-          reason: `Claim cited unknown evidence ${citationId}.`
+          reason: `Claim cited unknown evidence ${citationId}.`,
         } as const;
       }
 
@@ -141,7 +145,7 @@ export function validateGroundedAnswer(input: {
       if (claimWordCount > evidenceWordCount + 30) {
         return {
           valid: false,
-          reason: "Claim appears broader than its cited evidence."
+          reason: "Claim appears broader than its cited evidence.",
         } as const;
       }
     }
@@ -149,7 +153,7 @@ export function validateGroundedAnswer(input: {
 
   const citations = normalizeCitationLabels(
     claims.flatMap((claim) => claim.citationIds),
-    Array.from(allowedByLabel.keys())
+    Array.from(allowedByLabel.keys()),
   );
 
   return {
@@ -158,8 +162,8 @@ export function validateGroundedAnswer(input: {
       ...input.answer,
       claims,
       citations,
-      answer: buildAnswerFromClaims(claims)
-    } satisfies StructuredAnswer
+      answer: buildAnswerFromClaims(claims),
+    } satisfies StructuredAnswer,
   } as const;
 }
 
@@ -183,12 +187,12 @@ async function requestGroundedAnswer(input: {
       claims: [
         {
           text: claimText,
-          citationIds: [firstCitation.label]
-        }
+          citationIds: [firstCitation.label],
+        },
       ],
       supportLevel: "medium",
       citations: [firstCitation.label],
-      insufficientSupport: false
+      insufficientSupport: false,
     } satisfies StructuredAnswer;
   }
 
@@ -206,9 +210,9 @@ async function requestGroundedAnswer(input: {
             type: "input_text",
             text: input.stricterRetry
               ? "You are Support Copilot. Return claims directly supported by evidence. Include all materially distinct causes/checks/fixes present in evidence (especially troubleshooting tables), but do not infer beyond cited text. Every claim must include at least one valid citation ID. If evidence is insufficient, set insufficientSupport to true and return no claims."
-              : "You are Support Copilot. Answer only from provided evidence. Do not use outside knowledge. Return a short summary answer plus a claims array that captures all materially distinct supported points (including multiple causes/fixes when present). Every claim must include at least one valid citation ID. If evidence is weak or incomplete, set insufficientSupport to true and return no claims."
-          }
-        ]
+              : "You are Support Copilot. Answer only from provided evidence. Do not use outside knowledge. Return a short summary answer plus a claims array that captures all materially distinct supported points (including multiple causes/fixes when present). Every claim must include at least one valid citation ID. If evidence is weak or incomplete, set insufficientSupport to true and return no claims.",
+          },
+        ],
       },
       {
         role: "user",
@@ -218,19 +222,19 @@ async function requestGroundedAnswer(input: {
             text: `Support ticket:\n${input.ticket}\n\nEvidence:\n${citations
               .map(
                 (item) =>
-                  `${item.label} | ${item.filename}${item.sectionTitle ? ` | ${item.sectionTitle}` : ""}\n${item.excerpt}`
+                  `${item.label} | ${item.filename}${item.sectionTitle ? ` | ${item.sectionTitle}` : ""}\n${item.excerpt}`,
               )
-              .join("\n\n")}`
-          }
-        ]
-      }
+              .join("\n\n")}`,
+          },
+        ],
+      },
     ],
     text: {
       format: {
         type: "json_schema",
-        ...answerSchema
-      }
-    }
+        ...answerSchema,
+      },
+    },
   });
 
   const outputText = response.output_text;
@@ -242,10 +246,7 @@ async function requestGroundedAnswer(input: {
   return JSON.parse(outputText) as StructuredAnswer;
 }
 
-export async function generateGroundedAnswer(input: {
-  ticket: string;
-  evidence: EvidenceChunk[];
-}) {
+export async function generateGroundedAnswer(input: { ticket: string; evidence: EvidenceChunk[] }) {
   if (!input.evidence.length) {
     return buildInsufficientSupportAnswer();
   }
@@ -253,11 +254,11 @@ export async function generateGroundedAnswer(input: {
   const firstPass = await requestGroundedAnswer({
     ticket: input.ticket,
     evidence: input.evidence,
-    stricterRetry: false
+    stricterRetry: false,
   });
   const firstValidation = validateGroundedAnswer({
     answer: firstPass,
-    evidence: input.evidence
+    evidence: input.evidence,
   });
 
   if (firstValidation.valid) {
@@ -267,11 +268,11 @@ export async function generateGroundedAnswer(input: {
   const secondPass = await requestGroundedAnswer({
     ticket: input.ticket,
     evidence: input.evidence,
-    stricterRetry: true
+    stricterRetry: true,
   });
   const secondValidation = validateGroundedAnswer({
     answer: secondPass,
-    evidence: input.evidence
+    evidence: input.evidence,
   });
 
   if (secondValidation.valid) {
@@ -297,11 +298,11 @@ const investigationAnswerSchema = {
             text: { type: "string" },
             citations: {
               type: "array",
-              items: { type: "string" }
-            }
+              items: { type: "string" },
+            },
           },
-          required: ["text", "citations"]
-        }
+          required: ["text", "citations"],
+        },
       },
       internalDiagnosisClaims: {
         type: "array",
@@ -312,22 +313,27 @@ const investigationAnswerSchema = {
             text: { type: "string" },
             citations: {
               type: "array",
-              items: { type: "string" }
-            }
+              items: { type: "string" },
+            },
           },
-          required: ["text", "citations"]
-        }
+          required: ["text", "citations"],
+        },
       },
       openQuestions: {
         type: "array",
-        items: { type: "string" }
+        items: { type: "string" },
       },
       insufficientSupport: {
-        type: "boolean"
-      }
+        type: "boolean",
+      },
     },
-    required: ["customerReplyClaims", "internalDiagnosisClaims", "openQuestions", "insufficientSupport"]
-  }
+    required: [
+      "customerReplyClaims",
+      "internalDiagnosisClaims",
+      "openQuestions",
+      "insufficientSupport",
+    ],
+  },
 } as const;
 
 type StructuredInvestigationDraft = {
@@ -366,7 +372,7 @@ const claimValidationStopwords = new Set([
   "was",
   "with",
   "without",
-  "your"
+  "your",
 ]);
 
 function deriveSummary(claims: StructuredClaim[]) {
@@ -383,7 +389,7 @@ function deriveSummary(claims: StructuredClaim[]) {
 
 function normalizeStructuredClaims(
   claims: Array<{ text: string; citations: string[] }>,
-  allowedLabels: string[]
+  allowedLabels: string[],
 ): StructuredClaim[] {
   const seenTexts = new Set<string>();
   const normalized: StructuredClaim[] = [];
@@ -405,19 +411,14 @@ function normalizeStructuredClaims(
 }
 
 function extractRequiredDiagnosticTokens(toolEvidence: ToolEvidenceItem[]) {
-  const exactErrorTokens =
-    toolEvidence
-      .filter((item) => item.toolName === "getRecentErrors")
-      .flatMap((item) => item.excerpt.match(/\b[A-Z][A-Z0-9]+-[A-Z0-9]+\b/g) ?? []);
+  const exactErrorTokens = toolEvidence
+    .filter((item) => item.toolName === "getRecentErrors")
+    .flatMap((item) => item.excerpt.match(/\b[A-Z][A-Z0-9]+-[A-Z0-9]+\b/g) ?? []);
   const rowTokens = toolEvidence
     .filter((item) => item.toolName === "getRecentErrors" && /\brows?\b/i.test(item.excerpt))
     .map(() => "row");
 
-  return Array.from(
-    new Set(
-      [...exactErrorTokens, ...rowTokens]
-    )
-  );
+  return Array.from(new Set([...exactErrorTokens, ...rowTokens]));
 }
 
 function buildRequiredDiagnosticTokenAnswer(input: {
@@ -429,7 +430,9 @@ function buildRequiredDiagnosticTokenAnswer(input: {
   insufficientSupport: boolean;
 } | null {
   const recentError = input.toolEvidence.find(
-    (item) => item.toolName === "getRecentErrors" && item.excerpt.toLowerCase().includes(input.token.toLowerCase())
+    (item) =>
+      item.toolName === "getRecentErrors" &&
+      item.excerpt.toLowerCase().includes(input.token.toLowerCase()),
   );
 
   if (!recentError) {
@@ -445,26 +448,28 @@ function buildRequiredDiagnosticTokenAnswer(input: {
         : `The recent error evidence includes ${input.token}.`;
   const customerReply: StructuredClaimSet = {
     summary: claimText,
-    claims: [{ text: claimText, citations: [citation] }]
+    claims: [{ text: claimText, citations: [citation] }],
   };
   const internalDiagnosis: StructuredClaimSetWithOpenQuestions = {
     summary: claimText,
     claims: [{ text: claimText, citations: [citation] }],
-    openQuestions: []
+    openQuestions: [],
   };
 
   return {
     customerReply,
     internalDiagnosis,
-    insufficientSupport: false
+    insufficientSupport: false,
   };
 }
 
 function tokenizeClaimValidationText(text: string) {
-  return text
-    .toLowerCase()
-    .match(/[a-z0-9]+/g)
-    ?.filter((token) => token.length > 2 && !claimValidationStopwords.has(token)) ?? [];
+  return (
+    text
+      .toLowerCase()
+      .match(/[a-z0-9]+/g)
+      ?.filter((token) => token.length > 2 && !claimValidationStopwords.has(token)) ?? []
+  );
 }
 
 function validateCitationOverlap(claim: StructuredClaim, sources: EvidenceRegistryItem[]) {
@@ -474,7 +479,9 @@ function validateCitationOverlap(claim: StructuredClaim, sources: EvidenceRegist
     return { valid: true } as const;
   }
 
-  const evidenceTokens = new Set(sources.flatMap((source) => tokenizeClaimValidationText(source.excerpt)));
+  const evidenceTokens = new Set(
+    sources.flatMap((source) => tokenizeClaimValidationText(source.excerpt)),
+  );
 
   if (!evidenceTokens.size) {
     return { valid: true } as const;
@@ -487,7 +494,7 @@ function validateCitationOverlap(claim: StructuredClaim, sources: EvidenceRegist
   if (overlapCount < minimumOverlap && overlapRatio < 0.25) {
     return {
       valid: false,
-      reason: "Claim does not appear supported by its cited evidence."
+      reason: "Claim does not appear supported by its cited evidence.",
     } as const;
   }
 
@@ -504,7 +511,7 @@ function validateClaimBreadth(claim: StructuredClaim, registry: Map<string, Evid
     if (!source) {
       return {
         valid: false,
-        reason: `Unknown citation ${citation}.`
+        reason: `Unknown citation ${citation}.`,
       } as const;
     }
 
@@ -519,7 +526,7 @@ function validateClaimBreadth(claim: StructuredClaim, registry: Map<string, Evid
   if (claim.text.length > 360) {
     return {
       valid: false,
-      reason: "Claim exceeded the allowed length."
+      reason: "Claim exceeded the allowed length.",
     } as const;
   }
 
@@ -529,7 +536,7 @@ function validateClaimBreadth(claim: StructuredClaim, registry: Map<string, Evid
     if (claimWordCount > docWordBudget) {
       return {
         valid: false,
-        reason: "Claim appears broader than its cited documentation evidence."
+        reason: "Claim appears broader than its cited documentation evidence.",
       } as const;
     }
   }
@@ -551,11 +558,12 @@ export function buildStructuredHumanReviewFallback(input: {
 }) {
   const citations = input.citations ?? [];
   const customerReply: StructuredClaimSet = {
-    claims: input.customerMessage && citations.length ? [{ text: input.customerMessage, citations }] : []
+    claims:
+      input.customerMessage && citations.length ? [{ text: input.customerMessage, citations }] : [],
   };
   const internalDiagnosis: StructuredClaimSetWithOpenQuestions = {
     claims: citations.length ? [{ text: input.internalMessage, citations }] : [],
-    openQuestions: input.openQuestions ?? [input.internalMessage]
+    openQuestions: input.openQuestions ?? [input.internalMessage],
   };
 
   customerReply.summary = deriveSummary(customerReply.claims);
@@ -564,7 +572,7 @@ export function buildStructuredHumanReviewFallback(input: {
   return {
     customerReply,
     internalDiagnosis,
-    insufficientSupport: true
+    insufficientSupport: true,
   };
 }
 
@@ -585,19 +593,22 @@ export function validateInvestigationAnswer(input: {
 
   const allowedLabels = Array.from(registry.keys());
   const customerClaims = normalizeStructuredClaims(input.answer.customerReplyClaims, allowedLabels);
-  const internalClaims = normalizeStructuredClaims(input.answer.internalDiagnosisClaims, allowedLabels);
+  const internalClaims = normalizeStructuredClaims(
+    input.answer.internalDiagnosisClaims,
+    allowedLabels,
+  );
 
   if (input.answer.customerReplyClaims.length > 0 && customerClaims.length === 0) {
     return {
       valid: false,
-      reason: "Customer reply claims did not contain any valid citations."
+      reason: "Customer reply claims did not contain any valid citations.",
     } as const;
   }
 
   if (input.answer.internalDiagnosisClaims.length > 0 && internalClaims.length === 0) {
     return {
       valid: false,
-      reason: "Internal diagnosis claims did not contain any valid citations."
+      reason: "Internal diagnosis claims did not contain any valid citations.",
     } as const;
   }
 
@@ -612,13 +623,13 @@ export function validateInvestigationAnswer(input: {
   if (!input.answer.insufficientSupport) {
     const claimText = [...customerClaims, ...internalClaims].map((claim) => claim.text).join("\n");
     const missingDiagnosticTokens = extractRequiredDiagnosticTokens(input.toolEvidence).filter(
-      (token) => !claimText.includes(token)
+      (token) => !claimText.includes(token),
     );
 
     if (missingDiagnosticTokens.length) {
       return {
         valid: false,
-        reason: `Missing required diagnostic token ${missingDiagnosticTokens[0]}.`
+        reason: `Missing required diagnostic token ${missingDiagnosticTokens[0]}.`,
       } as const;
     }
   }
@@ -628,7 +639,7 @@ export function validateInvestigationAnswer(input: {
     answer: {
       customerReply: {
         summary: deriveSummary(customerClaims),
-        claims: customerClaims
+        claims: customerClaims,
       },
       internalDiagnosis: {
         summary: deriveSummary(internalClaims),
@@ -636,10 +647,10 @@ export function validateInvestigationAnswer(input: {
         openQuestions: input.answer.openQuestions
           .map((item) => item.replace(/\s+/g, " ").trim())
           .filter(Boolean)
-          .slice(0, 5)
+          .slice(0, 5),
       },
-      insufficientSupport: input.answer.insufficientSupport
-    }
+      insufficientSupport: input.answer.insufficientSupport,
+    },
   } as const;
 }
 
@@ -660,7 +671,7 @@ async function requestInvestigationAnswer(input: {
         customerReplyClaims: [],
         internalDiagnosisClaims: [],
         openQuestions: ["Add ready documentation or support context for this case."],
-        insufficientSupport: true
+        insufficientSupport: true,
       } satisfies StructuredInvestigationDraft;
     }
 
@@ -670,17 +681,17 @@ async function requestInvestigationAnswer(input: {
         customerReplyClaims: [
           {
             text: claimText,
-            citations: [firstDoc.id]
-          }
+            citations: [firstDoc.id],
+          },
         ],
         internalDiagnosisClaims: [
           {
             text: claimText,
-            citations: [firstDoc.id]
-          }
+            citations: [firstDoc.id],
+          },
         ],
         openQuestions: [],
-        insufficientSupport: false
+        insufficientSupport: false,
       } satisfies StructuredInvestigationDraft;
     }
 
@@ -688,17 +699,17 @@ async function requestInvestigationAnswer(input: {
       customerReplyClaims: [
         {
           text: `The available support context points to ${firstTool?.title ?? "the selected account context"}.`,
-          citations: [firstTool?.id ?? "T1"]
-        }
+          citations: [firstTool?.id ?? "T1"],
+        },
       ],
       internalDiagnosisClaims: [
         {
           text: `The investigation used support context from ${firstTool?.title ?? "the selected account context"}.`,
-          citations: [firstTool?.id ?? "T1"]
-        }
+          citations: [firstTool?.id ?? "T1"],
+        },
       ],
       openQuestions: [],
-      insufficientSupport: false
+      insufficientSupport: false,
     } satisfies StructuredInvestigationDraft;
   }
 
@@ -708,12 +719,14 @@ async function requestInvestigationAnswer(input: {
     ? input.docEvidence
         .map(
           (item) =>
-            `${item.id} | ${item.filename}${item.sectionTitle ? ` | ${item.sectionTitle}` : ""} | score ${Math.round(item.score * 100)}%\n${item.excerpt}`
+            `${item.id} | ${item.filename}${item.sectionTitle ? ` | ${item.sectionTitle}` : ""} | score ${Math.round(item.score * 100)}%\n${item.excerpt}`,
         )
         .join("\n\n")
     : "None";
   const toolBlock = input.toolEvidence.length
-    ? input.toolEvidence.map((item) => `${item.id} | ${item.toolName} | ${item.title}\n${item.excerpt}`).join("\n\n")
+    ? input.toolEvidence
+        .map((item) => `${item.id} | ${item.toolName} | ${item.title}\n${item.excerpt}`)
+        .join("\n\n")
     : "None";
   const requiredDiagnosticTokens = extractRequiredDiagnosticTokens(input.toolEvidence);
 
@@ -727,9 +740,9 @@ async function requestInvestigationAnswer(input: {
             type: "input_text",
             text: input.stricterRetry
               ? "You are Support Copilot. Produce only grounded structured claims. Every claim must cite at least one valid source ID from the provided documentation evidence or tool evidence. Customer reply must stay short and cautious. Internal diagnosis may be more explicit. Preserve exact plan tiers, limits, row counts, feature flag names, and error codes from cited evidence when they explain the case. If support is insufficient or unresolved, set insufficientSupport to true and prefer fewer claims over speculation."
-              : "You are Support Copilot. Use only the provided documentation evidence and tool evidence. Do not use outside knowledge. Produce concise structured claims for a customer-facing reply and a separate internal diagnosis. Every claim must cite at least one valid source ID. Preserve exact plan tiers, limits, row counts, feature flag names, and error codes from cited evidence when they explain the case. If evidence is incomplete or conflicting, set insufficientSupport to true."
-          }
-        ]
+              : "You are Support Copilot. Use only the provided documentation evidence and tool evidence. Do not use outside knowledge. Produce concise structured claims for a customer-facing reply and a separate internal diagnosis. Every claim must cite at least one valid source ID. Preserve exact plan tiers, limits, row counts, feature flag names, and error codes from cited evidence when they explain the case. If evidence is incomplete or conflicting, set insufficientSupport to true.",
+          },
+        ],
       },
       {
         role: "user",
@@ -742,17 +755,17 @@ async function requestInvestigationAnswer(input: {
               `Routing reason:\n${input.routingReason}\n\n` +
               `Documentation evidence:\n${docBlock}\n\n` +
               `Tool evidence:\n${toolBlock}\n\n` +
-              `Required exact diagnostic tokens:\n${requiredDiagnosticTokens.length ? requiredDiagnosticTokens.join(", ") : "None"}`
-          }
-        ]
-      }
+              `Required exact diagnostic tokens:\n${requiredDiagnosticTokens.length ? requiredDiagnosticTokens.join(", ") : "None"}`,
+          },
+        ],
+      },
     ],
     text: {
       format: {
         type: "json_schema",
-        ...investigationAnswerSchema
-      }
-    }
+        ...investigationAnswerSchema,
+      },
+    },
   });
 
   const outputText = response.output_text;
@@ -773,18 +786,18 @@ export async function generateInvestigationAnswer(input: {
 }) {
   if (!input.docEvidence.length && !input.toolEvidence.length) {
     return buildStructuredHumanReviewFallback({
-      internalMessage: "No documentation or tool evidence was available for this investigation."
+      internalMessage: "No documentation or tool evidence was available for this investigation.",
     });
   }
 
   const firstPass = await requestInvestigationAnswer({
     ...input,
-    stricterRetry: false
+    stricterRetry: false,
   });
   const firstValidation = validateInvestigationAnswer({
     answer: firstPass,
     docEvidence: input.docEvidence,
-    toolEvidence: input.toolEvidence
+    toolEvidence: input.toolEvidence,
   });
 
   if (firstValidation.valid) {
@@ -793,12 +806,12 @@ export async function generateInvestigationAnswer(input: {
 
   const secondPass = await requestInvestigationAnswer({
     ...input,
-    stricterRetry: true
+    stricterRetry: true,
   });
   const secondValidation = validateInvestigationAnswer({
     answer: secondPass,
     docEvidence: input.docEvidence,
-    toolEvidence: input.toolEvidence
+    toolEvidence: input.toolEvidence,
   });
 
   if (secondValidation.valid) {
@@ -806,12 +819,14 @@ export async function generateInvestigationAnswer(input: {
   }
 
   const requiredDiagnosticTokens = extractRequiredDiagnosticTokens(input.toolEvidence);
-  const missingDiagnosticToken = secondValidation.reason.match(/^Missing required diagnostic token (.+)\.$/)?.[1];
+  const missingDiagnosticToken = secondValidation.reason.match(
+    /^Missing required diagnostic token (.+)\.$/,
+  )?.[1];
   const diagnosticToken = missingDiagnosticToken ?? requiredDiagnosticTokens[0];
   const diagnosticTokenAnswer = diagnosticToken
     ? buildRequiredDiagnosticTokenAnswer({
         token: diagnosticToken,
-        toolEvidence: input.toolEvidence
+        toolEvidence: input.toolEvidence,
       })
     : null;
 
@@ -821,8 +836,9 @@ export async function generateInvestigationAnswer(input: {
 
   return {
     ...buildStructuredHumanReviewFallback({
-      internalMessage: "The model could not produce a fully grounded structured response from the available evidence."
+      internalMessage:
+        "The model could not produce a fully grounded structured response from the available evidence.",
     }),
-    validationFailed: true
+    validationFailed: true,
   };
 }

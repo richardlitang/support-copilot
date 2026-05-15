@@ -4,7 +4,7 @@ import type {
   DocEvidenceItem,
   ErrorEventRecord,
   FeatureFlagRecord,
-  InvestigationMode
+  InvestigationMode,
 } from "@/lib/types/investigation";
 
 export function findRelevantFlags(flags: FeatureFlagRecord[], productArea: string | null) {
@@ -13,7 +13,11 @@ export function findRelevantFlags(flags: FeatureFlagRecord[], productArea: strin
   }
 
   const needle = productArea.slice(0, -1);
-  return flags.filter((flag) => flag.flagKey.toLowerCase().includes(needle) || flag.flagKey.toLowerCase().includes(productArea));
+  return flags.filter(
+    (flag) =>
+      flag.flagKey.toLowerCase().includes(needle) ||
+      flag.flagKey.toLowerCase().includes(productArea),
+  );
 }
 
 export function accountHasModule(account: AccountRecord | null, productArea: string | null) {
@@ -38,7 +42,7 @@ export function detectConflict(input: {
   if (input.missingRequiredContext || input.mode !== "docs_plus_tools") {
     return {
       hasConflict: false,
-      reason: null
+      reason: null,
     };
   }
 
@@ -49,31 +53,33 @@ export function detectConflict(input: {
   const hasModule = accountHasModule(input.account, productArea);
   const accountInactive = input.account ? input.account.status.toLowerCase() !== "active" : false;
   const docsSuggestProcedure = input.docEvidence.length > 0;
-  const hasStructuredToolState = Boolean(input.account || input.flags.length || input.errors.length);
+  const hasStructuredToolState = Boolean(
+    input.account || input.flags.length || input.errors.length,
+  );
 
   if (!hasStructuredToolState) {
     return {
       hasConflict: false,
-      reason: null
+      reason: null,
     };
   }
 
   if (accountInactive || hasDisabledFlag || !hasModule || hasRecentErrors) {
     return {
       hasConflict: false,
-      reason: null
+      reason: null,
     };
   }
 
   if (docsSuggestProcedure) {
     return {
       hasConflict: true,
-      reason: "Docs and current tool state do not explain the reported issue."
+      reason: "Docs and current tool state do not explain the reported issue.",
     };
   }
 
   return {
     hasConflict: false,
-    reason: null
+    reason: null,
   };
 }

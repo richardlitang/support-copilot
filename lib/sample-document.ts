@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { ingestParsedDocument } from "@/lib/ingest";
+import { directIngestParsedDocument } from "@/lib/ingest";
 import { parseTextDocument } from "@/lib/parse";
 import type { DocumentRecord } from "@/lib/types";
 
@@ -15,16 +15,15 @@ export async function ingestBundledSampleDocument(sessionId: string) {
     filename: BUNDLED_SAMPLE_FILENAME,
     contentType: "text/markdown",
     text,
-    sourceType: "demo"
+    sourceType: "demo",
   });
 
-  return ingestParsedDocument({
+  return directIngestParsedDocument({
     parsedDocument: parsed,
-    sessionId
+    sessionId,
   });
 }
 
 export function includesBundledSampleDocument(documents: DocumentRecord[]) {
   return documents.some((document) => document.filename === BUNDLED_SAMPLE_FILENAME);
 }
-

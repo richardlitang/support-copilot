@@ -21,7 +21,7 @@ export async function ensureSessionId() {
     httpOnly: true,
     sameSite: "lax",
     path: "/",
-    maxAge: 60 * 60 * 24 * 14
+    maxAge: 60 * 60 * 24 * 14,
   });
 
   return sessionId;

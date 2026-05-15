@@ -52,7 +52,7 @@ export async function createEmbeddings(texts: string[]) {
     const batch = texts.slice(index, index + batchSize).map((text) => text.trim().slice(0, 8000));
     const response = await client.embeddings.create({
       model,
-      input: batch
+      input: batch,
     });
 
     embeddings.push(...response.data.map((item) => item.embedding));

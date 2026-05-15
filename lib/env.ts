@@ -9,7 +9,7 @@ function stripQuotes(value: string) {
   const trimmed = value.trim();
 
   if (
-    (trimmed.startsWith("\"") && trimmed.endsWith("\"")) ||
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
     (trimmed.startsWith("'") && trimmed.endsWith("'"))
   ) {
     return trimmed.slice(1, -1);
@@ -116,7 +116,7 @@ export function getRuntimeConfig() {
     uploadDir: readOptionalString("UPLOAD_DIR") || "uploads",
     maxUploadMb: readNumber("MAX_UPLOAD_MB", 10),
     logLevel: readOptionalString("LOG_LEVEL") || "info",
-    debugMode: readOptionalString("DEBUG_MODE") === "true"
+    debugMode: readOptionalString("DEBUG_MODE") === "true",
   };
 }
 

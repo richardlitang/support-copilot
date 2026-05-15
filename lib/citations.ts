@@ -15,7 +15,7 @@ export function buildCitationReferences(evidence: EvidenceChunk[]): CitationRefe
     label: formatCitationLabel(item.rank),
     filename: item.filename,
     sectionTitle: item.sectionTitle,
-    excerpt: item.content.slice(0, MAX_CITATION_EXCERPT_CHARS)
+    excerpt: item.content.slice(0, MAX_CITATION_EXCERPT_CHARS),
   }));
 }
 

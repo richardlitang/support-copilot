@@ -2,14 +2,20 @@ import { randomUUID } from "node:crypto";
 
 type LogData = Record<string, unknown>;
 
-function emit(level: "info" | "error", route: string, requestId: string, event: string, data?: LogData) {
+function emit(
+  level: "info" | "error",
+  route: string,
+  requestId: string,
+  event: string,
+  data?: LogData,
+) {
   const payload = {
     ts: new Date().toISOString(),
     level,
     route,
     requestId,
     event,
-    ...(data ?? {})
+    ...(data ?? {}),
   };
   const line = JSON.stringify(payload);
 
@@ -28,21 +34,21 @@ export function createRequestLogger(route: string, baseData?: LogData) {
   function info(event: string, data?: LogData) {
     emit("info", route, requestId, event, {
       ...(baseData ?? {}),
-      ...(data ?? {})
+      ...(data ?? {}),
     });
   }
 
   function error(event: string, data?: LogData) {
     emit("error", route, requestId, event, {
       ...(baseData ?? {}),
-      ...(data ?? {})
+      ...(data ?? {}),
     });
   }
 
   function finish(data?: LogData) {
     info("request_finished", {
       durationMs: Date.now() - startedAt,
-      ...(data ?? {})
+      ...(data ?? {}),
     });
   }
 
@@ -50,6 +56,6 @@ export function createRequestLogger(route: string, baseData?: LogData) {
     requestId,
     info,
     error,
-    finish
+    finish,
   };
 }

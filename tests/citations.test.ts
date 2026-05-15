@@ -15,14 +15,14 @@ describe("citations", () => {
         content: "Example excerpt for exports.",
         score: 0.81,
         rank: 1,
-        chunkIndex: 0
-      }
+        chunkIndex: 0,
+      },
     ]);
 
     expect(references[0]).toMatchObject({
       label: "S1",
       filename: "guide.md",
-      sectionTitle: "Setup"
+      sectionTitle: "Setup",
     });
   });
 });

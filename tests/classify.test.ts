@@ -14,9 +14,9 @@ describe("classifyInvestigation", () => {
           content: "Exports are available on Growth and Enterprise.",
           score: 0.82,
           rank: 1,
-          chunkIndex: 0
-        }
-      ]
+          chunkIndex: 0,
+        },
+      ],
     });
 
     expect(result.mode).toBe("docs_only");
@@ -36,9 +36,9 @@ describe("classifyInvestigation", () => {
           content: "Exports are available on Growth and Enterprise plans.",
           score: 0.77,
           rank: 1,
-          chunkIndex: 0
-        }
-      ]
+          chunkIndex: 0,
+        },
+      ],
     });
 
     expect(result.mode).toBe("docs_plus_tools");
@@ -50,8 +50,9 @@ describe("classifyInvestigation", () => {
     const result = classifyInvestigation({
       ticketText: "Why can't this customer access exports on our account?",
       selectedAccountId: null,
-      investigationContext: "Plan: Starter. Exports UI hidden. Support note: billing already complete.",
-      evidence: []
+      investigationContext:
+        "Plan: Starter. Exports UI hidden. Support note: billing already complete.",
+      evidence: [],
     });
 
     expect(result.mode).toBe("docs_plus_tools");
@@ -62,7 +63,7 @@ describe("classifyInvestigation", () => {
     const result = classifyInvestigation({
       ticketText: "Why can't this customer access exports on our account?",
       selectedAccountId: null,
-      evidence: []
+      evidence: [],
     });
 
     expect(result.mode).toBe("needs_human_review");
@@ -71,7 +72,8 @@ describe("classifyInvestigation", () => {
 
   it("does not require account context for general plan-comparison questions", () => {
     const result = classifyInvestigation({
-      ticketText: "Exports are dead on arrival after billing is done. Could Starter be the hidden blocker?",
+      ticketText:
+        "Exports are dead on arrival after billing is done. Could Starter be the hidden blocker?",
       selectedAccountId: null,
       evidence: [
         {
@@ -82,9 +84,9 @@ describe("classifyInvestigation", () => {
           content: "Starter does not include exports. Growth and Enterprise include exports.",
           score: 0.8,
           rank: 1,
-          chunkIndex: 0
-        }
-      ]
+          chunkIndex: 0,
+        },
+      ],
     });
 
     expect(result.mode).toBe("docs_only");
@@ -102,12 +104,13 @@ describe("classifyInvestigation", () => {
           documentId: "doc-1",
           filename: "paybridge-api-support-guide.md",
           sectionTitle: "webhook_endpoint_disabled",
-          content: "Fix the endpoint, return a 2xx response quickly, and re-enable the endpoint in the dashboard.",
+          content:
+            "Fix the endpoint, return a 2xx response quickly, and re-enable the endpoint in the dashboard.",
           score: 0.78,
           rank: 1,
-          chunkIndex: 0
-        }
-      ]
+          chunkIndex: 0,
+        },
+      ],
     });
 
     expect(result.mode).toBe("docs_only");
@@ -118,7 +121,7 @@ describe("classifyInvestigation", () => {
     const result = classifyInvestigation({
       ticketText: "The exports feature is disabled for this account.",
       selectedAccountId: null,
-      evidence: []
+      evidence: [],
     });
 
     expect(result.mode).toBe("needs_human_review");
@@ -138,9 +141,9 @@ describe("classifyInvestigation", () => {
           content: "Audit logs are available on Enterprise.",
           score: 0.8,
           rank: 1,
-          chunkIndex: 0
-        }
-      ]
+          chunkIndex: 0,
+        },
+      ],
     });
 
     expect(result.mode).toBe("docs_plus_tools");

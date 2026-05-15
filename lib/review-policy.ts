@@ -7,7 +7,7 @@ export function determineReviewStatus(input: {
   hasConflict: boolean;
   missingRequiredContext: boolean;
   validationFailed: boolean;
-}) : ReviewStatus {
+}): ReviewStatus {
   if (
     input.mode === "needs_human_review" ||
     input.supportLevel === "insufficient_support" ||

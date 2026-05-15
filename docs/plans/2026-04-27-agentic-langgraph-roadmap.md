@@ -1,12 +1,15 @@
 # Feature: Support Copilot Agentic Roadmap
 
 ## Goal
+
 Evolve Support Copilot from a trust-first RAG workbench into a graph-orchestrated support investigation system without sacrificing citation quality, debuggability, or demo reliability.
 
 ## Architecture Overview
+
 The current app should remain deterministic and inspectable while the trust layer is hardened. LangGraph should be introduced only after retrieval quality, claim validation, and eval coverage are strong enough to prove that the graph improves workflow clarity rather than adding agentic theater. The target architecture is a stateful investigation graph with explicit nodes for retrieval, routing, tool execution, claim generation, validation, review policy, and optional human-review interrupts.
 
 ## Positioning
+
 This project should be described as:
 
 > A trust-first support investigation copilot that combines RAG, pgvector retrieval, structured outputs, claim-level citation validation, deterministic tool routing, and a LangGraph-ready orchestration path for human-review workflows.
@@ -14,6 +17,7 @@ This project should be described as:
 Avoid claiming "multi-agent" until there are genuinely distinct agent responsibilities and testable graph states. Prefer "graph-orchestrated investigation workflow" over "AI agents" in technical discussions.
 
 ## Tech Stack
+
 - Next.js App Router
 - TypeScript
 - Supabase Postgres with pgvector
@@ -26,6 +30,7 @@ Avoid claiming "multi-agent" until there are genuinely distinct agent responsibi
 Use this section first if another conversation picks up the project without chat history.
 
 ### Current Product State
+
 - The app is a single-root Next.js app, not a monorepo.
 - Users can upload `.md`, `.txt`, and best-effort text-based `.pdf` files.
 - Uploaded files are parsed on upload; raw files are not intentionally retained.
@@ -36,6 +41,7 @@ Use this section first if another conversation picks up the project without chat
 - The current UI direction is a compact workbench: source docs first, ticket/context second, answer/evidence only after the user has something to inspect.
 
 ### Current Architecture Map
+
 - `app/api/upload/route.ts`: upload request handling, ingestion logging, parse/chunk/embed/persist orchestration.
 - `app/api/investigate/route.ts`: investigation request handling and response logging.
 - `app/api/documents/route.ts`: session document listing and clearing/removal operations.
@@ -60,6 +66,7 @@ Use this section first if another conversation picks up the project without chat
 - `lib/types/investigation.ts`: chunk-2 structured result contract.
 
 ### Current Scripts and Verification
+
 - `npm run dev`: starts Next with webpack. This was chosen because the local Turbopack path was slow/problematic during UI iteration.
 - `npm run build`: production build.
 - `npm run lint`: ESLint.
@@ -71,6 +78,7 @@ Use this section first if another conversation picks up the project without chat
 Before claiming a change is complete, run the narrow relevant check plus `npm run lint` when practical. For pipeline changes, run `npm run test` and `npm run eval:demo`. For UI/build config changes, run `npm run build`.
 
 ### Existing Demo and Eval Assets
+
 - `demo/docs`: seeded support documentation.
 - `demo/tickets.json`: demo tickets.
 - `demo/support-context.json`: seeded accounts, flags, and errors.
@@ -78,6 +86,7 @@ Before claiming a change is complete, run the narrow relevant check plus `npm ru
 - `scripts/run-evals.ts`: current eval runner. It checks expected mode, review status, minimum doc evidence count, and whether tool evidence is present when required.
 
 ### Important Decisions Already Made
+
 - Keep `insufficient_support` as the canonical enum spelling. Do not introduce alternate spellings.
 - Preserve structured JSON outputs as the source of truth: `customer_reply_json` and `internal_diagnosis_json`.
 - Use `S1`, `S2`, etc. for document evidence and `T1`, `T2`, etc. for tool evidence.
@@ -88,6 +97,7 @@ Before claiming a change is complete, run the narrow relevant check plus `npm ru
 - Treat "agentic" as a later graph-orchestration capability, not a marketing label pasted onto the current pipeline.
 
 ### Known Risks
+
 - `lib/investigate.ts` is carrying too much orchestration logic. Split evidence building, tool running, and conflict policy before adding LangGraph.
 - DB writes are not fully transactional across tickets, investigations, sources, and tool calls.
 - The eval suite exists but is still shallow. It checks routing/evidence counts more than answer correctness, retrieval quality, or unsupported-claim coverage.
@@ -96,6 +106,7 @@ Before claiming a change is complete, run the narrow relevant check plus `npm ru
 - UI polish has improved, but the user is sensitive to wasted space, oversized chips, and redundant status blocks. Keep UI changes compact and evidence-first.
 
 ### Next Best Implementation Slice
+
 Do not start with LangGraph. The next best slice is:
 
 1. Improve the eval runner so it reports retrieval quality, route correctness, fallback correctness, and critical failures in readable terminal sections.
@@ -108,6 +119,7 @@ Do not start with LangGraph. The next best slice is:
 Only after those pass should the project introduce a feature-flagged LangGraph runner.
 
 ### Batch Progress: 2026-04-27
+
 - Added readable `npm run eval:demo` reporting for routing, review status, retrieval, tool evidence, top retrieved docs, and missing evidence keywords.
 - Added broad `expectedEvidenceKeywords` checks to the existing 15-case `demo/evals.json`.
 - Added `demo/evals.README.md`.
@@ -119,6 +131,7 @@ Only after those pass should the project introduce a feature-flagged LangGraph r
 - Fixed TypeScript 6 `baseUrl` deprecation noise with `ignoreDeprecations`.
 
 Verification from this batch:
+
 - `npm run test` passed.
 - `npm run typecheck` passed.
 - `npm run lint` passed.
@@ -126,6 +139,7 @@ Verification from this batch:
 - `npm run eval:demo` could not reach Supabase in this environment: first sandbox blocked the `tsx` IPC pipe, then escalated execution failed at `createTicket` with `TypeError: fetch failed`.
 
 ### Batch Progress: 2026-04-27 Continued
+
 - Added `docs/architecture.md` with the current pipeline, trust model, boundaries, limitations, and LangGraph direction.
 - Added `docs/demo-script.md` with a 3-minute interview walkthrough covering docs-only, docs-plus-context, missing-context review, and unsupported fallback paths.
 - Linked the architecture and demo script from `README.md`.
@@ -139,6 +153,7 @@ Verification from this batch:
   - Removed `next/font/google` runtime build dependency and switched to local system font stacks.
 
 Verification from this continuation:
+
 - `npm run test` passed.
 - `npm run typecheck` passed.
 - `npm run lint` passed.
@@ -146,6 +161,7 @@ Verification from this continuation:
 - `npm run eval:demo` still cannot reach Supabase in this environment and fails at `createTicket` with the new actionable environment message.
 
 ### Batch Progress: 2026-04-27 Offline Eval Harness
+
 - Added `npm run eval:demo:offline` for restricted environments where Supabase/OpenAI are not reachable.
 - The offline harness uses mocked retrieved evidence and mocked tool outputs. It validates routing, review state, report formatting, evidence keyword checks, and tool-evidence wiring, but it is not a replacement for live retrieval evals.
 - Offline eval exposed and fixed two routing bugs:
@@ -154,12 +170,14 @@ Verification from this continuation:
 - Added classifier regression coverage for both cases.
 
 Verification from this continuation:
+
 - `npm run test` passed with 38 tests.
 - `npm run typecheck` passed.
 - `npm run lint` passed.
 - `npm run eval:demo:offline` passed 15/15 outside the sandbox. Inside the sandbox, `tsx` can still fail with an IPC pipe `EPERM`.
 
 ### Batch Progress: 2026-04-27 Live Eval Restored
+
 - Restored the `Support Copilot` Supabase project. Root cause of the earlier `fetch failed` was that the project was `INACTIVE`, so the project host did not resolve.
 - Applied all repo migrations to the restored project:
   - `support_copilot_chunk_1`
@@ -176,6 +194,7 @@ Verification from this continuation:
 - Added regression coverage for low-but-usable evidence.
 
 Verification from this live run:
+
 - `npm run eval:demo` passed 15/15 against live Supabase/OpenAI.
 - `npm run test` passed with 39 tests.
 - `npm run typecheck` passed.
@@ -183,6 +202,7 @@ Verification from this live run:
 - `npm run build` passed outside the sandbox.
 
 ### Batch Progress: 2026-04-27 Graph State Contract
+
 - Started Phase 2 without changing runtime behavior or adding LangGraph as a dependency.
 - Added `lib/graph/investigation-state.ts` with the typed state object that future graph nodes will pass through.
 - Captured request input, retrieved evidence, routing decision, doc/tool evidence, generated claims, grounding validation, review policy, persistence IDs, missing-context state, and conflict state in one contract.
@@ -192,6 +212,7 @@ Verification from this live run:
 - Added `tests/graph-nodes.test.ts` coverage using stubs, so the graph-node contract is tested without calling Supabase or OpenAI.
 
 Verification from this slice:
+
 - `npm run test -- investigation-state` passed with 3 tests.
 - `npm run test -- graph-nodes investigation-state` passed with 6 tests.
 - `npm run test` passed with 45 tests.
@@ -201,6 +222,7 @@ Verification from this slice:
 - `npm run eval:demo:offline` passed 15/15.
 
 ### Batch Progress: 2026-04-27 Review Loop And Atomic Persistence
+
 - Added a visible human-review queue state with deterministic next-action guidance.
 - Added a staged retry state so the demo path reads as review blocked -> add context -> rerun investigation.
 - Added a local "mark reviewed" action for interview walkthroughs.
@@ -209,18 +231,22 @@ Verification from this slice:
 - Moved investigation orchestration to a single persistence boundary when the atomic adapter is available, with a compatibility path for older schemas/tests.
 
 Verification from this slice:
+
 - `npm run test -- review-actions` passed with 4 tests.
 - `npm run test -- investigate-structured` passed with 5 tests.
 
 ### Batch Progress: 2026-04-27 Graph Parity Eval
+
 - Extended the offline eval harness to run each case through the direct investigation pipeline and the graph-node pipeline.
 - Added graph parity reporting for mode and review status before wiring any graph runtime path.
 - Kept parity offline-only so it stays deterministic and does not double-call live Supabase/OpenAI dependencies.
 
 Verification from this slice:
+
 - `npm run eval:demo:offline` passed 15/15 with graph parity 15/15.
 
 ### Batch Progress: 2026-04-27 Citation Grounding Guard
+
 - Added a lightweight claim/evidence overlap check to structured answer validation.
 - Claims with known citations can still be rejected when the cited excerpts share no meaningful terms with the claim text.
 - Added regression coverage for unsupported citation attachment.
@@ -229,6 +255,7 @@ Verification from this slice:
 - Locked database access to server-side service-role adapters by enabling RLS, revoking public table grants, revoking public RPC execution, dropping the stale retrieval function overload, and adding missing foreign-key indexes.
 
 Verification from this slice:
+
 - `npm run test -- investigation-answer` passed with 3 tests.
 - `npm run test` passed with 51 tests.
 - `npm run typecheck` passed.
@@ -240,6 +267,7 @@ Verification from this slice:
 - Supabase security advisors now report only `RLS Enabled No Policy` info notices for the service-role-only tables.
 
 ## Non-Goals
+
 - Do not add LangChain chains just for keywords.
 - Do not replace working retrieval/answer code with opaque abstractions.
 - Do not add multi-agent prompts before the eval suite can detect regressions.
@@ -247,6 +275,7 @@ Verification from this slice:
 - Do not add MCP before the core workflow is stable and evaluated.
 
 ## Future MCP Positioning
+
 MCP is a V2/V3 interface layer, not a V1 requirement. Keep the first product as a normal Next.js/Supabase application with explicit APIs, deterministic routing, structured outputs, and eval coverage.
 
 For Support Copilot, a future MCP server could expose controlled tools for AI-assisted review:
@@ -283,13 +312,16 @@ Start
 ## Phase 0: Stabilize Current Trust Layer
 
 ### Task 1: Add canonical eval manifest
+
 **Files:**
+
 - Modify `demo/evals.json`
 - Create `demo/evals.README.md` if evaluator guidance grows beyond the README
 
 **Action:** The repo already has 15 seeded eval cases in `demo/evals.json`. Extend them before changing orchestration. Add expected evidence hints or keywords so the eval runner can detect retrieval quality, not just route shape. Include docs-only, multi-doc, unsupported, noisy query, provided-context, missing-context, conflict, and tool-assisted cases.
 
 **Case shape:**
+
 ```json
 {
   "id": "exports-permission-docs-only",
@@ -302,6 +334,7 @@ Start
 ```
 
 **Verify:**
+
 ```bash
 npm run eval:demo
 ```
@@ -311,18 +344,22 @@ npm run eval:demo
 ---
 
 ### Task 2: Add eval runner
+
 **Files:**
+
 - Modify `scripts/run-evals.ts`
 - Modify `package.json`
 
 **Action:** The repo already has `scripts/run-evals.ts` and `npm run eval:demo`. Improve the runner so it records retrieval/routing/support/fallback results with readable summaries instead of only dumping JSON.
 
 **Current script:**
+
 ```json
 "eval:demo": "tsx scripts/run-evals.ts"
 ```
 
 **Verify:**
+
 ```bash
 npm run eval:demo
 ```
@@ -332,13 +369,16 @@ npm run eval:demo
 ---
 
 ### Task 3: Add retrieval quality reporting
+
 **Files:**
+
 - Modify `scripts/run-evals.ts`
 - Modify `evals/README.md`
 
 **Action:** Report top-k retrieval hits, missing expected evidence, fallback correctness, and route correctness. Keep this simple and terminal-readable.
 
 **Expected output sections:**
+
 ```text
 Retrieval: 14/18 passed
 Routing: 16/18 passed
@@ -348,6 +388,7 @@ Critical failures:
 ```
 
 **Verify:**
+
 ```bash
 npm run eval:demo
 ```
@@ -357,13 +398,16 @@ npm run eval:demo
 ---
 
 ### Task 4: Add table-aware chunking tests
+
 **Files:**
+
 - Modify `tests/chunk.test.ts`
 - Modify `lib/chunk.ts`
 
 **Action:** Add a failing test using troubleshooting-table style text, then update chunking so cause/action rows remain in the same retrievable chunk.
 
 **Verify RED/GREEN:**
+
 ```bash
 npm run test -- chunk
 ```
@@ -375,7 +419,9 @@ npm run test -- chunk
 ## Phase 1: Split Pipeline Policies Before LangGraph
 
 ### Task 5: Extract evidence builder
+
 **Files:**
+
 - Create `lib/evidence-builder.ts`
 - Modify `lib/investigate.ts`
 - Create `tests/evidence-builder.test.ts`
@@ -383,6 +429,7 @@ npm run test -- chunk
 **Action:** Move doc evidence mapping, tool evidence mapping, and citation ID registry construction out of `lib/investigate.ts`.
 
 **Verify:**
+
 ```bash
 npm run test -- evidence-builder investigate
 ```
@@ -392,7 +439,9 @@ npm run test -- evidence-builder investigate
 ---
 
 ### Task 6: Extract tool runner
+
 **Files:**
+
 - Create `lib/tool-runner.ts`
 - Modify `lib/investigate.ts`
 - Create `tests/tool-runner.test.ts`
@@ -400,6 +449,7 @@ npm run test -- evidence-builder investigate
 **Action:** Move `collectToolArtifacts` and tool-call record construction into a dedicated module. Keep tools read-only and deterministic.
 
 **Verify:**
+
 ```bash
 npm run test -- tool-runner investigate
 ```
@@ -409,7 +459,9 @@ npm run test -- tool-runner investigate
 ---
 
 ### Task 7: Extract conflict policy
+
 **Files:**
+
 - Create `lib/conflict-policy.ts`
 - Modify `lib/investigate.ts`
 - Create `tests/conflict-policy.test.ts`
@@ -417,6 +469,7 @@ npm run test -- tool-runner investigate
 **Action:** Move conflict detection out of orchestration and add cases for "tool state explains issue" vs "tool state does not explain issue."
 
 **Verify:**
+
 ```bash
 npm run test -- conflict-policy investigate
 ```
@@ -426,17 +479,21 @@ npm run test -- conflict-policy investigate
 ---
 
 ### Task 8: Remove silent legacy investigation fallback
+
 **Files:**
+
 - Modify `lib/db.ts`
 - Modify `README.md`
 
 **Action:** Replace silent schema fallback with explicit failure or environment-gated compatibility mode.
 
 **Implementation rule:**
+
 - Default: fail loudly if structured columns are missing.
 - Optional fallback was removed; investigations now require the atomic persistence path.
 
 **Verify:**
+
 ```bash
 npm run test -- investigate
 npm run build
@@ -449,13 +506,16 @@ npm run build
 ## Phase 2: Introduce LangGraph as Orchestration, Not Magic
 
 ### Task 9: Add graph state types
+
 **Files:**
+
 - Create `lib/graph/investigation-state.ts`
 - Create `tests/investigation-state.test.ts`
 
 **Action:** Define the state object that moves through graph nodes. It should include ticket, session, retrieved evidence, routing decision, tool evidence, draft claims, validation result, support level, review status, and persistence IDs.
 
 **Verify:**
+
 ```bash
 npm run test -- investigation-state
 ```
@@ -465,7 +525,9 @@ npm run test -- investigation-state
 ---
 
 ### Task 10: Wrap existing functions as graph nodes
+
 **Files:**
+
 - Create `lib/graph/nodes/retrieve-documentation.ts`
 - Create `lib/graph/nodes/classify-investigation.ts`
 - Create `lib/graph/nodes/run-context-tools.ts`
@@ -477,6 +539,7 @@ npm run test -- investigation-state
 **Action:** Wrap existing deterministic modules as isolated graph nodes. Do not change behavior yet.
 
 **Verify:**
+
 ```bash
 npm run test -- graph-nodes
 ```
@@ -486,7 +549,9 @@ npm run test -- graph-nodes
 ---
 
 ### Task 11: Add graph runner behind feature flag
+
 **Files:**
+
 - Create `lib/graph/investigation-graph.ts`
 - Modify `lib/investigate.ts`
 - Modify `.env.example`
@@ -494,6 +559,7 @@ npm run test -- graph-nodes
 **Action:** Add `SUPPORT_USE_LANGGRAPH=true` to run the graph path. Default remains the current direct pipeline until evals prove parity.
 
 **Verify:**
+
 ```bash
 npm run test -- investigate graph
 SUPPORT_USE_LANGGRAPH=true npm run test -- investigate graph
@@ -504,13 +570,16 @@ SUPPORT_USE_LANGGRAPH=true npm run test -- investigate graph
 ---
 
 ### Task 12: Prove graph parity with evals
+
 **Files:**
+
 - Modify `scripts/run-evals.ts`
 - Modify `evals/README.md`
 
 **Action:** Run every eval case against both direct pipeline and graph pipeline. Report parity failures.
 
 **Verify:**
+
 ```bash
 npm run eval
 SUPPORT_USE_LANGGRAPH=true npm run eval
@@ -523,7 +592,9 @@ SUPPORT_USE_LANGGRAPH=true npm run eval
 ## Phase 3: Add One Real Agentic Capability
 
 ### Task 13: Add human-review interrupt state
+
 **Files:**
+
 - Modify `lib/graph/investigation-state.ts`
 - Modify `lib/graph/investigation-graph.ts`
 - Modify `components/AnswerPanel.tsx`
@@ -532,6 +603,7 @@ SUPPORT_USE_LANGGRAPH=true npm run eval
 **Action:** When validation fails, evidence conflicts, or required context is missing, stop in a human-review state and expose exactly what input would unblock the investigation.
 
 **Verify:**
+
 ```bash
 npm run test -- graph
 npm run build
@@ -542,7 +614,9 @@ npm run build
 ---
 
 ### Task 14: Add rerun-from-review path
+
 **Files:**
+
 - Modify `app/api/investigate/route.ts`
 - Modify `components/TicketForm.tsx`
 - Modify `lib/graph/investigation-graph.ts`
@@ -550,6 +624,7 @@ npm run build
 **Action:** Let the user add missing context and rerun the investigation from the review state. Keep this local to the app; do not add external workflow integrations.
 
 **Verify:**
+
 ```bash
 npm run test
 npm run build
@@ -562,7 +637,9 @@ npm run build
 ## Phase 4: Portfolio Packaging
 
 ### Task 15: Add architecture doc
+
 **Files:**
+
 - Create `docs/architecture.md`
 
 **Status:** Done in batch progress on 2026-04-27.
@@ -570,6 +647,7 @@ npm run build
 **Action:** Explain the system in one page: ingestion, retrieval, structured generation, validation, tool evidence, review policy, and graph orchestration.
 
 **Verify:**
+
 ```bash
 npm run lint
 ```
@@ -579,7 +657,9 @@ npm run lint
 ---
 
 ### Task 16: Add interview demo script
+
 **Files:**
+
 - Create `docs/demo-script.md`
 
 **Status:** Done in batch progress on 2026-04-27.
@@ -587,6 +667,7 @@ npm run lint
 **Action:** Add a 3-minute demo script with three paths: docs-only, docs-plus-context, and needs-human-review.
 
 **Verify:**
+
 ```bash
 npm run lint
 ```
@@ -596,12 +677,15 @@ npm run lint
 ---
 
 ### Task 17: Update README positioning
+
 **Files:**
+
 - Modify `README.md`
 
 **Action:** Position the project as a trust-first RAG support investigation system with an optional LangGraph orchestration path. Include setup, evals, and demo script links.
 
 **Verify:**
+
 ```bash
 npm run build
 ```
@@ -611,7 +695,9 @@ npm run build
 ## Checkpoints
 
 ### Checkpoint A: Before LangGraph
+
 Required before Phase 2:
+
 - `npm run test` passes
 - `npm run build` passes
 - `npm run eval` exists
@@ -619,7 +705,9 @@ Required before Phase 2:
 - table-style troubleshooting docs retrieve expected chunks
 
 ### Checkpoint B: Before calling it agentic
+
 Required before portfolio claims:
+
 - graph path passes eval parity against direct path
 - human-review interrupt is real and visible
 - graph nodes are independently tested

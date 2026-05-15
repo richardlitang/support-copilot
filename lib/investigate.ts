@@ -3,11 +3,15 @@ import { detectConflict } from "@/lib/conflict-policy";
 import { buildDocsGapReport } from "@/lib/docs-gap-report";
 import { persistInvestigationRun as persistInvestigationRunAdapter } from "@/lib/db";
 import {
-  buildStructuredHumanReviewFallback,
   generateGroundedAnswer as generateGroundedAnswerAdapter,
-  generateInvestigationAnswer as generateInvestigationAnswerAdapter
+  generateInvestigationAnswer as generateInvestigationAnswerAdapter,
 } from "@/lib/answer";
-import { buildLegacyAnswer, createDocEvidence } from "@/lib/evidence-builder";
+import {
+  generateClaimsFromEvidence,
+  type ClaimGenerationResult,
+  type ClaimGenerationDependencies,
+} from "@/lib/claim-generation";
+import { buildAnswerMarkdownFromClaims, createDocEvidence } from "@/lib/evidence-builder";
 import { determineReviewDecision } from "@/lib/review-decision";
 import { determineReviewStatus, shouldEscalateToHumanReview } from "@/lib/review-policy";
 import { retrieveEvidence as retrieveEvidenceAdapter } from "@/lib/retrieve";
@@ -18,21 +22,18 @@ import { getFeatureFlags as getFeatureFlagsAdapter } from "@/lib/tools/feature-f
 import { getRecentErrors as getRecentErrorsAdapter } from "@/lib/tools/recent-errors";
 import type { EvidenceChunk } from "@/lib/types";
 import type {
-  CitationId,
   InvestigationExecutionMode,
   InvestigationMode,
   InvestigationResult,
   PipelineTraceStep,
-  StructuredClaimSet,
-  StructuredClaimSetWithOpenQuestions,
-  ToolCallRecord
+  ToolCallRecord,
 } from "@/lib/types/investigation";
 
 type InvestigationDependencies = {
   persistInvestigationRun: typeof persistInvestigationRunAdapter;
   retrieveEvidence: typeof retrieveEvidenceAdapter;
-  generateGroundedAnswer: typeof generateGroundedAnswerAdapter;
-  generateInvestigationAnswer: typeof generateInvestigationAnswerAdapter;
+  generateGroundedAnswer: ClaimGenerationDependencies["generateGroundedAnswer"];
+  generateInvestigationAnswer: ClaimGenerationDependencies["generateInvestigationAnswer"];
   getAccountContext: typeof getAccountContextAdapter;
   getFeatureFlags: typeof getFeatureFlagsAdapter;
   getRecentErrors: typeof getRecentErrorsAdapter;
@@ -49,12 +50,7 @@ type InvestigationInput = {
 
 type ToolArtifacts = Awaited<ReturnType<typeof collectToolArtifacts>>;
 
-type GeneratedInvestigation = {
-  customerReply: StructuredClaimSet;
-  internalDiagnosis: StructuredClaimSetWithOpenQuestions;
-  insufficientSupport: boolean;
-  validationFailed?: boolean;
-};
+type GeneratedInvestigation = ClaimGenerationResult;
 
 const defaultDependencies: InvestigationDependencies = {
   persistInvestigationRun: persistInvestigationRunAdapter,
@@ -63,16 +59,16 @@ const defaultDependencies: InvestigationDependencies = {
   generateInvestigationAnswer: generateInvestigationAnswerAdapter,
   getAccountContext: getAccountContextAdapter,
   getFeatureFlags: getFeatureFlagsAdapter,
-  getRecentErrors: getRecentErrorsAdapter
+  getRecentErrors: getRecentErrorsAdapter,
 };
 
 export async function investigateTicket(
   input: InvestigationInput,
-  dependencies: Partial<InvestigationDependencies> = {}
+  dependencies: Partial<InvestigationDependencies> = {},
 ) {
   const deps = {
     ...defaultDependencies,
-    ...dependencies
+    ...dependencies,
   };
 
   const retrieval = await retrieveAndRouteInvestigation(input, deps);
@@ -80,7 +76,7 @@ export async function investigateTicket(
     input,
     dependencies: deps,
     routing: retrieval.routing,
-    missingRequiredContext: retrieval.missingRequiredContext
+    missingRequiredContext: retrieval.missingRequiredContext,
   });
 
   const conflict = detectConflict({
@@ -90,7 +86,7 @@ export async function investigateTicket(
     account: toolArtifacts.account,
     flags: toolArtifacts.flags,
     errors: toolArtifacts.errors,
-    missingRequiredContext: retrieval.missingRequiredContext
+    missingRequiredContext: retrieval.missingRequiredContext,
   });
   const executionMode = input.executionMode ?? "draft_answer";
   const generated =
@@ -98,7 +94,7 @@ export async function investigateTicket(
       ? buildEvidenceOnlyInvestigation({
           missingRequiredContext: retrieval.missingRequiredContext,
           hasConflict: conflict.hasConflict,
-          conflictReason: conflict.reason
+          conflictReason: conflict.reason,
         })
       : await generateClaimsForInvestigation({
           input,
@@ -109,7 +105,7 @@ export async function investigateTicket(
           toolArtifacts,
           missingRequiredContext: retrieval.missingRequiredContext,
           hasConflict: conflict.hasConflict,
-          conflictReason: conflict.reason
+          conflictReason: conflict.reason,
         });
   const review = decideInvestigationReview({
     routing: retrieval.routing,
@@ -117,7 +113,7 @@ export async function investigateTicket(
     docEvidence: retrieval.docEvidence,
     toolArtifacts,
     missingRequiredContext: retrieval.missingRequiredContext,
-    hasConflict: conflict.hasConflict
+    hasConflict: conflict.hasConflict,
   });
   const routingReason = conflict.reason ?? retrieval.routing.routingReason;
   const persisted = await persistInvestigation({
@@ -130,7 +126,7 @@ export async function investigateTicket(
     reviewStatus: review.reviewStatus,
     reviewDecision: review.reviewDecision,
     supportLevel: review.supportLevel,
-    routingReason
+    routingReason,
   });
   const pipelineTrace = buildPipelineTrace({
     input,
@@ -143,7 +139,7 @@ export async function investigateTicket(
     conflictReason: conflict.reason,
     generated,
     review,
-    persisted
+    persisted,
   });
   const docsGapReport = buildDocsGapReport({
     ticket: input.ticket,
@@ -151,7 +147,7 @@ export async function investigateTicket(
     routingReason,
     internalDiagnosis: generated.internalDiagnosis,
     docEvidence: retrieval.docEvidence,
-    toolEvidence: toolArtifacts.toolEvidence
+    toolEvidence: toolArtifacts.toolEvidence,
   });
 
   return {
@@ -169,16 +165,19 @@ export async function investigateTicket(
     toolEvidence: toolArtifacts.toolEvidence,
     toolCalls: toolArtifacts.toolCalls,
     pipelineTrace,
-    ...(docsGapReport ? { docsGapReport } : {})
+    ...(docsGapReport ? { docsGapReport } : {}),
   } satisfies InvestigationResult;
 }
 
-async function retrieveAndRouteInvestigation(input: InvestigationInput, dependencies: InvestigationDependencies) {
+async function retrieveAndRouteInvestigation(
+  input: InvestigationInput,
+  dependencies: InvestigationDependencies,
+) {
   const evidence = input.ragEnabled
     ? await dependencies.retrieveEvidence({
         question: input.ticket,
         sessionId: input.sessionId,
-        limit: 8
+        limit: 8,
       })
     : [];
   const docEvidence = createDocEvidence(evidence);
@@ -186,7 +185,7 @@ async function retrieveAndRouteInvestigation(input: InvestigationInput, dependen
     ticketText: input.ticket,
     selectedAccountId: input.selectedAccountId,
     investigationContext: input.investigationContext,
-    evidence
+    evidence,
   });
   const missingRequiredContext =
     routing.mode === "needs_human_review" &&
@@ -197,7 +196,7 @@ async function retrieveAndRouteInvestigation(input: InvestigationInput, dependen
     evidence,
     docEvidence,
     routing,
-    missingRequiredContext
+    missingRequiredContext,
   };
 }
 
@@ -209,22 +208,26 @@ function buildEvidenceOnlyInvestigation(input: {
   const openQuestions = [];
 
   if (input.missingRequiredContext) {
-    openQuestions.push("Add investigation context or select a debug account before drafting an answer.");
+    openQuestions.push(
+      "Add investigation context or select a debug account before drafting an answer.",
+    );
   }
 
   if (input.hasConflict) {
-    openQuestions.push(input.conflictReason ?? "Resolve the evidence conflict before drafting an answer.");
+    openQuestions.push(
+      input.conflictReason ?? "Resolve the evidence conflict before drafting an answer.",
+    );
   }
 
   return {
     customerReply: {
-      claims: []
+      claims: [],
     },
     internalDiagnosis: {
       claims: [],
-      openQuestions
+      openQuestions,
     },
-    insufficientSupport: true
+    insufficientSupport: true,
   };
 }
 
@@ -239,7 +242,7 @@ async function collectContextEvidence(input: {
     selectedAccountId: input.input.selectedAccountId,
     investigationContext: input.input.investigationContext,
     ticket: input.input.ticket,
-    dependencies: input.dependencies
+    dependencies: input.dependencies,
   });
 
   if (!input.missingRequiredContext || toolArtifacts.toolEvidence.length > 0) {
@@ -250,18 +253,19 @@ async function collectContextEvidence(input: {
     toolName: "getProvidedContext",
     rank: 1,
     title: "Missing investigation context",
-    excerpt: "This ticket appears to require structured product or account context, but none was provided.",
+    excerpt:
+      "This ticket appears to require structured product or account context, but none was provided.",
     raw: {
       status: "not_provided",
-      context: null
-    }
+      context: null,
+    },
   });
   toolArtifacts.toolEvidence.push(synthetic.evidence);
   toolArtifacts.toolCalls.push({
     ...synthetic.call,
     input: {
-      context: null
-    }
+      context: null,
+    },
   });
 
   return toolArtifacts;
@@ -278,67 +282,23 @@ async function generateClaimsForInvestigation(input: {
   hasConflict: boolean;
   conflictReason: string | null;
 }): Promise<GeneratedInvestigation> {
-  const firstCitation = (input.docEvidence[0]?.id ?? input.toolArtifacts.toolEvidence[0]?.id) as
-    | `S${number}`
-    | `T${number}`
-    | undefined;
-
-  if (input.missingRequiredContext || input.hasConflict) {
-    return buildStructuredHumanReviewFallback({
-      customerMessage: firstCitation ? "I cannot confirm the cause without the required investigation context." : undefined,
-      internalMessage: input.conflictReason ?? "Structured product or account context required but not provided for this investigation.",
-      citations: firstCitation ? [firstCitation] : [],
-      openQuestions: input.missingRequiredContext
-        ? ["Add investigation context or select a debug account and rerun the investigation."]
-        : ["The docs and current tool state do not explain the issue."]
-    });
-  }
-
-  if (input.routing.mode === "docs_only") {
-    if (!input.evidence.length) {
-      return buildStructuredHumanReviewFallback({
-        internalMessage: "Documentation evidence was too weak to support a grounded answer.",
-        openQuestions: ["Add stronger documentation or rerun with investigation context if the issue is account-specific."]
-      });
-    }
-
-    const legacy = await input.dependencies.generateGroundedAnswer({
+  return generateClaimsFromEvidence(
+    {
       ticket: input.input.ticket,
-      evidence: input.evidence
-    });
-    const legacyClaims = legacy.claims.map((claim) => ({
-      text: claim.text,
-      citations: claim.citationIds as CitationId[]
-    }));
-
-    return !legacyClaims.length && legacy.insufficientSupport
-      ? buildStructuredHumanReviewFallback({
-          customerMessage: firstCitation ? "I do not have enough support in the uploaded docs to answer this confidently." : undefined,
-          internalMessage: "Documentation evidence was too weak to support a grounded answer.",
-          citations: firstCitation ? [firstCitation] : [],
-          openQuestions: ["Add stronger documentation or rerun with investigation context if the issue is account-specific."]
-        })
-      : {
-          customerReply: {
-            summary: legacyClaims[0]?.text,
-            claims: legacyClaims
-          },
-          internalDiagnosis: {
-            summary: legacyClaims[0]?.text,
-            claims: legacyClaims,
-            openQuestions: legacy.insufficientSupport ? ["Documentation support was limited."] : []
-          },
-          insufficientSupport: legacy.insufficientSupport
-        };
-  }
-
-  return input.dependencies.generateInvestigationAnswer({
-    ticket: input.input.ticket,
-    mode: input.routing.mode,
-    routingReason: input.routing.routingReason,
-    docEvidence: input.docEvidence,
-    toolEvidence: input.toolArtifacts.toolEvidence
-  });
+      mode: input.routing.mode,
+      routingReason: input.routing.routingReason,
+      evidence: input.evidence,
+      docEvidence: input.docEvidence,
+      toolEvidence: input.toolArtifacts.toolEvidence,
+      missingRequiredContext: input.missingRequiredContext,
+      hasConflict: input.hasConflict,
+      conflictReason: input.conflictReason,
+    },
+    {
+      generateGroundedAnswer: input.dependencies.generateGroundedAnswer,
+      generateInvestigationAnswer: input.dependencies.generateInvestigationAnswer,
+    },
+  );
 }
 
 function decideInvestigationReview(input: {
@@ -349,7 +309,8 @@ function decideInvestigationReview(input: {
   missingRequiredContext: boolean;
   hasConflict: boolean;
 }) {
-  const validationFailed = "validationFailed" in input.generated && input.generated.validationFailed === true;
+  const validationFailed =
+    "validationFailed" in input.generated && input.generated.validationFailed === true;
   const supportLevel = determineSupportLevel({
     topDocScore: input.docEvidence[0]?.score ?? 0,
     secondDocScore: input.docEvidence[1]?.score ?? 0,
@@ -359,21 +320,22 @@ function decideInvestigationReview(input: {
     internalClaimCount: input.generated.internalDiagnosis.claims.length,
     hasConflict: input.hasConflict,
     missingRequiredContext: input.missingRequiredContext,
-    validationFailed
+    validationFailed,
   });
   const reviewStatus = determineReviewStatus({
     mode: input.routing.mode,
     supportLevel,
     hasConflict: input.hasConflict,
     missingRequiredContext: input.missingRequiredContext,
-    validationFailed
+    validationFailed,
   });
   const finalMode: InvestigationMode =
-    reviewStatus === "needs_human_review" || shouldEscalateToHumanReview({
+    reviewStatus === "needs_human_review" ||
+    shouldEscalateToHumanReview({
       hasConflict: input.hasConflict,
       missingRequiredContext: input.missingRequiredContext,
       supportLevel,
-      validationFailed
+      validationFailed,
     })
       ? "needs_human_review"
       : input.routing.mode;
@@ -387,8 +349,8 @@ function decideInvestigationReview(input: {
       supportLevel,
       missingRequiredContext: input.missingRequiredContext,
       hasConflict: input.hasConflict,
-      validationFailed
-    })
+      validationFailed,
+    }),
   };
 }
 
@@ -404,7 +366,7 @@ async function persistInvestigation(input: {
   supportLevel: ReturnType<typeof determineSupportLevel>;
   routingReason: string;
 }) {
-  const answerMarkdown = buildLegacyAnswer(input.generated.customerReply.claims);
+  const answerMarkdown = buildAnswerMarkdownFromClaims(input.generated.customerReply.claims);
   const persistenceInput = {
     ticketText: input.input.ticket,
     status: input.reviewStatus === "needs_human_review" ? "needs_human_review" : "complete",
@@ -420,13 +382,13 @@ async function persistInvestigation(input: {
     sources: input.evidence.map((item: EvidenceChunk) => ({
       documentChunkId: item.id,
       rank: item.rank,
-      score: item.score
+      score: item.score,
     })),
     toolCalls: input.toolArtifacts.toolCalls.map((toolCall: ToolCallRecord) => ({
       toolName: toolCall.toolName,
       input: toolCall.input,
-      output: toolCall.output
-    }))
+      output: toolCall.output,
+    })),
   };
 
   return input.dependencies.persistInvestigationRun(persistenceInput);
@@ -442,7 +404,7 @@ function summarizeEvidence(items: ReturnType<typeof createDocEvidence>) {
     vectorScore: item.vectorScore ?? null,
     rerankScore: item.rerankScore ?? null,
     literalMatches: item.literalMatches ?? [],
-    excerpt: item.excerpt
+    excerpt: item.excerpt,
   }));
 }
 
@@ -452,7 +414,7 @@ function summarizeToolEvidence(items: ToolArtifacts["toolEvidence"]) {
     toolName: item.toolName,
     title: item.title,
     excerpt: item.excerpt,
-    raw: item.raw
+    raw: item.raw,
   }));
 }
 
@@ -479,7 +441,7 @@ function buildPipelineTrace(input: {
     mode: input.routing.mode,
     routingReason: input.routing.routingReason,
     documentationEvidence: docEvidence,
-    toolEvidence
+    toolEvidence,
   };
 
   return [
@@ -494,11 +456,11 @@ function buildPipelineTrace(input: {
         ragEnabled: input.input.ragEnabled,
         sessionId: input.input.sessionId,
         selectedAccountId: input.input.selectedAccountId ?? null,
-        investigationContext: input.input.investigationContext ?? null
+        investigationContext: input.input.investigationContext ?? null,
       },
       output: {
-        accepted: true
-      }
+        accepted: true,
+      },
     },
     {
       id: "retrieval",
@@ -509,9 +471,9 @@ function buildPipelineTrace(input: {
         : "Retrieval was disabled for this run.",
       input: {
         query: input.input.ticket,
-        limit: 8
+        limit: 8,
       },
-      output: docEvidence
+      output: docEvidence,
     },
     {
       id: "routing",
@@ -522,30 +484,33 @@ function buildPipelineTrace(input: {
         ticket: input.input.ticket,
         evidenceIds: input.docEvidence.map((item) => item.id),
         selectedAccountId: input.input.selectedAccountId ?? null,
-        hasInvestigationContext: Boolean(input.input.investigationContext?.trim())
+        hasInvestigationContext: Boolean(input.input.investigationContext?.trim()),
       },
       output: {
         mode: input.routing.mode,
         requiredTools: input.routing.requiredTools,
-        routingReason: input.routing.routingReason
-      }
+        routingReason: input.routing.routingReason,
+      },
     },
     {
       id: "tools",
       label: "Tool context",
-      status: input.routing.requiredTools.length || input.toolArtifacts.toolEvidence.length ? "complete" : "skipped",
+      status:
+        input.routing.requiredTools.length || input.toolArtifacts.toolEvidence.length
+          ? "complete"
+          : "skipped",
       summary: input.toolArtifacts.toolEvidence.length
         ? `Collected ${input.toolArtifacts.toolEvidence.length} tool source${input.toolArtifacts.toolEvidence.length === 1 ? "" : "s"}.`
         : "No account or product-state tools were needed.",
       input: {
         requiredTools: input.routing.requiredTools,
         selectedAccountId: input.input.selectedAccountId ?? null,
-        investigationContext: input.input.investigationContext ?? null
+        investigationContext: input.input.investigationContext ?? null,
       },
       output: {
         toolEvidence,
-        toolCalls: input.toolArtifacts.toolCalls
-      }
+        toolCalls: input.toolArtifacts.toolCalls,
+      },
     },
     {
       id: "conflict",
@@ -555,17 +520,22 @@ function buildPipelineTrace(input: {
       input: {
         mode: input.routing.mode,
         docEvidence,
-        toolEvidence
+        toolEvidence,
       },
       output: {
         hasConflict: input.hasConflict,
-        reason: input.conflictReason
-      }
+        reason: input.conflictReason,
+      },
     },
     {
       id: "draft",
       label: "Answer drafting",
-      status: input.executionMode === "evidence_only" ? "skipped" : input.generated.insufficientSupport ? "blocked" : "complete",
+      status:
+        input.executionMode === "evidence_only"
+          ? "skipped"
+          : input.generated.insufficientSupport
+            ? "blocked"
+            : "complete",
       summary:
         input.executionMode === "evidence_only"
           ? "Answer model was skipped. This run only returned inspectable evidence."
@@ -574,13 +544,13 @@ function buildPipelineTrace(input: {
       output:
         input.executionMode === "evidence_only"
           ? {
-              skipped: true
+              skipped: true,
             }
           : {
               customerReply: input.generated.customerReply,
               internalDiagnosis: input.generated.internalDiagnosis,
-              insufficientSupport: input.generated.insufficientSupport
-            }
+              insufficientSupport: input.generated.insufficientSupport,
+            },
     },
     {
       id: "review",
@@ -595,14 +565,14 @@ function buildPipelineTrace(input: {
       input: {
         supportLevel: input.review.supportLevel,
         hasOpenQuestions: input.generated.internalDiagnosis.openQuestions.length > 0,
-        hasConflict: input.hasConflict
+        hasConflict: input.hasConflict,
       },
       output: {
         mode: input.review.finalMode,
         supportLevel: input.review.supportLevel,
         reviewStatus: input.review.reviewStatus,
-        reviewDecision: input.review.reviewDecision
-      }
+        reviewDecision: input.review.reviewDecision,
+      },
     },
     {
       id: "persistence",
@@ -611,9 +581,9 @@ function buildPipelineTrace(input: {
       summary: "Saved the ticket, sources, tool calls, and final investigation state.",
       input: {
         sourceCount: input.evidence.length,
-        toolCallCount: input.toolArtifacts.toolCalls.length
+        toolCallCount: input.toolArtifacts.toolCalls.length,
       },
-      output: input.persisted
-    }
+      output: input.persisted,
+    },
   ];
 }

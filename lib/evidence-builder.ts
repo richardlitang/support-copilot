@@ -2,14 +2,14 @@ import { formatCitationLabel } from "@/lib/citations";
 import type { EvidenceChunk, GroundedClaim } from "@/lib/types";
 import type { DocEvidenceItem, StructuredClaimSet } from "@/lib/types/investigation";
 
-export function buildLegacyAnswer(claims: StructuredClaimSet["claims"]) {
+export function buildAnswerMarkdownFromClaims(claims: StructuredClaimSet["claims"]) {
   return claims.map((claim) => `${claim.text} [${claim.citations.join("][")}]`).join("\n\n");
 }
 
-export function toLegacyClaims(claims: StructuredClaimSet["claims"]): GroundedClaim[] {
+export function toGroundedClaims(claims: StructuredClaimSet["claims"]): GroundedClaim[] {
   return claims.map((claim) => ({
     text: claim.text,
-    citationIds: claim.citations
+    citationIds: claim.citations,
   }));
 }
 
@@ -26,7 +26,7 @@ export function createDocEvidence(evidence: EvidenceChunk[]): DocEvidenceItem[] 
     ...(item.retrievalSource ? { retrievalSource: item.retrievalSource } : {}),
     ...(item.vectorScore !== undefined ? { vectorScore: item.vectorScore } : {}),
     ...(item.literalMatches?.length ? { literalMatches: item.literalMatches } : {}),
-    ...(item.rerankScore !== undefined ? { rerankScore: item.rerankScore } : {})
+    ...(item.rerankScore !== undefined ? { rerankScore: item.rerankScore } : {}),
   }));
 }
 
@@ -37,7 +37,7 @@ export function collectCitationIds(input: {
   return Array.from(
     new Set([
       ...input.customerReply.claims.flatMap((claim) => claim.citations),
-      ...input.internalDiagnosis.claims.flatMap((claim) => claim.citations)
-    ])
+      ...input.internalDiagnosis.claims.flatMap((claim) => claim.citations),
+    ]),
   );
 }

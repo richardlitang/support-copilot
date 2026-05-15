@@ -10,7 +10,7 @@ export function determineSupportLevel(input: {
   hasConflict: boolean;
   missingRequiredContext: boolean;
   validationFailed: boolean;
-}) : SupportLevel {
+}): SupportLevel {
   if (input.validationFailed || input.missingRequiredContext || input.hasConflict) {
     return "insufficient_support";
   }
@@ -21,11 +21,15 @@ export function determineSupportLevel(input: {
     return "insufficient_support";
   }
 
-  const strongDocs = input.topDocScore >= 0.8 && (input.docEvidenceCount === 1 || input.secondDocScore >= 0.64);
+  const strongDocs =
+    input.topDocScore >= 0.8 && (input.docEvidenceCount === 1 || input.secondDocScore >= 0.64);
   const decentDocs = input.topDocScore >= 0.66;
   const usableDocs = input.topDocScore >= 0.52;
   const marginalMultiSourceDocs =
-    input.topDocScore >= 0.46 && input.secondDocScore >= 0.46 && input.docEvidenceCount >= 2 && totalClaims >= 2;
+    input.topDocScore >= 0.46 &&
+    input.secondDocScore >= 0.46 &&
+    input.docEvidenceCount >= 2 &&
+    totalClaims >= 2;
 
   if (strongDocs && totalClaims >= 2) {
     return "high";

@@ -8,11 +8,11 @@ export default defineConfig({
   test: {
     environment: "node",
     globals: true,
-    include: ["tests/**/*.test.ts"]
+    include: ["tests/**/*.test.ts"],
   },
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, ".")
-    }
-  }
+      "@": path.resolve(__dirname, "."),
+    },
+  },
 });

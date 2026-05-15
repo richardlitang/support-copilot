@@ -6,12 +6,12 @@ import {
   deleteDocumentsBySessionDirect,
   getDocumentCountDirect,
   listDocumentsDirect,
-  updateDocumentStatusDirect
+  updateDocumentStatusDirect,
 } from "@/src/server/db/documents";
 import {
   matchDocumentChunksDirect,
   matchLiteralDocumentChunksDirect,
-  replaceDocumentChunks
+  replaceDocumentChunks,
 } from "@/src/server/db/chunks";
 import { withPgClient } from "@/src/server/db/client";
 import type {
@@ -23,14 +23,14 @@ import type {
   ReviewStatus,
   StructuredClaimSet,
   StructuredClaimSetWithOpenQuestions,
-  ToolCallRecord
+  ToolCallRecord,
 } from "@/lib/types/investigation";
 import type {
   ChunkCandidate,
   DocumentRecord,
   DocumentStatus,
   EvidenceChunk,
-  SupportLevel
+  SupportLevel,
 } from "@/lib/types";
 
 type DbDocumentRow = {
@@ -112,8 +112,8 @@ function emitPerf(event: string, data?: Record<string, unknown>) {
       level: "info",
       route: "db",
       event,
-      ...(data ?? {})
-    })
+      ...(data ?? {}),
+    }),
   );
 }
 
@@ -128,16 +128,23 @@ function isSchemaCompatibilityError(message: string) {
 }
 
 function readStringArray(value: unknown) {
-  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string")
+    : [];
 }
 
 function readRecord(value: unknown) {
-  return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
 }
 
 function getSupabaseUrl() {
   ensureEnvLoaded();
-  const rawUrl = (process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").replace(/^"(.*)"$/, "$1");
+  const rawUrl = (process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").replace(
+    /^"(.*)"$/,
+    "$1",
+  );
 
   if (!rawUrl) {
     return "";
@@ -180,8 +187,8 @@ export function getSupabaseAdminClient() {
   return createClient(url, key, {
     auth: {
       persistSession: false,
-      autoRefreshToken: false
-    }
+      autoRefreshToken: false,
+    },
   });
 }
 
@@ -197,7 +204,7 @@ function mapDocumentRow(row: DbDocumentRow): DocumentRecord {
     sizeBytes: row.size_bytes ?? null,
     errorCode: row.error_code ?? null,
     errorMessageSafe: row.error_message_safe ?? null,
-    processedAt: row.processed_at ?? null
+    processedAt: row.processed_at ?? null,
   };
 }
 
@@ -209,7 +216,7 @@ function mapAccountRow(row: DbAccountRow): AccountRecord {
     status: row.status,
     enabledModules: readStringArray(row.enabled_modules_json),
     limits: readRecord(row.limits_json),
-    createdAt: row.created_at
+    createdAt: row.created_at,
   };
 }
 
@@ -221,7 +228,7 @@ function mapFeatureFlagRow(row: DbFeatureFlagRow): FeatureFlagRecord {
     flagValue: row.flag_value,
     description: row.description,
     rolloutNotes: row.rollout_notes,
-    createdAt: row.created_at
+    createdAt: row.created_at,
   };
 }
 
@@ -233,7 +240,7 @@ function mapErrorEventRow(row: DbErrorEventRow): ErrorEventRecord {
     errorCode: row.error_code,
     summary: row.summary,
     occurredAt: row.occurred_at,
-    createdAt: row.created_at
+    createdAt: row.created_at,
   };
 }
 
@@ -260,7 +267,7 @@ export async function listDocumentsSafe(sessionId?: string | null) {
   if (!hasDatabaseConfig() || !sessionId) {
     emitPerf("listDocumentsSafe_skipped", {
       hasDatabaseConfig: hasDatabaseConfig(),
-      hasSessionId: Boolean(sessionId)
+      hasSessionId: Boolean(sessionId),
     });
     return [];
   }
@@ -272,14 +279,14 @@ export async function listDocumentsSafe(sessionId?: string | null) {
     emitPerf("listDocumentsSafe_completed", {
       sessionId,
       documentCount: documents.length,
-      durationMs: Date.now() - startedAt
+      durationMs: Date.now() - startedAt,
     });
     return documents;
   } catch (error) {
     emitPerf("listDocumentsSafe_failed", {
       sessionId,
       durationMs: Date.now() - startedAt,
-      message: error instanceof Error ? error.message : "Unknown error"
+      message: error instanceof Error ? error.message : "Unknown error",
     });
     return [];
   }
@@ -318,7 +325,7 @@ export async function createDocumentRecord(input: {
       contentType: input.contentType,
       status: input.status ?? "processing",
       storagePath: input.storagePath ?? null,
-      sizeBytes: input.sizeBytes ?? null
+      sizeBytes: input.sizeBytes ?? null,
     });
   }
 
@@ -331,7 +338,7 @@ export async function createDocumentRecord(input: {
       content_type: input.contentType,
       status: input.status ?? "processing",
       storage_path: input.storagePath ?? null,
-      size_bytes: input.sizeBytes ?? null
+      size_bytes: input.sizeBytes ?? null,
     })
     .select("id, session_id, filename, content_type, status, created_at")
     .single();
@@ -356,7 +363,11 @@ export async function updateDocumentStatus(documentId: string, status: DocumentS
   }
 }
 
-export async function deleteDocumentsByFilenameAndStatus(filename: string, status: DocumentStatus, sessionId: string) {
+export async function deleteDocumentsByFilenameAndStatus(
+  filename: string,
+  status: DocumentStatus,
+  sessionId: string,
+) {
   const supabase = getSupabaseAdminClient();
   const { error } = await supabase
     .from("documents")
@@ -376,7 +387,11 @@ export async function deleteDocumentById(documentId: string, sessionId: string) 
   }
 
   const supabase = getSupabaseAdminClient();
-  const { error } = await supabase.from("documents").delete().eq("id", documentId).eq("session_id", sessionId);
+  const { error } = await supabase
+    .from("documents")
+    .delete()
+    .eq("id", documentId)
+    .eq("session_id", sessionId);
 
   if (error) {
     throw new Error(`Failed to delete document: ${error.message}`);
@@ -397,7 +412,7 @@ export async function deleteDocumentsBySessionId(sessionId: string) {
 }
 
 export async function insertDocumentChunks(
-  rows: Array<ChunkCandidate & { documentId: string; embedding: number[] }>
+  rows: Array<ChunkCandidate & { documentId: string; embedding: number[] }>,
 ) {
   if (hasDirectDatabaseConfig()) {
     const documentId = rows[0]?.documentId;
@@ -414,8 +429,8 @@ export async function insertDocumentChunks(
         content: row.content,
         tokenCount: row.tokenCount,
         metadata: row.metadata,
-        embedding: row.embedding
-      }))
+        embedding: row.embedding,
+      })),
     });
     return;
   }
@@ -429,8 +444,8 @@ export async function insertDocumentChunks(
       content: row.content,
       token_count: row.tokenCount,
       metadata_json: row.metadata,
-      embedding: row.embedding
-    }))
+      embedding: row.embedding,
+    })),
   );
 
   if (error) {
@@ -440,7 +455,11 @@ export async function insertDocumentChunks(
 
 export async function createTicket(rawText: string) {
   const supabase = getSupabaseAdminClient();
-  const { data, error } = await supabase.from("tickets").insert({ raw_text: rawText }).select("id").single();
+  const { data, error } = await supabase
+    .from("tickets")
+    .insert({ raw_text: rawText })
+    .select("id")
+    .single();
 
   if (error || !data) {
     throw new Error(`Failed to create ticket: ${error?.message ?? "Unknown error"}`);
@@ -477,7 +496,8 @@ export async function createInvestigation(input: {
       routing_reason: input.routingReason ?? null,
       account_id: input.accountId ?? null,
       customer_reply_json: (input.customerReplyJson ?? null) as InvestigationJsonPayload | null,
-      internal_diagnosis_json: (input.internalDiagnosisJson ?? null) as InvestigationJsonPayload | null
+      internal_diagnosis_json: (input.internalDiagnosisJson ??
+        null) as InvestigationJsonPayload | null,
     })
     .select("id")
     .single();
@@ -488,7 +508,7 @@ export async function createInvestigation(input: {
 
   if (isSchemaCompatibilityError(primaryInsert.error.message)) {
     throw new Error(
-      `Failed to create investigation: ${primaryInsert.error.message}. Apply the structured investigation schema migration before running investigations.`
+      `Failed to create investigation: ${primaryInsert.error.message}. Apply the structured investigation schema migration before running investigations.`,
     );
   }
 
@@ -501,7 +521,7 @@ export async function insertInvestigationSources(
     documentChunkId: string;
     rank: number;
     score: number;
-  }>
+  }>,
 ) {
   if (!rows.length) {
     return;
@@ -513,8 +533,8 @@ export async function insertInvestigationSources(
       investigation_id: row.investigationId,
       document_chunk_id: row.documentChunkId,
       rank: row.rank,
-      score: row.score
-    }))
+      score: row.score,
+    })),
   );
 
   if (error) {
@@ -528,7 +548,7 @@ export async function insertInvestigationToolCalls(
     toolName: ToolCallRecord["toolName"];
     input: Record<string, unknown>;
     output: unknown;
-  }>
+  }>,
 ) {
   if (!rows.length) {
     return;
@@ -540,8 +560,8 @@ export async function insertInvestigationToolCalls(
       investigation_id: row.investigationId,
       tool_name: row.toolName,
       tool_input_json: row.input,
-      tool_output_json: row.output
-    }))
+      tool_output_json: row.output,
+    })),
   );
 
   if (error) {
@@ -611,17 +631,17 @@ export async function persistInvestigationRun(input: {
             input.sources.map((source) => ({
               document_chunk_id: source.documentChunkId,
               rank: source.rank,
-              score: source.score
-            }))
+              score: source.score,
+            })),
           ),
           JSON.stringify(
             input.toolCalls.map((toolCall) => ({
               tool_name: toolCall.toolName,
               tool_input_json: toolCall.input,
-              tool_output_json: toolCall.output
-            }))
-          )
-        ]
+              tool_output_json: toolCall.output,
+            })),
+          ),
+        ],
       );
       const row = result.rows[0];
 
@@ -631,7 +651,7 @@ export async function persistInvestigationRun(input: {
 
       return {
         ticketId: row.ticket_id,
-        investigationId: row.investigation_id
+        investigationId: row.investigation_id,
       };
     });
   }
@@ -654,13 +674,13 @@ export async function persistInvestigationRun(input: {
       p_sources: input.sources.map((source) => ({
         document_chunk_id: source.documentChunkId,
         rank: source.rank,
-        score: source.score
+        score: source.score,
       })),
       p_tool_calls: input.toolCalls.map((toolCall) => ({
         tool_name: toolCall.toolName,
         tool_input_json: toolCall.input,
-        tool_output_json: toolCall.output
-      }))
+        tool_output_json: toolCall.output,
+      })),
     })
     .single();
 
@@ -669,7 +689,7 @@ export async function persistInvestigationRun(input: {
 
     return {
       ticketId: data.ticket_id,
-      investigationId: data.investigation_id
+      investigationId: data.investigation_id,
     };
   }
 
@@ -677,12 +697,15 @@ export async function persistInvestigationRun(input: {
 
   if (
     !rpcResult.error ||
-    (!errorMessage.includes("create_investigation_run") && !errorMessage.toLowerCase().includes("schema cache"))
+    (!errorMessage.includes("create_investigation_run") &&
+      !errorMessage.toLowerCase().includes("schema cache"))
   ) {
     throw new Error(`Failed to persist investigation run: ${errorMessage}`);
   }
 
-  throw new Error(`Failed to persist investigation run: ${errorMessage}. Apply the atomic investigation-run migration.`);
+  throw new Error(
+    `Failed to persist investigation run: ${errorMessage}. Apply the atomic investigation-run migration.`,
+  );
 }
 
 export async function matchDocumentChunks(input: {
@@ -700,23 +723,25 @@ export async function matchDocumentChunks(input: {
     session_id_filter: input.sessionId,
     query_embedding: input.queryEmbedding,
     match_count: input.matchCount,
-    match_threshold: input.matchThreshold
+    match_threshold: input.matchThreshold,
   });
 
   if (error) {
     throw new Error(`Failed to retrieve document chunks: ${error.message}`);
   }
 
-  return (data ?? []).map((row: MatchRow, index: number): EvidenceChunk => ({
-    id: row.id,
-    documentId: row.document_id,
-    filename: row.filename,
-    sectionTitle: row.section_title,
-    content: row.content,
-    score: row.score,
-    rank: index + 1,
-    chunkIndex: row.chunk_index
-  }));
+  return (data ?? []).map(
+    (row: MatchRow, index: number): EvidenceChunk => ({
+      id: row.id,
+      documentId: row.document_id,
+      filename: row.filename,
+      sectionTitle: row.section_title,
+      content: row.content,
+      score: row.score,
+      rank: index + 1,
+      chunkIndex: row.chunk_index,
+    }),
+  );
 }
 
 export async function matchLiteralDocumentChunks(input: {
@@ -750,7 +775,7 @@ export async function matchLiteralDocumentChunks(input: {
         rank: rowsById.size + 1,
         chunkIndex: row.chunk_index,
         retrievalSource: "literal",
-        literalMatches: [literal]
+        literalMatches: [literal],
       });
     }
   }
@@ -759,7 +784,9 @@ export async function matchLiteralDocumentChunks(input: {
     const pattern = `%${literal}%`;
     const contentResult = await supabase
       .from("document_chunks")
-      .select("id, document_id, section_title, content, chunk_index, documents!inner(filename, session_id)")
+      .select(
+        "id, document_id, section_title, content, chunk_index, documents!inner(filename, session_id)",
+      )
       .eq("documents.session_id", input.sessionId)
       .eq("documents.status", "ready")
       .ilike("content", pattern)
@@ -773,23 +800,29 @@ export async function matchLiteralDocumentChunks(input: {
 
     const titleResult = await supabase
       .from("document_chunks")
-      .select("id, document_id, section_title, content, chunk_index, documents!inner(filename, session_id)")
+      .select(
+        "id, document_id, section_title, content, chunk_index, documents!inner(filename, session_id)",
+      )
       .eq("documents.session_id", input.sessionId)
       .eq("documents.status", "ready")
       .ilike("section_title", pattern)
       .limit(input.matchCount);
 
     if (titleResult.error) {
-      throw new Error(`Failed to retrieve literal document chunks by title: ${titleResult.error.message}`);
+      throw new Error(
+        `Failed to retrieve literal document chunks by title: ${titleResult.error.message}`,
+      );
     }
 
     addRows((titleResult.data ?? []) as LiteralMatchRow[], literal);
   }
 
-  return Array.from(rowsById.values()).slice(0, input.matchCount).map((row, index) => ({
-    ...row,
-    rank: index + 1
-  }));
+  return Array.from(rowsById.values())
+    .slice(0, input.matchCount)
+    .map((row, index) => ({
+      ...row,
+      rank: index + 1,
+    }));
 }
 
 export async function listAccounts() {
@@ -809,7 +842,7 @@ export async function listAccounts() {
 export async function listAccountsSafe() {
   if (!hasDatabaseConfig()) {
     emitPerf("listAccountsSafe_skipped", {
-      hasDatabaseConfig: false
+      hasDatabaseConfig: false,
     });
     return [];
   }
@@ -820,13 +853,13 @@ export async function listAccountsSafe() {
     const accounts = await listAccounts();
     emitPerf("listAccountsSafe_completed", {
       accountCount: accounts.length,
-      durationMs: Date.now() - startedAt
+      durationMs: Date.now() - startedAt,
     });
     return accounts;
   } catch (error) {
     emitPerf("listAccountsSafe_failed", {
       durationMs: Date.now() - startedAt,
-      message: error instanceof Error ? error.message : "Unknown error"
+      message: error instanceof Error ? error.message : "Unknown error",
     });
     return [];
   }

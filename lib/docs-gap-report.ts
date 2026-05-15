@@ -2,7 +2,7 @@ import type {
   DocsGapReport,
   ReviewDecision,
   StructuredClaimSetWithOpenQuestions,
-  ToolEvidenceItem
+  ToolEvidenceItem,
 } from "@/lib/types/investigation";
 import type { DocEvidenceItem } from "@/lib/types/investigation";
 
@@ -66,15 +66,14 @@ export function buildDocsGapReport(input: {
         sourceType: "doc" as const,
         title: docTitle(item),
         excerpt: item.excerpt,
-        score: item.score
+        score: item.score,
       })),
       ...input.toolEvidence.slice(0, 2).map((item) => ({
         id: item.id,
         sourceType: "tool" as const,
         title: `${item.toolName} - ${item.title}`,
-        excerpt: item.excerpt
-      }))
-    ]
+        excerpt: item.excerpt,
+      })),
+    ],
   };
 }
-

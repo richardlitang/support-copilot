@@ -12,7 +12,7 @@ export function determineReviewDecision(input: {
     return {
       status: "ready",
       reasonCode: "none",
-      action: "none"
+      action: "none",
     };
   }
 
@@ -20,7 +20,7 @@ export function determineReviewDecision(input: {
     return {
       status: input.reviewStatus,
       reasonCode: "missing_account_context",
-      action: "add_context"
+      action: "add_context",
     };
   }
 
@@ -28,7 +28,7 @@ export function determineReviewDecision(input: {
     return {
       status: input.reviewStatus,
       reasonCode: "unresolved_evidence_conflict",
-      action: "inspect_conflict"
+      action: "inspect_conflict",
     };
   }
 
@@ -36,7 +36,7 @@ export function determineReviewDecision(input: {
     return {
       status: input.reviewStatus,
       reasonCode: "grounding_validation_failed",
-      action: "review_claims"
+      action: "review_claims",
     };
   }
 
@@ -44,13 +44,13 @@ export function determineReviewDecision(input: {
     return {
       status: input.reviewStatus,
       reasonCode: "weak_retrieval",
-      action: "add_docs"
+      action: "add_docs",
     };
   }
 
   return {
     status: input.reviewStatus,
     reasonCode: "weak_retrieval",
-    action: "review_claims"
+    action: "review_claims",
   };
 }

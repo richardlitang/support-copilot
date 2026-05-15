@@ -8,7 +8,7 @@ import { withPgClient } from "@/src/server/db/client";
 import {
   getDocumentForIngestionWithClient,
   updateDocumentStatusDirect,
-  updateDocumentStatusWithClient
+  updateDocumentStatusWithClient,
 } from "@/src/server/db/documents";
 import { recordPipelineEvent, sanitizeError } from "@/src/server/db/pipelineEvents";
 import { captureServerException } from "@/src/server/observability/sentry";
@@ -20,7 +20,7 @@ import { JOB_NAMES, QUEUE_NAMES } from "@/src/server/queue/names";
 async function processDocumentIngestion(jobData: DocumentIngestionJob, jobId?: string) {
   const logger = createRequestLogger("document-ingestion-worker", {
     documentId: jobData.documentId,
-    jobId
+    jobId,
   });
   const startedAt = Date.now();
 
@@ -30,7 +30,7 @@ async function processDocumentIngestion(jobData: DocumentIngestionJob, jobId?: s
     entityType: "document",
     entityId: jobData.documentId,
     sessionId: jobData.sessionId,
-    metadata: { jobId }
+    metadata: { jobId },
   });
 
   try {
@@ -55,14 +55,14 @@ async function processDocumentIngestion(jobData: DocumentIngestionJob, jobId?: s
 
         await updateDocumentStatusWithClient(client, {
           documentId: jobData.documentId,
-          status: "processing"
+          status: "processing",
         });
 
         const buffer = await getLocalObject(document.storagePath);
         const parsed = await parseUploadedBuffer({
           buffer,
           filename: document.filename,
-          contentType: document.contentType ?? "application/octet-stream"
+          contentType: document.contentType ?? "application/octet-stream",
         });
 
         await recordPipelineEvent({
@@ -74,8 +74,8 @@ async function processDocumentIngestion(jobData: DocumentIngestionJob, jobId?: s
           metadata: {
             filename: document.filename,
             contentType: document.contentType,
-            sizeBytes: document.sizeBytes
-          }
+            sizeBytes: document.sizeBytes,
+          },
         });
 
         const chunks = chunkParsedDocument(parsed);
@@ -90,7 +90,7 @@ async function processDocumentIngestion(jobData: DocumentIngestionJob, jobId?: s
           entityType: "document",
           entityId: jobData.documentId,
           sessionId: jobData.sessionId,
-          metadata: { chunkCount: chunks.length }
+          metadata: { chunkCount: chunks.length },
         });
 
         const embeddings = await embedTexts(chunks.map((chunk) => chunk.content));
@@ -105,20 +105,20 @@ async function processDocumentIngestion(jobData: DocumentIngestionJob, jobId?: s
           entityType: "document",
           entityId: jobData.documentId,
           sessionId: jobData.sessionId,
-          metadata: { chunkCount: chunks.length }
+          metadata: { chunkCount: chunks.length },
         });
 
         await replaceDocumentChunksWithClient(client, {
           documentId: jobData.documentId,
           chunks: chunks.map((chunk, index) => ({
             ...chunk,
-            embedding: embeddings[index] as number[]
-          }))
+            embedding: embeddings[index] as number[],
+          })),
         });
 
         await updateDocumentStatusWithClient(client, {
           documentId: jobData.documentId,
-          status: "ready"
+          status: "ready",
         });
 
         await client.query("commit");
@@ -138,14 +138,14 @@ async function processDocumentIngestion(jobData: DocumentIngestionJob, jobId?: s
       durationMs: Date.now() - startedAt,
       metadata: {
         chunkCount: result.chunkCount,
-        jobId
-      }
+        jobId,
+      },
     });
 
     logger.info("document_ingestion_completed", {
       chunkCount: result.chunkCount,
       skipped: result.skipped,
-      durationMs: Date.now() - startedAt
+      durationMs: Date.now() - startedAt,
     });
   } catch (error) {
     const safeError = sanitizeError(error);
@@ -154,19 +154,19 @@ async function processDocumentIngestion(jobData: DocumentIngestionJob, jobId?: s
         route: "document-ingestion-worker",
         jobName: JOB_NAMES.documentIngestion,
         documentId: jobData.documentId,
-        jobId: jobId ?? "unknown"
+        jobId: jobId ?? "unknown",
       },
       extra: {
         errorCode: safeError.errorCode,
-        sessionId: jobData.sessionId ?? null
-      }
+        sessionId: jobData.sessionId ?? null,
+      },
     });
 
     await updateDocumentStatusDirect({
       documentId: jobData.documentId,
       status: "failed",
       errorCode: safeError.errorCode,
-      errorMessageSafe: safeError.errorMessageSafe
+      errorMessageSafe: safeError.errorMessageSafe,
     }).catch(() => undefined);
 
     await recordPipelineEvent({
@@ -178,13 +178,13 @@ async function processDocumentIngestion(jobData: DocumentIngestionJob, jobId?: s
       durationMs: Date.now() - startedAt,
       metadata: { jobId },
       errorCode: safeError.errorCode,
-      errorMessageSafe: safeError.errorMessageSafe
+      errorMessageSafe: safeError.errorMessageSafe,
     }).catch(() => undefined);
 
     logger.error("document_ingestion_failed", {
       errorCode: safeError.errorCode,
       errorMessageSafe: safeError.errorMessageSafe,
-      durationMs: Date.now() - startedAt
+      durationMs: Date.now() - startedAt,
     });
 
     throw error;
@@ -202,7 +202,7 @@ export function createDocumentIngestionWorker() {
       await processDocumentIngestion(job.data, job.id);
     },
     {
-      connection: getRedisConnection()
-    }
+      connection: getRedisConnection(),
+    },
   );
 }

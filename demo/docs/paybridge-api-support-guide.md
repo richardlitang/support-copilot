@@ -62,6 +62,7 @@ Each entry includes customer-facing action, support investigation steps, and esc
 **Meaning:** The secret API key used by the integration has expired or was rotated.
 
 **Likely causes:**
+
 - Deployed service still uses an old environment variable
 - Live key was rotated without redeploying workers
 - Using a key copied from the wrong workspace
@@ -77,6 +78,7 @@ Each entry includes customer-facing action, support investigation steps, and esc
 **Meaning:** The payment requires the customer to complete an authentication step before it can succeed.
 
 **Likely causes:**
+
 - 3D Secure or bank challenge is required
 - Off-session payment attempted without prior mandate
 - Customer abandoned the authentication redirect
@@ -92,6 +94,7 @@ Each entry includes customer-facing action, support investigation steps, and esc
 **Meaning:** The issuing bank declined the card. The API response should include a more specific decline_code.
 
 **Likely causes:**
+
 - Issuer refused authorization
 - Risk controls blocked the attempt
 - Cardholder bank requires another payment method
@@ -107,6 +110,7 @@ Each entry includes customer-facing action, support investigation steps, and esc
 **Meaning:** The card expiration date is in the past.
 
 **Likely causes:**
+
 - Customer selected an old saved card
 - Card metadata was not refreshed after a card update
 
@@ -121,6 +125,7 @@ Each entry includes customer-facing action, support investigation steps, and esc
 **Meaning:** The CVC value failed validation or did not match issuer records.
 
 **Likely causes:**
+
 - Customer typed the wrong CVC
 - Saved card was reused for a flow that requires CVC recollection
 
@@ -135,6 +140,7 @@ Each entry includes customer-facing action, support investigation steps, and esc
 **Meaning:** The account or card does not have enough available funds for the attempted amount.
 
 **Likely causes:**
+
 - Buyer account balance is too low
 - Issuer applied a spending limit
 - Currency conversion changed the final amount
@@ -150,6 +156,7 @@ Each entry includes customer-facing action, support investigation steps, and esc
 **Meaning:** The amount is invalid for the currency or payment method.
 
 **Likely causes:**
+
 - Amount is zero or negative
 - Amount is not in the smallest currency unit
 - Amount exceeds payment method maximum
@@ -165,6 +172,7 @@ Each entry includes customer-facing action, support investigation steps, and esc
 **Meaning:** A test-mode object is being used with a live key, or a live object is being used with a test key.
 
 **Likely causes:**
+
 - Frontend uses test publishable key while backend uses live secret key
 - Stored customer_id was created in test mode
 - Webhook handler receives events from the wrong endpoint
@@ -180,6 +188,7 @@ Each entry includes customer-facing action, support investigation steps, and esc
 **Meaning:** Two concurrent requests are using the same idempotency key before the first request has completed.
 
 **Likely causes:**
+
 - Client double-submits the checkout form
 - Retry worker starts before the original request finishes
 - Shared idempotency key reused across unrelated operations
@@ -195,6 +204,7 @@ Each entry includes customer-facing action, support investigation steps, and esc
 **Meaning:** The platform detected a second payment attempt for an order that already has a successful payment.
 
 **Likely causes:**
+
 - Webhook delivery was delayed and the merchant retried manually
 - Checkout page did not disable the pay button after submit
 - Order status update failed after payment success
@@ -210,6 +220,7 @@ Each entry includes customer-facing action, support investigation steps, and esc
 **Meaning:** The object is temporarily locked by another process, such as capture, refund, invoice finalization, or webhook reconciliation.
 
 **Likely causes:**
+
 - Concurrent update to the same payment
 - Refund and capture attempted at the same time
 - High retry rate from a worker
@@ -225,6 +236,7 @@ Each entry includes customer-facing action, support investigation steps, and esc
 **Meaning:** The integration is sending too many requests in a short period.
 
 **Likely causes:**
+
 - Retry loop without exponential backoff
 - Bulk import script sending parallel requests
 - Webhook handler calls the API once per line item
@@ -240,6 +252,7 @@ Each entry includes customer-facing action, support investigation steps, and esc
 **Meaning:** The webhook signature cannot be verified against the endpoint secret.
 
 **Likely causes:**
+
 - Wrong endpoint secret
 - Raw body is modified before verification
 - Clock skew exceeds tolerance
@@ -256,6 +269,7 @@ Each entry includes customer-facing action, support investigation steps, and esc
 **Meaning:** The endpoint was disabled after repeated delivery failures.
 
 **Likely causes:**
+
 - Endpoint returned 5xx errors
 - TLS certificate expired
 - Endpoint timed out
@@ -272,6 +286,7 @@ Each entry includes customer-facing action, support investigation steps, and esc
 **Meaning:** The invoice cannot be finalized or paid because no usable payment method is available.
 
 **Likely causes:**
+
 - Customer has no default payment method
 - Invoice payment settings restrict allowed methods
 - Payment method was detached after subscription creation
@@ -287,6 +302,7 @@ Each entry includes customer-facing action, support investigation steps, and esc
 **Meaning:** The invoice payment created a payment that requires customer authentication.
 
 **Likely causes:**
+
 - Saved card requires 3D Secure
 - Mandate was not collected on-session
 - Customer is off-session and bank requires challenge
@@ -302,6 +318,7 @@ Each entry includes customer-facing action, support investigation steps, and esc
 **Meaning:** The requested refund has already been completed or an identical refund request already succeeded.
 
 **Likely causes:**
+
 - Support clicked refund twice
 - Retry worker did not persist the first result
 - Merchant used the same idempotency key and then changed the amount
@@ -317,6 +334,7 @@ Each entry includes customer-facing action, support investigation steps, and esc
 **Meaning:** The account does not have enough available balance to create the payout.
 
 **Likely causes:**
+
 - Funds are pending and not yet available
 - Reserve or negative balance reduced available amount
 - Payout amount includes currency not available on account
@@ -332,6 +350,7 @@ Each entry includes customer-facing action, support investigation steps, and esc
 **Meaning:** The connected account must provide required verification information before payments or payouts can continue.
 
 **Likely causes:**
+
 - KYC fields are missing
 - Identity document review failed
 - Business profile is incomplete
@@ -347,6 +366,7 @@ Each entry includes customer-facing action, support investigation steps, and esc
 **Meaning:** The account country does not match the country of the business, bank account, or requested capability.
 
 **Likely causes:**
+
 - Merchant registered in one country but bank account is in another
 - Wrong country selected during onboarding
 - Capability not available in the selected country
@@ -360,18 +380,21 @@ Each entry includes customer-facing action, support investigation steps, and esc
 ## Webhook troubleshooting
 
 ### Signature verification
+
 - Read the endpoint secret from the dashboard for the exact endpoint and mode.
 - Verify against the raw request body before JSON parsing or body mutation.
 - Reject requests when the timestamp is outside the configured tolerance.
 - Log the event ID and request ID, but never log the endpoint secret.
 
 ### Delivery behavior
+
 - Return a 2xx response as soon as the event is safely queued.
 - Process expensive work asynchronously after acknowledgement.
 - Expect duplicate event deliveries and make handlers idempotent.
 - Use the event ID as the dedupe key, not the order ID alone.
 
 ### Common failure patterns
+
 - 404 after deployment usually means the route path changed.
 - 401 or 403 usually means an application auth middleware is blocking the payment provider.
 - 5xx usually means the endpoint crashed or a dependency failed.
@@ -380,18 +403,21 @@ Each entry includes customer-facing action, support investigation steps, and esc
 ## Billing and invoice troubleshooting
 
 ### Invoice finalization checklist
+
 - Confirm the invoice has at least one invoice item or subscription line item.
 - Confirm the customer has a usable default payment method or the invoice allows manual payment.
 - Check invoice.payment_settings if some payment method types are unexpectedly unavailable.
 - Check whether tax location requirements are blocking finalization.
 
 ### Subscription payment recovery
+
 - When an invoice payment requires action, send the hosted invoice link or customer portal link.
 - If a payment method was detached, attach a new method and retry the invoice payment.
 - If a coupon expired, remove it or replace it with an active coupon before retrying.
 - Do not create a duplicate subscription to fix a failed invoice.
 
 ### Refund support
+
 - Refunds should be created against the payment or charge that actually succeeded.
 - Use idempotency keys for refund retry flows to avoid duplicate refunds.
 - If a charge is disputed, follow the dispute workflow instead of refunding blindly.

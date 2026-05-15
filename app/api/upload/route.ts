@@ -23,12 +23,15 @@ export async function POST(request: Request) {
     const files = formData.getAll("files").filter((value): value is File => value instanceof File);
     logger.info("upload_received", {
       sessionId,
-      fileCount: files.length
+      fileCount: files.length,
     });
 
     if (!files.length) {
       logger.finish({ outcome: "validation_error_no_files" });
-      const response = NextResponse.json({ error: "Upload at least one document." }, { status: 400 });
+      const response = NextResponse.json(
+        { error: "Upload at least one document." },
+        { status: 400 },
+      );
       response.headers.set("x-request-id", logger.requestId);
       return response;
     }
@@ -41,13 +44,13 @@ export async function POST(request: Request) {
         outcome: "validation_error_session_limit",
         currentCount,
         incomingCount: files.length,
-        maxFiles: MAX_FILES
+        maxFiles: MAX_FILES,
       });
       const response = NextResponse.json(
         {
-          error: `This session supports up to ${MAX_FILES} documents. Remove one before uploading more.`
+          error: `This session supports up to ${MAX_FILES} documents. Remove one before uploading more.`,
         },
-        { status: 400 }
+        { status: 400 },
       );
       response.headers.set("x-request-id", logger.requestId);
       return response;
@@ -59,19 +62,19 @@ export async function POST(request: Request) {
       logger.info("file_processing_started", {
         filename: file.name,
         contentType: file.type || "unknown",
-        sizeBytes: file.size
+        sizeBytes: file.size,
       });
 
       if (file.size > maxFileSizeBytes) {
         outcomes.push({
           filename: file.name,
           status: "failed",
-          message: `File exceeds the ${config.maxUploadMb} MB upload limit.`
+          message: `File exceeds the ${config.maxUploadMb} MB upload limit.`,
         });
         logger.info("file_rejected_size_limit", {
           filename: file.name,
           sizeBytes: file.size,
-          maxSizeBytes: maxFileSizeBytes
+          maxSizeBytes: maxFileSizeBytes,
         });
         continue;
       }
@@ -81,7 +84,7 @@ export async function POST(request: Request) {
         const stored = await putLocalObject({
           buffer,
           filename: file.name,
-          contentType: file.type || "application/octet-stream"
+          contentType: file.type || "application/octet-stream",
         });
         const document = await createDocumentRecord({
           sessionId,
@@ -89,7 +92,7 @@ export async function POST(request: Request) {
           contentType: file.type || null,
           status: "uploaded",
           storagePath: stored.storagePath,
-          sizeBytes: file.size
+          sizeBytes: file.size,
         });
 
         await recordPipelineEvent({
@@ -101,13 +104,13 @@ export async function POST(request: Request) {
           metadata: {
             filename: file.name,
             contentType: file.type || "unknown",
-            sizeBytes: file.size
-          }
+            sizeBytes: file.size,
+          },
         }).catch(() => undefined);
 
         const job = await enqueueDocumentIngestionJob({
           documentId: document.id,
-          sessionId
+          sessionId,
         });
 
         await recordPipelineEvent({
@@ -118,42 +121,42 @@ export async function POST(request: Request) {
           sessionId,
           metadata: {
             jobId: job.id,
-            queueName: "document-ingestion"
-          }
+            queueName: "document-ingestion",
+          },
         }).catch(() => undefined);
 
         outcomes.push({
           filename: file.name,
           documentId: document.id,
           status: "uploaded",
-          message: "Document accepted for background processing."
+          message: "Document accepted for background processing.",
         });
         logger.info("file_accepted", {
           filename: file.name,
           documentId: document.id,
           jobId: job.id,
-          sizeBytes: file.size
+          sizeBytes: file.size,
         });
       } catch (error) {
         captureServerException(error, {
           tags: {
             route: "/api/upload",
-            requestId: logger.requestId
+            requestId: logger.requestId,
           },
           extra: {
             filename: file.name,
             contentType: file.type || "unknown",
-            sizeBytes: file.size
-          }
+            sizeBytes: file.size,
+          },
         });
         outcomes.push({
           filename: file.name,
           status: "failed",
-          message: "Upload failed before ingestion could start."
+          message: "Upload failed before ingestion could start.",
         });
         logger.error("file_ingest_failed", {
           filename: file.name,
-          message: error instanceof Error ? error.message : "Upload failed."
+          message: error instanceof Error ? error.message : "Upload failed.",
         });
       }
     }
@@ -163,14 +166,14 @@ export async function POST(request: Request) {
     logger.finish({
       outcome: hasFailure ? "partial_success" : "success",
       documentCount: documents.length,
-      failureCount: outcomes.filter((item) => item.status === "failed").length
+      failureCount: outcomes.filter((item) => item.status === "failed").length,
     });
     const response = NextResponse.json(
       {
         documents,
-        outcomes
+        outcomes,
       },
-      { status: hasFailure ? 207 : 202 }
+      { status: hasFailure ? 207 : 202 },
     );
     response.headers.set("x-request-id", logger.requestId);
     return response;
@@ -179,16 +182,16 @@ export async function POST(request: Request) {
     captureServerException(error, {
       tags: {
         route: "/api/upload",
-        requestId: logger.requestId
-      }
+        requestId: logger.requestId,
+      },
     });
     logger.error("upload_request_failed", { message });
     logger.finish({ outcome: "request_error" });
     const response = NextResponse.json(
       {
-        error: message
+        error: message,
       },
-      { status: 500 }
+      { status: 500 },
     );
     response.headers.set("x-request-id", logger.requestId);
     return response;

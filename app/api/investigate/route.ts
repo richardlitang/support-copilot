@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { investigateTicket } from "@/lib/investigate";
-import { InvestigationRequestError, normalizeInvestigationRequest } from "@/lib/investigation-request";
+import {
+  InvestigationRequestError,
+  normalizeInvestigationRequest,
+} from "@/lib/investigation-request";
 import { createRequestLogger } from "@/lib/log";
 import { ensureSessionId } from "@/lib/session";
 import { recordPipelineEvent } from "@/src/server/db/pipelineEvents";
@@ -19,7 +22,7 @@ export async function POST(request: Request) {
       ragEnabled: payload.ragEnabled,
       ticketLength: payload.ticket.length,
       selectedAccountId: payload.selectedAccountId,
-      investigationContextLength: payload.investigationContext?.length ?? 0
+      investigationContextLength: payload.investigationContext?.length ?? 0,
     });
     await recordPipelineEvent({
       eventType: "INVESTIGATION_STARTED",
@@ -31,8 +34,8 @@ export async function POST(request: Request) {
         executionMode: payload.executionMode,
         ragEnabled: payload.ragEnabled,
         ticketLength: payload.ticket.length,
-        investigationContextLength: payload.investigationContext?.length ?? 0
-      }
+        investigationContextLength: payload.investigationContext?.length ?? 0,
+      },
     }).catch(() => undefined);
 
     const result = await investigateTicket({
@@ -41,7 +44,7 @@ export async function POST(request: Request) {
       ragEnabled: payload.ragEnabled,
       sessionId,
       selectedAccountId: payload.selectedAccountId,
-      investigationContext: payload.investigationContext
+      investigationContext: payload.investigationContext,
     });
     logger.finish({
       outcome: "success",
@@ -52,8 +55,10 @@ export async function POST(request: Request) {
       evidenceCount: result.docEvidence.length,
       toolEvidenceCount: result.toolEvidence.length,
       citationCount: new Set(
-        [...result.customerReply.claims, ...result.internalDiagnosis.claims].flatMap((claim) => claim.citations)
-      ).size
+        [...result.customerReply.claims, ...result.internalDiagnosis.claims].flatMap(
+          (claim) => claim.citations,
+        ),
+      ).size,
     });
     await recordPipelineEvent({
       eventType: "ANSWER_GENERATED",
@@ -66,8 +71,8 @@ export async function POST(request: Request) {
         reviewStatus: result.reviewStatus,
         supportLevel: result.supportLevel,
         evidenceCount: result.docEvidence.length,
-        toolEvidenceCount: result.toolEvidence.length
-      }
+        toolEvidenceCount: result.toolEvidence.length,
+      },
     }).catch(() => undefined);
     const response = NextResponse.json(result);
     response.headers.set("x-request-id", logger.requestId);
@@ -79,11 +84,11 @@ export async function POST(request: Request) {
       captureServerException(error, {
         tags: {
           route: "/api/investigate",
-          requestId: logger.requestId
+          requestId: logger.requestId,
         },
         extra: {
-          status
-        }
+          status,
+        },
       });
     }
     logger.error("investigate_request_failed", { message });
@@ -94,16 +99,17 @@ export async function POST(request: Request) {
       entityType: "request",
       entityId: logger.requestId,
       metadata: {
-        status
+        status,
       },
       errorCode: status === 400 ? "INVESTIGATION_REQUEST_INVALID" : "INVESTIGATION_REQUEST_FAILED",
-      errorMessageSafe: status === 400 ? "Investigation request was invalid" : "Investigation request failed"
+      errorMessageSafe:
+        status === 400 ? "Investigation request was invalid" : "Investigation request failed",
     }).catch(() => undefined);
     const response = NextResponse.json(
       {
-        error: message
+        error: message,
       },
-      { status }
+      { status },
     );
     response.headers.set("x-request-id", logger.requestId);
     return response;

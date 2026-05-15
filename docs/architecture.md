@@ -2,6 +2,8 @@
 
 Support Copilot is a trust-first RAG support workbench. The core design goal is not "chat with files"; it is to make the retrieval, evidence, and fallback behavior inspectable enough that a reviewer can verify the system is grounded.
 
+For a file-oriented map of frontend, backend, worker, and test/demo code, see [`docs/code-map.md`](code-map.md).
+
 ## Runtime Flow
 
 1. **Upload and ingest**
@@ -41,9 +43,10 @@ Support Copilot is a trust-first RAG support workbench. The core design goal is 
 
 ## Key Boundaries
 
-- `lib/ingest.ts`: upload-to-vector-store ingestion boundary.
+- `lib/ingest.ts`: direct seed/demo ingestion helper for deterministic local setup.
 - `lib/investigate.ts`: current direct orchestration boundary.
-- `lib/evidence-builder.ts`: source registry and legacy compatibility helpers.
+- `lib/claim-generation.ts`: shared claim-generation boundary used by the direct pipeline and graph-node parity wrappers.
+- `lib/evidence-builder.ts`: source registry and claim/evidence formatting helpers.
 - `lib/tool-runner.ts`: deterministic tool execution and tool evidence construction.
 - `lib/conflict-policy.ts`: policy for unresolved doc/tool state.
 - `lib/types/investigation.ts`: canonical structured investigation contract.
@@ -65,11 +68,11 @@ The project relies on explicit artifacts instead of hidden reasoning:
 
 - The eval suite is useful but still shallow. It checks route shape and evidence presence more than full semantic answer quality or reranker lift.
 - Claim validation now catches uncited output, unknown citation labels, over-broad claims, and claims with no meaningful token overlap with cited evidence. It is a guardrail, not a proof of entailment.
-- Atomic investigation persistence depends on applying the latest Supabase migration; older schemas still use the compatibility path.
+- Atomic investigation persistence depends on applying the latest Supabase migration; older schemas fail with an explicit migration error instead of silently falling back.
 - PDF parsing is best effort and should not be the primary demo path.
 - Chunking has basic table preservation but is not a full layout-aware document parser.
 - Literal expansion currently uses simple Postgres `ILIKE` matching. Trigram or full-text retrieval should be added only if evals show missed literal/prose cases.
-- LangGraph is not implemented yet. The current architecture is prepared for it but intentionally stays direct until evals prove stability.
+- LangGraph is not implemented yet. `lib/graph/**` contains parity wrappers around deterministic modules, but the runtime intentionally stays direct until evals prove stability.
 
 ## Future Direction
 

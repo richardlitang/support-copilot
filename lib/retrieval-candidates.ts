@@ -10,15 +10,19 @@ export function mergeRetrievalCandidates(candidates: EvidenceChunk[]) {
       byChunk.set(candidate.id, {
         ...candidate,
         retrievalSource: candidate.retrievalSource ?? "vector",
-        vectorScore: candidate.vectorScore ?? (candidate.retrievalSource === "literal" ? undefined : candidate.score),
-        literalMatches: candidate.literalMatches ?? []
+        vectorScore:
+          candidate.vectorScore ??
+          (candidate.retrievalSource === "literal" ? undefined : candidate.score),
+        literalMatches: candidate.literalMatches ?? [],
       });
       continue;
     }
 
     const existingSource = existing.retrievalSource ?? "vector";
     const nextSource = candidate.retrievalSource ?? "vector";
-    const literalMatches = Array.from(new Set([...(existing.literalMatches ?? []), ...(candidate.literalMatches ?? [])]));
+    const literalMatches = Array.from(
+      new Set([...(existing.literalMatches ?? []), ...(candidate.literalMatches ?? [])]),
+    );
     const vectorScore =
       existing.vectorScore ??
       candidate.vectorScore ??
@@ -29,17 +33,22 @@ export function mergeRetrievalCandidates(candidates: EvidenceChunk[]) {
       score: Math.max(existing.score, candidate.score),
       retrievalSource: existingSource === nextSource ? existingSource : "hybrid",
       vectorScore,
-      literalMatches
+      literalMatches,
     });
   }
 
-  return Array.from(byChunk.values()).sort((left, right) => right.score - left.score).map((candidate, index) => ({
-    ...candidate,
-    rank: index + 1
-  }));
+  return Array.from(byChunk.values())
+    .sort((left, right) => right.score - left.score)
+    .map((candidate, index) => ({
+      ...candidate,
+      rank: index + 1,
+    }));
 }
 
-export function applyRerankScores(candidates: EvidenceChunk[], scores: Array<{ index: number; score: number }>) {
+export function applyRerankScores(
+  candidates: EvidenceChunk[],
+  scores: Array<{ index: number; score: number }>,
+) {
   const byIndex = new Map(scores.map((item) => [item.index, item.score]));
 
   return candidates
@@ -49,7 +58,7 @@ export function applyRerankScores(candidates: EvidenceChunk[], scores: Array<{ i
       return {
         ...candidate,
         score: rerankScore ?? candidate.score,
-        rerankScore
+        rerankScore,
       };
     })
     .sort((left, right) => {
@@ -69,7 +78,6 @@ export function applyRerankScores(candidates: EvidenceChunk[], scores: Array<{ i
     })
     .map((candidate, index) => ({
       ...candidate,
-      rank: index + 1
+      rank: index + 1,
     }));
 }
-
