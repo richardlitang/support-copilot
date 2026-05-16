@@ -20,9 +20,10 @@ Support Copilot is a single-app Next.js support investigation workspace built to
 
 1. Read [`docs/code-map.md`](docs/code-map.md) for runtime boundaries.
 2. Read [`docs/architecture.md`](docs/architecture.md) for system flow and trust model.
-3. Read ADRs in [`docs/adr`](docs/adr) for decision rationale.
-4. Run `npm run eval:demo:offline` for deterministic behavior checks.
-5. Run `npm run eval:demo` for live retrieval-quality checks.
+3. Read [`docs/threat-model.md`](docs/threat-model.md) for data/security assumptions.
+4. Read ADRs in [`docs/adr`](docs/adr) for decision rationale.
+5. Run `npm run verify` for the full quality gate.
+6. Run `npm run eval:demo` for live retrieval-quality checks.
 
 <img width="1280" height="694" alt="chrome-capture-2026-05-05" src="https://github.com/user-attachments/assets/ddde7941-f7d4-4344-b5ac-81ecbb2ebdf2" />
 
@@ -55,10 +56,10 @@ For a file-by-file orientation, see [`docs/code-map.md`](docs/code-map.md).
 - `lib/retrieve.ts`: dense retrieval against `match_document_chunks`, literal-aware candidate expansion, candidate merging, and reranking
 - `lib/literal-retrieval.ts` and `lib/rerank.ts`: deterministic literal extraction and hosted reranker adapter
 - `lib/docs-gap-report.ts`: structured documentation-gap artifact generation for failed or weak-support runs
-- `lib/answer.ts`: chunk-1 grounded answer generation plus chunk-2 mixed-evidence structured claim generation
+- `lib/answer.ts`: stable facade for answer generation modules in `lib/ai/**`
 - `lib/classify.ts`: deterministic routing for docs-only vs docs-plus-tools vs human-review
 - `lib/tools/*`: Postgres-backed read-only investigation tools for account context, feature flags, and recent errors
-- `lib/investigate.ts`: current investigation orchestration boundary
+- `lib/investigate.ts`: investigation orchestration boundary (stages in `lib/investigation/**`)
 - `lib/claim-generation.ts`: shared structured-claim generation boundary used by the direct pipeline and graph parity wrappers
 - `lib/ingest.ts`: direct seed/demo ingestion helper; user uploads use the queue-backed worker path
 

@@ -19,6 +19,8 @@ HTTP boundary
 
 Investigation pipeline
   lib/investigate.ts
+    -> lib/investigation/stages.ts
+    -> lib/investigation/trace.ts
     -> lib/retrieve.ts
     -> lib/classify.ts
     -> lib/tool-runner.ts
@@ -61,7 +63,7 @@ Next.js route handlers under `app/api/**/route.ts` are backend code:
 
 ## Domain Pipeline
 
-`lib/investigate.ts` is the current orchestration path. It retrieves evidence, classifies the request, gathers optional tool context, detects conflicts, generates structured claims, applies review policy, persists the result, and builds an inspectable trace.
+`lib/investigate.ts` is the current orchestration entrypoint. Stage logic now lives in `lib/investigation/stages.ts` and trace rendering payload assembly lives in `lib/investigation/trace.ts`.
 
 `lib/claim-generation.ts` is the shared claim-generation boundary used by both the current direct pipeline and the graph-node parity wrappers. Docs-only runs still use the older grounded-answer generator internally, but the conversion into the current structured claim contract lives in one place.
 
@@ -82,7 +84,11 @@ If you are tracing production behavior today, start with `lib/investigate.ts`, n
 
 ## Test And Demo Harness
 
-- `tests/**`: unit and integration coverage for retrieval helpers, routing, claim validation, review policy, graph parity wrappers, and pipeline behavior.
+- `tests/ai/**`: answer-generation and model-boundary tests.
+- `tests/core/**`: routing/review/policy/value-level core checks.
+- `tests/investigation/**`: pipeline orchestration and graph parity wrappers.
+- `tests/retrieval/**`: retrieval helper and ranking tests.
+- `tests/infrastructure/**`: ingestion and tool-runner integration tests.
 - `demo/**`: PayBridge support docs, tickets, account/tool context, and eval cases used for walkthroughs.
 - `scripts/run-evals.ts`: seeded regression/eval runner.
 - `scripts/seed-demo.ts`: local demo data seeding.

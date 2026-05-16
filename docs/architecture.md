@@ -27,7 +27,7 @@ For a file-oriented map of frontend, backend, worker, and test/demo code, see [`
    - Tool outputs become separate evidence items with source IDs such as `T1`, `T2`, and `T3`.
 
 5. **Generate structured claims**
-   - `lib/answer.ts` asks OpenAI for structured output, not a freeform blob.
+   - `lib/answer.ts` is a stable facade over `lib/ai/*` modules that ask OpenAI for structured output, not a freeform blob.
    - The app renders customer-facing reply and internal diagnosis from claim arrays.
 
 6. **Validate and review**
@@ -37,14 +37,14 @@ For a file-oriented map of frontend, backend, worker, and test/demo code, see [`
    - `lib/docs-gap-report.ts` turns failed or weak-support runs into a structured docs-gap report.
 
 7. **Persist and inspect**
-   - `lib/db.ts` stores tickets, investigations, sources, tool calls, and structured JSON outputs.
+   - `lib/db.ts` is a facade over `src/server/db/*` adapters that store tickets, investigations, sources, tool calls, and structured JSON outputs.
    - Current-schema deployments use `create_investigation_run` to write the ticket, investigation, source links, and tool-call rows in one database transaction.
    - The UI shows document evidence, tool evidence, and tool-call records separately.
 
 ## Key Boundaries
 
 - `lib/ingest.ts`: direct seed/demo ingestion helper for deterministic local setup.
-- `lib/investigate.ts`: current direct orchestration boundary.
+- `lib/investigate.ts`: orchestration entrypoint with stages in `lib/investigation/stages.ts` and trace assembly in `lib/investigation/trace.ts`.
 - `lib/claim-generation.ts`: shared claim-generation boundary used by the direct pipeline and graph-node parity wrappers.
 - `lib/evidence-builder.ts`: source registry and claim/evidence formatting helpers.
 - `lib/tool-runner.ts`: deterministic tool execution and tool evidence construction.
