@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, FlaskConical, Pencil, Plus, SearchCheck } from "lucide-react";
+import { Plus } from "lucide-react";
 import type { DemoScenario } from "@/components/SupportCopilotShell";
+import { CollapsedTicketSummary } from "@/components/ticket/collapsed-summary";
+import { SampleScenarios } from "@/components/ticket/sample-scenarios";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -98,49 +100,14 @@ export function TicketForm({
 
   if (isCollapsed) {
     return (
-      <Card className="surface-shell overflow-hidden">
-        <CardContent className="p-3">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="eyebrow">Case input</p>
-                {isInvestigating ? (
-                  <Badge variant="warn">Investigating</Badge>
-                ) : (
-                  <Badge variant="secondary">Submitted</Badge>
-                )}
-              </div>
-              <p className="mt-2 line-clamp-2 text-sm leading-6 text-zinc-800">{ticket}</p>
-              {investigationContext.trim() ? (
-                <p className="mt-1 text-xs text-zinc-500">Context added</p>
-              ) : null}
-            </div>
-            <div className="flex shrink-0 items-center gap-2">
-              {isInvestigating ? (
-                <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
-                  <SearchCheck className="h-4 w-4 animate-pulse" />
-                  {executionMode === "evidence_only" ? "Finding evidence" : "Drafting answer"}
-                </div>
-              ) : null}
-              {!isInvestigating ? (
-                <Button type="button" variant="outline" size="sm" onClick={onNewTicket}>
-                  <Plus className="h-4 w-4" />
-                  New ticket
-                </Button>
-              ) : null}
-              <Button type="button" variant="outline" size="sm" onClick={onEdit}>
-                <Pencil className="h-4 w-4" />
-                Edit
-              </Button>
-            </div>
-          </div>
-          {isInvestigating ? (
-            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-zinc-100">
-              <div className="h-full w-1/2 animate-[case-progress_1.4s_ease-in-out_infinite] rounded-full bg-zinc-950" />
-            </div>
-          ) : null}
-        </CardContent>
-      </Card>
+      <CollapsedTicketSummary
+        executionMode={executionMode}
+        investigationContext={investigationContext}
+        isInvestigating={isInvestigating}
+        onEdit={onEdit}
+        onNewTicket={onNewTicket}
+        ticket={ticket}
+      />
     );
   }
 
@@ -326,56 +293,12 @@ export function TicketForm({
           ) : null}
         </div>
 
-        <div className="rounded-lg border border-zinc-200 bg-white/70">
-          <button
-            type="button"
-            onClick={() => setShowDemos((value) => !value)}
-            className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
-          >
-            <div>
-              <p className="text-sm font-medium text-zinc-950">Sample test cases</p>
-              <p className="mt-1 text-xs leading-5 text-zinc-600">
-                Run a known case against the seeded docs.
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-zinc-500">
-                {demoScenarios.length} cases
-              </span>
-              <ChevronDown
-                className={`h-4 w-4 text-zinc-500 transition ${showDemos ? "rotate-180" : ""}`}
-              />
-            </div>
-          </button>
-
-          {showDemos ? (
-            <div className="grid gap-2 border-t border-zinc-200 px-4 py-3">
-              {demoScenarios.map((scenario) => (
-                <button
-                  key={scenario.id}
-                  type="button"
-                  onClick={() => onLoadScenario(scenario)}
-                  className="surface-muted flex items-start justify-between gap-3 p-3 text-left transition hover:border-zinc-300"
-                >
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-xs font-semibold text-zinc-950">
-                        {scenario.label ?? scenario.rawText}
-                      </p>
-                      <Badge variant="outline">
-                        {(scenario.bucket ?? "demo").replaceAll("_", " ")}
-                      </Badge>
-                    </div>
-                    <p className="mt-1.5 line-clamp-2 text-xs leading-5 text-zinc-600">
-                      {scenario.rawText}
-                    </p>
-                  </div>
-                  <FlaskConical className="mt-0.5 h-4 w-4 shrink-0 text-zinc-500" />
-                </button>
-              ))}
-            </div>
-          ) : null}
-        </div>
+        <SampleScenarios
+          demoScenarios={demoScenarios}
+          onLoadScenario={onLoadScenario}
+          showDemos={showDemos}
+          onToggleShowDemos={() => setShowDemos((value) => !value)}
+        />
 
         <Separator />
         <div className="rounded-lg border border-zinc-200 bg-white/70 p-3">
