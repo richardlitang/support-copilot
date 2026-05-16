@@ -1,4 +1,3 @@
-import { createClient } from "@supabase/supabase-js";
 import { ensureEnvLoaded, hasDirectDatabaseConfig } from "@/lib/env";
 import {
   createDocumentDirect,
@@ -14,6 +13,13 @@ import {
   replaceDocumentChunks,
 } from "@/src/server/db/chunks";
 import { withPgClient } from "@/src/server/db/client";
+import { getSupabaseAdminClient, hasDatabaseConfig } from "@/src/server/db/supabaseAdmin";
+import {
+  getAccountByIdDirect,
+  listAccountsDirect,
+  listFeatureFlagsByAccountIdDirect,
+  listRecentErrorsByAccountIdDirect,
+} from "@/src/server/db/supportContext";
 import type {
   AccountRecord,
   ErrorEventRecord,
@@ -69,36 +75,6 @@ type LiteralMatchRow = {
   } | null;
 };
 
-type DbAccountRow = {
-  id: string;
-  name: string;
-  plan_tier: string;
-  status: string;
-  enabled_modules_json: unknown;
-  limits_json: unknown;
-  created_at: string;
-};
-
-type DbFeatureFlagRow = {
-  id: string;
-  account_id: string;
-  flag_key: string;
-  flag_value: boolean;
-  description: string | null;
-  rollout_notes: string | null;
-  created_at: string;
-};
-
-type DbErrorEventRow = {
-  id: string;
-  account_id: string;
-  product_area: string | null;
-  error_code: string;
-  summary: string;
-  occurred_at: string;
-  created_at: string;
-};
-
 type InvestigationJsonPayload = StructuredClaimSet | StructuredClaimSetWithOpenQuestions;
 
 function emitPerf(event: string, data?: Record<string, unknown>) {
@@ -127,70 +103,7 @@ function isSchemaCompatibilityError(message: string) {
   );
 }
 
-function readStringArray(value: unknown) {
-  return Array.isArray(value)
-    ? value.filter((item): item is string => typeof item === "string")
-    : [];
-}
-
-function readRecord(value: unknown) {
-  return value && typeof value === "object" && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : {};
-}
-
-function getSupabaseUrl() {
-  ensureEnvLoaded();
-  const rawUrl = (process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").replace(
-    /^"(.*)"$/,
-    "$1",
-  );
-
-  if (!rawUrl) {
-    return "";
-  }
-
-  if (rawUrl.startsWith("postgresql://") || rawUrl.startsWith("postgres://")) {
-    try {
-      const parsed = new URL(rawUrl);
-      const host = parsed.hostname;
-      const projectRef = host.startsWith("db.") ? host.slice(3).split(".")[0] : "";
-
-      if (projectRef) {
-        return `https://${projectRef}.supabase.co`;
-      }
-    } catch {
-      return "";
-    }
-  }
-
-  return rawUrl;
-}
-
-function getSupabaseServiceKey() {
-  ensureEnvLoaded();
-  return process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || "";
-}
-
-export function hasDatabaseConfig() {
-  return Boolean(getSupabaseUrl() && getSupabaseServiceKey());
-}
-
-export function getSupabaseAdminClient() {
-  const url = getSupabaseUrl();
-  const key = getSupabaseServiceKey();
-
-  if (!url || !key) {
-    throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY.");
-  }
-
-  return createClient(url, key, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-    },
-  });
-}
+export { getSupabaseAdminClient, hasDatabaseConfig };
 
 function mapDocumentRow(row: DbDocumentRow): DocumentRecord {
   return {
@@ -205,42 +118,6 @@ function mapDocumentRow(row: DbDocumentRow): DocumentRecord {
     errorCode: row.error_code ?? null,
     errorMessageSafe: row.error_message_safe ?? null,
     processedAt: row.processed_at ?? null,
-  };
-}
-
-function mapAccountRow(row: DbAccountRow): AccountRecord {
-  return {
-    id: row.id,
-    name: row.name,
-    planTier: row.plan_tier,
-    status: row.status,
-    enabledModules: readStringArray(row.enabled_modules_json),
-    limits: readRecord(row.limits_json),
-    createdAt: row.created_at,
-  };
-}
-
-function mapFeatureFlagRow(row: DbFeatureFlagRow): FeatureFlagRecord {
-  return {
-    id: row.id,
-    accountId: row.account_id,
-    flagKey: row.flag_key,
-    flagValue: row.flag_value,
-    description: row.description,
-    rolloutNotes: row.rollout_notes,
-    createdAt: row.created_at,
-  };
-}
-
-function mapErrorEventRow(row: DbErrorEventRow): ErrorEventRecord {
-  return {
-    id: row.id,
-    accountId: row.account_id,
-    productArea: row.product_area,
-    errorCode: row.error_code,
-    summary: row.summary,
-    occurredAt: row.occurred_at,
-    createdAt: row.created_at,
   };
 }
 
@@ -826,17 +703,7 @@ export async function matchLiteralDocumentChunks(input: {
 }
 
 export async function listAccounts() {
-  const supabase = getSupabaseAdminClient();
-  const { data, error } = await supabase
-    .from("accounts")
-    .select("id, name, plan_tier, status, enabled_modules_json, limits_json, created_at")
-    .order("name", { ascending: true });
-
-  if (error) {
-    throw new Error(`Failed to list accounts: ${error.message}`);
-  }
-
-  return (data ?? []).map((row) => mapAccountRow(row as DbAccountRow));
+  return listAccountsDirect();
 }
 
 export async function listAccountsSafe() {
@@ -866,33 +733,11 @@ export async function listAccountsSafe() {
 }
 
 export async function getAccountById(accountId: string) {
-  const supabase = getSupabaseAdminClient();
-  const { data, error } = await supabase
-    .from("accounts")
-    .select("id, name, plan_tier, status, enabled_modules_json, limits_json, created_at")
-    .eq("id", accountId)
-    .maybeSingle();
-
-  if (error) {
-    throw new Error(`Failed to load account: ${error.message}`);
-  }
-
-  return data ? mapAccountRow(data as DbAccountRow) : null;
+  return getAccountByIdDirect(accountId);
 }
 
 export async function listFeatureFlagsByAccountId(accountId: string) {
-  const supabase = getSupabaseAdminClient();
-  const { data, error } = await supabase
-    .from("feature_flags")
-    .select("id, account_id, flag_key, flag_value, description, rollout_notes, created_at")
-    .eq("account_id", accountId)
-    .order("flag_key", { ascending: true });
-
-  if (error) {
-    throw new Error(`Failed to load feature flags: ${error.message}`);
-  }
-
-  return (data ?? []).map((row) => mapFeatureFlagRow(row as DbFeatureFlagRow));
+  return listFeatureFlagsByAccountIdDirect(accountId);
 }
 
 export async function listRecentErrorsByAccountId(input: {
@@ -900,23 +745,5 @@ export async function listRecentErrorsByAccountId(input: {
   productArea?: string | null;
   limit?: number;
 }) {
-  const supabase = getSupabaseAdminClient();
-  let query = supabase
-    .from("error_events")
-    .select("id, account_id, product_area, error_code, summary, occurred_at, created_at")
-    .eq("account_id", input.accountId)
-    .order("occurred_at", { ascending: false })
-    .limit(input.limit ?? 5);
-
-  if (input.productArea) {
-    query = query.eq("product_area", input.productArea);
-  }
-
-  const { data, error } = await query;
-
-  if (error) {
-    throw new Error(`Failed to load recent errors: ${error.message}`);
-  }
-
-  return (data ?? []).map((row) => mapErrorEventRow(row as DbErrorEventRow));
+  return listRecentErrorsByAccountIdDirect(input);
 }
