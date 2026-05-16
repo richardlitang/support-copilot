@@ -166,6 +166,7 @@ Optional error tracking is supported through `SENTRY_DSN`. When configured, serv
 - `demo/support-context.json`: 5 seeded accounts, feature flags, and recent error events
 - `demo/tickets.json`: PayBridge sample test cases for live walkthroughs
 - `demo/evals.json`: eval tickets spanning docs-only, docs-plus-tools, unsupported, missing-account, and unresolved-conflict cases
+- `scripts/evals/*`: deterministic eval helper modules (offline fixtures, assertions/types, and shared utilities)
 
 ## Canonical Demo Flow
 

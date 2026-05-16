@@ -51,6 +51,7 @@ Persistence and infrastructure
 - `app/page.tsx` is the page entrypoint.
 - `components/SupportCopilotShell.tsx` owns client state, API calls, local investigation history, document polling, and panel composition.
 - `components/UploadPanel.tsx`, `components/TicketForm.tsx`, `components/AnswerPanel.tsx`, and `components/EvidencePanel.tsx` are presentation/workflow panels.
+- `components/upload/*` contains focused upload UI sections (`intake-dropzone`, `session-docs-list`, `latest-ingestion`).
 - `components/ui/**` contains local UI primitives.
 
 ## Backend HTTP Layer
@@ -95,5 +96,6 @@ If you are tracing production behavior today, start with `lib/investigate.ts`, n
 - `tests/infrastructure/**`: ingestion and tool-runner integration tests.
 - `demo/**`: PayBridge support docs, tickets, account/tool context, and eval cases used for walkthroughs.
 - `scripts/run-evals.ts`: seeded regression/eval runner.
+- `scripts/evals/*`: eval runner support modules for offline fixtures, types, and shared utilities.
 - `scripts/seed-demo.ts`: local demo data seeding.
 - `scripts/apply-migrations.ts`: local migration helper.
