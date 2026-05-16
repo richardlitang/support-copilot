@@ -6,11 +6,11 @@ Make the repository easier to understand as a portfolio project by reducing dupl
 
 ## Architecture Overview
 
-The active runtime remains the direct `lib/investigate.ts` pipeline. Graph modules stay as parity wrappers for future orchestration, but duplicated claim-generation logic moves into a shared boundary. Direct ingestion is renamed to clarify that it supports seed/demo setup rather than the upload runtime.
+The active runtime remains the direct `src/server/investigation/investigate.ts` pipeline. Graph modules stay as parity wrappers for future orchestration, but duplicated claim-generation logic moves into a shared boundary. Direct ingestion is renamed to clarify that it supports seed/demo setup rather than the upload runtime.
 
 ## Tasks
 
-1. Extract shared claim-generation branching from `lib/investigate.ts` and `lib/experimental/graph/nodes/generate-claims.ts` into `lib/claim-generation.ts`.
+1. Extract shared claim-generation branching from `src/server/investigation/investigate.ts` and `lib/experimental/graph/nodes/generate-claims.ts` into `lib/claim-generation.ts`.
 2. Rename `ingestParsedDocument` to `directIngestParsedDocument` and update seed/sample/tests.
 3. Add `docs/code-map.md` with current runtime boundaries and reading order.
 4. Update README and architecture docs to point reviewers at the code map and label future graph work.

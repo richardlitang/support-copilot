@@ -2,9 +2,9 @@ export {
   buildInsufficientSupportAnswer,
   generateGroundedAnswer,
   validateGroundedAnswer,
-} from "@/lib/ai/grounded-answer";
+} from "@/src/server/ai/answers/grounded-answer";
 export {
   buildStructuredHumanReviewFallback,
   generateInvestigationAnswer,
   validateInvestigationAnswer,
-} from "@/lib/ai/investigation-answer";
+} from "@/src/server/ai/answers/investigation-answer";

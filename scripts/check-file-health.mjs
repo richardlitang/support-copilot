@@ -5,10 +5,10 @@ const ROOT = process.cwd();
 
 const budgets = [
   { file: "src/server/db/index.ts", maxLines: 300 },
-  { file: "lib/investigate.ts", maxLines: 220 },
-  { file: "lib/investigation/stages.ts", maxLines: 320 },
-  { file: "lib/ai/grounded-answer.ts", maxLines: 260 },
-  { file: "lib/ai/investigation-answer.ts", maxLines: 560 },
+  { file: "src/server/investigation/investigate.ts", maxLines: 220 },
+  { file: "src/server/investigation/stages.ts", maxLines: 320 },
+  { file: "src/server/ai/answers/grounded-answer.ts", maxLines: 260 },
+  { file: "src/server/ai/answers/investigation-answer.ts", maxLines: 560 },
   { file: "components/AnswerPanel.tsx", maxLines: 560 },
 ];
 

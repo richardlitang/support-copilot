@@ -1,6 +1,6 @@
 import { normalizeSourceLabels } from "@/lib/citations";
 import { getRuntimeConfig } from "@/lib/env";
-import { investigationAnswerSchema, type StructuredInvestigationDraft } from "@/lib/ai/schemas";
+import { investigationAnswerSchema, type StructuredInvestigationDraft } from "@/src/server/ai/answers/schemas";
 import { createStructuredJsonResponse } from "@/src/server/ai/provider";
 import type {
   CitationId,

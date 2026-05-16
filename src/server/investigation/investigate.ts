@@ -4,7 +4,7 @@ import { persistInvestigationRun as persistInvestigationRunAdapter } from "@/src
 import {
   generateGroundedAnswer as generateGroundedAnswerAdapter,
   generateInvestigationAnswer as generateInvestigationAnswerAdapter,
-} from "@/lib/answer";
+} from "@/src/server/ai/answer";
 import { retrieveEvidence as retrieveEvidenceAdapter } from "@/src/server/retrieval/retrieve";
 import { getAccountContext as getAccountContextAdapter } from "@/src/server/tools/account-context";
 import { getFeatureFlags as getFeatureFlagsAdapter } from "@/src/server/tools/feature-flags";
@@ -19,9 +19,9 @@ import {
   retrieveAndRouteInvestigation,
   type InvestigationDependencies,
   type InvestigationInput,
-} from "@/lib/investigation/stages";
-import { buildAnswerQualityCheck } from "@/lib/investigation/quality-check";
-import { buildPipelineTrace } from "@/lib/investigation/trace";
+} from "@/src/server/investigation/stages";
+import { buildAnswerQualityCheck } from "@/src/server/investigation/quality-check";
+import { buildPipelineTrace } from "@/src/server/investigation/trace";
 
 const defaultDependencies: InvestigationDependencies = {
   persistInvestigationRun: persistInvestigationRunAdapter,

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { investigateTicket } from "@/lib/investigate";
+import { investigateTicket } from "@/src/server/investigation/investigate";
 import {
   InvestigationRequestError,
   normalizeInvestigationRequest,

@@ -1,4 +1,4 @@
-import { investigateTicket } from "@/lib/investigate";
+import { investigateTicket } from "@/src/server/investigation/investigate";
 
 describe("investigateTicket structured", () => {
   const baseEvidence = [

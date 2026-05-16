@@ -56,9 +56,9 @@ Use this section first if another conversation picks up the project without chat
 - `lib/chunk.ts`: deterministic chunking.
 - `lib/embed.ts`: OpenAI embedding generation.
 - `lib/retrieve.ts`: pgvector retrieval.
-- `lib/answer.ts`: structured answer generation and claim validation helpers.
+- `src/server/ai/answer.ts`: structured answer generation and claim validation helpers.
 - `lib/classify.ts`: deterministic route selection.
-- `lib/investigate.ts`: current main orchestration module. This is the biggest refactor target before LangGraph.
+- `src/server/investigation/investigate.ts`: current main orchestration module. This is the biggest refactor target before LangGraph.
 - `lib/support-level.ts`: support-level heuristic.
 - `lib/review-policy.ts`: review-status policy.
 - `lib/tools/*`: read-only seeded support-context tools.
@@ -98,7 +98,7 @@ Before claiming a change is complete, run the narrow relevant check plus `npm ru
 
 ### Known Risks
 
-- `lib/investigate.ts` is carrying too much orchestration logic. Split evidence building, tool running, and conflict policy before adding LangGraph.
+- `src/server/investigation/investigate.ts` is carrying too much orchestration logic. Split evidence building, tool running, and conflict policy before adding LangGraph.
 - DB writes are not fully transactional across tickets, investigations, sources, and tool calls.
 - The eval suite exists but is still shallow. It checks routing/evidence counts more than answer correctness, retrieval quality, or unsupported-claim coverage.
 - Chunking is serviceable but still risky for troubleshooting tables and manual-style PDFs.
@@ -112,9 +112,9 @@ Do not start with LangGraph. The next best slice is:
 1. Improve the eval runner so it reports retrieval quality, route correctness, fallback correctness, and critical failures in readable terminal sections.
 2. Add expected-evidence keywords or document hints to `demo/evals.json`.
 3. Add table-aware chunking coverage for troubleshooting-table text.
-4. Extract `lib/evidence-builder.ts` from `lib/investigate.ts`.
-5. Extract `lib/tool-runner.ts` from `lib/investigate.ts`.
-6. Extract `lib/conflict-policy.ts` from `lib/investigate.ts`.
+4. Extract `lib/evidence-builder.ts` from `src/server/investigation/investigate.ts`.
+5. Extract `lib/tool-runner.ts` from `src/server/investigation/investigate.ts`.
+6. Extract `lib/conflict-policy.ts` from `src/server/investigation/investigate.ts`.
 
 Only after those pass should the project introduce a feature-flagged LangGraph runner.
 
@@ -124,9 +124,9 @@ Only after those pass should the project introduce a feature-flagged LangGraph r
 - Added broad `expectedEvidenceKeywords` checks to the existing 15-case `demo/evals.json`.
 - Added `demo/evals.README.md`.
 - Added troubleshooting-table chunking coverage and updated chunking to preserve table-like rows with corrective actions.
-- Extracted `lib/evidence-builder.ts` from `lib/investigate.ts`.
-- Extracted `lib/tool-runner.ts` from `lib/investigate.ts`.
-- Extracted `lib/conflict-policy.ts` from `lib/investigate.ts`.
+- Extracted `lib/evidence-builder.ts` from `src/server/investigation/investigate.ts`.
+- Extracted `lib/tool-runner.ts` from `src/server/investigation/investigate.ts`.
+- Extracted `lib/conflict-policy.ts` from `src/server/investigation/investigate.ts`.
 - Changed investigation schema handling to fail loudly when required migrations are missing.
 - Fixed TypeScript 6 `baseUrl` deprecation noise with `ignoreDeprecations`.
 
@@ -423,10 +423,10 @@ npm run test -- chunk
 **Files:**
 
 - Create `lib/evidence-builder.ts`
-- Modify `lib/investigate.ts`
+- Modify `src/server/investigation/investigate.ts`
 - Create `tests/evidence-builder.test.ts`
 
-**Action:** Move doc evidence mapping, tool evidence mapping, and citation ID registry construction out of `lib/investigate.ts`.
+**Action:** Move doc evidence mapping, tool evidence mapping, and citation ID registry construction out of `src/server/investigation/investigate.ts`.
 
 **Verify:**
 
@@ -443,7 +443,7 @@ npm run test -- evidence-builder investigate
 **Files:**
 
 - Create `lib/tool-runner.ts`
-- Modify `lib/investigate.ts`
+- Modify `src/server/investigation/investigate.ts`
 - Create `tests/tool-runner.test.ts`
 
 **Action:** Move `collectToolArtifacts` and tool-call record construction into a dedicated module. Keep tools read-only and deterministic.
@@ -463,7 +463,7 @@ npm run test -- tool-runner investigate
 **Files:**
 
 - Create `lib/conflict-policy.ts`
-- Modify `lib/investigate.ts`
+- Modify `src/server/investigation/investigate.ts`
 - Create `tests/conflict-policy.test.ts`
 
 **Action:** Move conflict detection out of orchestration and add cases for "tool state explains issue" vs "tool state does not explain issue."
@@ -553,7 +553,7 @@ npm run test -- graph-nodes
 **Files:**
 
 - Create `lib/experimental/graph/investigation-graph.ts`
-- Modify `lib/investigate.ts`
+- Modify `src/server/investigation/investigate.ts`
 - Modify `.env.example`
 
 **Action:** Add `SUPPORT_USE_LANGGRAPH=true` to run the graph path. Default remains the current direct pipeline until evals prove parity.

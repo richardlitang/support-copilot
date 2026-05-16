@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { hasDatabaseConfig } from "../src/server/db";
-import { investigateTicket } from "../lib/investigate";
+import { investigateTicket } from "../src/server/investigation/investigate";
 import { createOfflineDependencies, runOfflineGraphParity } from "./evals/offline";
 import type { EvalCase, EvalSummary } from "./evals/types";
 import { countClaimCitations, formatRuntimeFailure } from "./evals/utils";

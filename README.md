@@ -56,10 +56,10 @@ For a file-by-file orientation, see [`docs/code-map.md`](docs/code-map.md).
 - `src/server/retrieval/retrieve.ts`: dense retrieval against `match_document_chunks`, literal-aware candidate expansion, candidate merging, and reranking
 - `lib/literal-retrieval.ts` and `src/server/ai/rerank.ts`: deterministic literal extraction and hosted reranker adapter
 - `lib/docs-gap-report.ts`: structured documentation-gap artifact generation for failed or weak-support runs
-- `lib/answer.ts`: stable facade for answer generation modules in `lib/ai/**`
+- `src/server/ai/answer.ts`: stable facade for answer generation modules in `src/server/ai/answers/**`
 - `lib/classify.ts`: deterministic routing for docs-only vs docs-plus-tools vs human-review
 - `src/server/tools/*`: Postgres-backed read-only investigation tools for account context, feature flags, and recent errors
-- `lib/investigate.ts`: investigation orchestration boundary (stages in `lib/investigation/**`)
+- `src/server/investigation/investigate.ts`: investigation orchestration boundary (stages in `src/server/investigation/**`)
 - `lib/claim-generation.ts`: shared structured-claim generation boundary used by the direct pipeline and graph parity wrappers
 - `src/server/ingestion/directIngest.ts`: direct seed/demo ingestion helper; user uploads use the queue-backed worker path
 

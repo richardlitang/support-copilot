@@ -80,7 +80,7 @@ npm run test -- upload
 
 - Create `lib/retrieve.ts`
 - Create `lib/citations.ts`
-- Create `lib/answer.ts`
+- Create `src/server/ai/answer.ts`
 - Create `app/api/investigate/route.ts`
 
 **Action:** Embed the ticket, fetch top chunks, compute heuristic support, and generate structured grounded answers with citations or an insufficient-support fallback.

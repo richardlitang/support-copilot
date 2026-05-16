@@ -39,7 +39,7 @@ describe("AI provider selection", () => {
   });
 
   it("keeps answer modules behind the provider boundary", () => {
-    const answerModules = ["lib/ai/grounded-answer.ts", "lib/ai/investigation-answer.ts"];
+    const answerModules = ["src/server/ai/answers/grounded-answer.ts", "src/server/ai/answers/investigation-answer.ts"];
 
     for (const modulePath of answerModules) {
       const source = readFileSync(modulePath, "utf8");

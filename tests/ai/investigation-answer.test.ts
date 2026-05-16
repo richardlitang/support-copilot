@@ -1,4 +1,4 @@
-import { validateInvestigationAnswer } from "@/lib/answer";
+import { validateInvestigationAnswer } from "@/src/server/ai/answer";
 
 describe("validateInvestigationAnswer", () => {
   const docEvidence = [

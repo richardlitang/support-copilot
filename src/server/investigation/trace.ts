@@ -10,7 +10,7 @@ import type {
   GeneratedInvestigation,
   InvestigationInput,
   ToolArtifacts,
-} from "@/lib/investigation/stages";
+} from "@/src/server/investigation/stages";
 
 function summarizeEvidence(items: ReturnType<typeof createDocEvidence>) {
   return items.map((item) => ({

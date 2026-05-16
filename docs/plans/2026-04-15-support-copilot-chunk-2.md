@@ -95,8 +95,8 @@ npm run test -- classify
 
 **Files:**
 
-- Modify `lib/answer.ts`
-- Modify `lib/investigate.ts`
+- Modify `src/server/ai/answer.ts`
+- Modify `src/server/investigation/investigate.ts`
 - Modify `app/api/investigate/route.ts`
 
 **Action:** Produce `InvestigationResult`, validate structured claims against both doc and tool citations, persist structured JSON outputs, and map docs-only runs into the new contract.

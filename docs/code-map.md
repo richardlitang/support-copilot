@@ -18,9 +18,9 @@ HTTP boundary
   app/api/ready/route.ts
 
 Investigation pipeline
-  lib/investigate.ts
-    -> lib/investigation/stages.ts
-    -> lib/investigation/trace.ts
+  src/server/investigation/investigate.ts
+    -> src/server/investigation/stages.ts
+    -> src/server/investigation/trace.ts
     -> src/server/retrieval/retrieve.ts
     -> lib/classify.ts
     -> lib/tool-runner.ts
@@ -66,7 +66,7 @@ Next.js route handlers under `app/api/**/route.ts` are backend code:
 
 ## Domain Pipeline
 
-`lib/investigate.ts` is the current orchestration entrypoint. Stage logic now lives in `lib/investigation/stages.ts` and trace rendering payload assembly lives in `lib/investigation/trace.ts`.
+`src/server/investigation/investigate.ts` is the current orchestration entrypoint. Stage logic now lives in `src/server/investigation/stages.ts` and trace rendering payload assembly lives in `src/server/investigation/trace.ts`.
 
 `lib/claim-generation.ts` is the shared claim-generation boundary used by both the current direct pipeline and the graph-node parity wrappers. Docs-only runs still use the older grounded-answer generator internally, but the conversion into the current structured claim contract lives in one place.
 
@@ -85,7 +85,7 @@ The queued path is the production-style runtime path. The direct path is for det
 
 `lib/experimental/graph/**` is not the active runtime. It contains typed graph-state wrappers around the current deterministic modules so future LangGraph orchestration can be introduced behind a feature flag and checked against direct-pipeline eval parity.
 
-If you are tracing production behavior today, start with `lib/investigate.ts`, not `lib/experimental/graph/**`.
+If you are tracing production behavior today, start with `src/server/investigation/investigate.ts`, not `lib/experimental/graph/**`.
 
 ## Test And Demo Harness
 

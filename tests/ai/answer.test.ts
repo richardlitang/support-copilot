@@ -2,7 +2,7 @@ import {
   buildInsufficientSupportAnswer,
   generateGroundedAnswer,
   validateGroundedAnswer,
-} from "@/lib/answer";
+} from "@/src/server/ai/answer";
 
 describe("generateGroundedAnswer", () => {
   it("returns insufficient support when there is no evidence", async () => {

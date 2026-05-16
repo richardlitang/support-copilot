@@ -1,4 +1,4 @@
-import { investigateTicket } from "@/lib/investigate";
+import { investigateTicket } from "@/src/server/investigation/investigate";
 
 describe("investigateTicket", () => {
   it("returns a grounded investigation with citations when evidence is strong", async () => {

@@ -2,7 +2,7 @@ import {
   buildStructuredHumanReviewFallback,
   generateGroundedAnswer as generateGroundedAnswerAdapter,
   generateInvestigationAnswer as generateInvestigationAnswerAdapter,
-} from "@/lib/answer";
+} from "@/src/server/ai/answer";
 import type { EvidenceChunk } from "@/lib/types";
 import type {
   CitationId,

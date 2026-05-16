@@ -28,7 +28,7 @@ For a file-oriented map of frontend, backend, worker, and test/demo code, see [`
    - Tool outputs become separate evidence items with source IDs such as `T1`, `T2`, and `T3`.
 
 5. **Generate structured claims**
-   - `lib/answer.ts` is a stable facade over `lib/ai/*` modules that request provider-gated structured output, not a freeform blob.
+   - `src/server/ai/answer.ts` is a stable facade over `src/server/ai/answers/*` modules that request provider-gated structured output, not a freeform blob.
    - Live structured generation currently uses OpenAI through `src/server/ai/provider.ts`; tests and CI use the deterministic mock provider.
    - The app renders customer-facing reply and internal diagnosis from claim arrays.
 
@@ -47,7 +47,7 @@ For a file-oriented map of frontend, backend, worker, and test/demo code, see [`
 ## Key Boundaries
 
 - `src/server/ingestion/directIngest.ts`: direct seed/demo ingestion helper for deterministic local setup.
-- `lib/investigate.ts`: orchestration entrypoint with stages in `lib/investigation/stages.ts` and trace assembly in `lib/investigation/trace.ts`.
+- `src/server/investigation/investigate.ts`: orchestration entrypoint with stages in `src/server/investigation/stages.ts` and trace assembly in `src/server/investigation/trace.ts`.
 - `lib/claim-generation.ts`: shared claim-generation boundary used by the direct pipeline and graph-node parity wrappers.
 - `lib/evidence-builder.ts`: source registry and claim/evidence formatting helpers.
 - `lib/tool-runner.ts`: deterministic tool execution and tool evidence construction.

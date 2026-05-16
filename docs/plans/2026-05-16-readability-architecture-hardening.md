@@ -103,7 +103,7 @@ npm run test
 
 **Files:**
 
-- Modify: `lib/answer.ts`
+- Modify: `src/server/ai/answer.ts`
 - Create: `lib/ai/schemas.ts`
 - Create: `lib/ai/prompts.ts`
 - Create: `lib/ai/grounded-answer.ts`
@@ -132,12 +132,12 @@ npm run typecheck
 
 **Files:**
 
-- Modify: `lib/investigate.ts`
-- Create: `lib/investigation/retrieve-evidence.ts`
-- Create: `lib/investigation/collect-context.ts`
-- Create: `lib/investigation/detect-conflicts.ts`
-- Create: `lib/investigation/apply-review.ts`
-- Create: `lib/investigation/persist-run.ts`
+- Modify: `src/server/investigation/investigate.ts`
+- Create: `src/server/investigation/retrieve-evidence.ts`
+- Create: `src/server/investigation/collect-context.ts`
+- Create: `src/server/investigation/detect-conflicts.ts`
+- Create: `src/server/investigation/apply-review.ts`
+- Create: `src/server/investigation/persist-run.ts`
 
 **Action:**
 
