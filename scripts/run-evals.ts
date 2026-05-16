@@ -37,6 +37,7 @@ type EvalCase = {
   forbiddenClaimKeywords?: string[];
   minDocEvidence?: number;
   requireToolEvidence?: boolean;
+  requireCitedClaimsWhenReady?: boolean;
 };
 
 type EvalSummary = {
@@ -75,6 +76,7 @@ type EvalSummary = {
   claimPassed: boolean;
   forbiddenClaimPassed: boolean;
   toolPassed: boolean;
+  citationPassed: boolean;
   graphParityPassed: boolean | null;
   passed: boolean;
   topDocs: Array<{
@@ -404,7 +406,7 @@ async function runOfflineGraphParity(input: {
 async function main() {
   if (!offlineMode && !hasDatabaseConfig()) {
     throw new Error(
-      "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY. `npm run eval:demo` requires a reachable seeded Supabase project.",
+      "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY. `npm run eval:demo` requires a reachable seeded Supabase project. For deterministic checks use `npm run eval:rag-contract`.",
     );
   }
 
@@ -482,6 +484,14 @@ async function main() {
     const claimPassed = missingClaimKeywords.length === 0;
     const forbiddenClaimPassed = presentForbiddenClaimKeywords.length === 0;
     const toolPassed = !testCase.requireToolEvidence || result.toolEvidence.length > 0;
+    const requireCitedClaimsWhenReady = testCase.requireCitedClaimsWhenReady ?? true;
+    const citationCount = countClaimCitations(result);
+    const citationPassed =
+      !requireCitedClaimsWhenReady ||
+      result.reviewStatus !== "ready" ||
+      (result.customerReply.claims.length > 0 &&
+        result.internalDiagnosis.claims.length > 0 &&
+        citationCount > 0);
 
     if (!routePassed) {
       failures.push(`${testCase.id}: expected mode ${testCase.expectedMode}, got ${result.mode}`);
@@ -533,6 +543,12 @@ async function main() {
       failures.push(`${testCase.id}: expected tool evidence, got none`);
     }
 
+    if (!citationPassed) {
+      failures.push(
+        `${testCase.id}: expected cited customer/internal claims for ready review status, got ${citationCount} citation(s)`,
+      );
+    }
+
     if (graphParityPassed === false && graphResult) {
       failures.push(
         `${testCase.id}: graph parity failed, direct ${result.mode}/${result.reviewStatus}/${result.reviewDecision.reasonCode}/${result.reviewDecision.action}, graph ${graphResult.mode}/${graphResult.reviewStatus}/${graphResult.reviewDecision.reasonCode}/${graphResult.reviewDecision.action}`,
@@ -575,6 +591,7 @@ async function main() {
       claimPassed,
       forbiddenClaimPassed,
       toolPassed,
+      citationPassed,
       graphParityPassed,
       passed:
         routePassed &&
@@ -585,6 +602,7 @@ async function main() {
         claimPassed &&
         forbiddenClaimPassed &&
         toolPassed &&
+        citationPassed &&
         graphParityPassed !== false,
       topDocs: result.docEvidence.slice(0, 3).map((item) => ({
         id: item.id,
@@ -605,10 +623,11 @@ async function main() {
   const claimPassed = summary.filter((item) => item.claimPassed).length;
   const forbiddenClaimPassed = summary.filter((item) => item.forbiddenClaimPassed).length;
   const toolPassed = summary.filter((item) => item.toolPassed).length;
+  const citationPassed = summary.filter((item) => item.citationPassed).length;
   const graphParityItems = summary.filter((item) => item.graphParityPassed !== null);
   const graphParityPassed = graphParityItems.filter((item) => item.graphParityPassed).length;
 
-  console.log("Support Copilot eval summary");
+  console.log(`Support Copilot ${offlineMode ? "RAG contract" : "live eval"} summary`);
   console.log(`Mode: ${offlineMode ? "offline mock" : "live Supabase/OpenAI"}`);
   console.log(`Cases: ${passedCount}/${summary.length} passed`);
   console.log(`Routing: ${routePassed}/${summary.length} passed`);
@@ -619,6 +638,7 @@ async function main() {
   console.log(`Claim content: ${claimPassed}/${summary.length} passed`);
   console.log(`Forbidden claims: ${forbiddenClaimPassed}/${summary.length} passed`);
   console.log(`Tool evidence: ${toolPassed}/${summary.length} passed`);
+  console.log(`Citation readiness: ${citationPassed}/${summary.length} passed`);
   if (graphParityItems.length) {
     console.log(`Graph parity: ${graphParityPassed}/${graphParityItems.length} passed`);
   }

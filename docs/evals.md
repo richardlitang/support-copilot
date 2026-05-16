@@ -1,22 +1,23 @@
-# Eval Strategy
+# RAG Contract Strategy
 
 This project uses two complementary eval paths:
 
+- `npm run eval:rag-contract`: deterministic regression contract with mocked retrieval/tool output and graph-wrapper parity checks.
 - `npm run eval:demo`: live retrieval path with real retrieval and configured model/provider behavior.
-- `npm run eval:demo:offline`: deterministic parity path with mocked retrieval/tool output and graph-wrapper parity checks.
 
-## What These Evals Prove
+## What The Contract Proves
 
 - Route correctness: `docs_only`, `docs_plus_tools`, or `needs_human_review`.
 - Review correctness: `ready` vs `needs_human_review`.
 - Evidence floor: required doc/tool evidence counts and expected evidence keywords.
+- Grounding guardrails: cited-claim expectations and forbidden-claim checks for known scenarios.
 - Parity checks: direct pipeline output vs graph-wrapper output for mode/review decisions in offline runs.
 
-## What These Evals Do Not Prove
+## What The Contract Does Not Prove
 
 - They do not prove semantic quality for every user phrasing.
 - They do not benchmark reranker lift rigorously.
-- Offline mode does not validate real retrieval quality.
+- Deterministic mode does not validate live retrieval quality against external services.
 
 ## Release Gates
 
@@ -27,8 +28,8 @@ npm run format:check
 npm run lint
 npm run typecheck
 npm run test
+npm run eval:rag-contract
 npm run build
-npm run eval:demo:offline
 ```
 
 Recommended pre-release gate:
@@ -42,4 +43,5 @@ npm run eval:demo
 - Route mismatch: likely classifier or review-policy drift.
 - Evidence-keyword miss with correct route: likely retrieval candidate/rerank drift.
 - Offline parity mismatch: wrapper/direct pipeline logic divergence.
+- Forbidden-claim failure: likely grounding or claim-validation regression.
 - Live-only failures: environment/config drift or real retrieval quality regression.

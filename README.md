@@ -23,7 +23,7 @@ Support Copilot is a single-app Next.js support investigation workspace built to
 3. Read [`docs/threat-model.md`](docs/threat-model.md) for data/security assumptions.
 4. Read ADRs in [`docs/adr`](docs/adr) for decision rationale.
 5. Run `npm run verify` for the full quality gate.
-6. Run `npm run eval:demo` for live retrieval-quality checks.
+6. Run `npm run eval:rag-contract` for deterministic RAG contract checks.
 
 <img width="1280" height="694" alt="chrome-capture-2026-05-05" src="https://github.com/user-attachments/assets/ddde7941-f7d4-4344-b5ac-81ecbb2ebdf2" />
 
@@ -187,19 +187,19 @@ Expected UI behavior for the bundled PayBridge samples:
 
 ## Eval Loop
 
-Run the seeded eval suite after seeding the corpus:
+Run the deterministic RAG contract suite:
+
+```bash
+npm run eval:rag-contract
+```
+
+Run live retrieval evals against Supabase/OpenAI before release:
 
 ```bash
 npm run eval:demo
 ```
 
-For restricted/offline environments, use:
-
-```bash
-npm run eval:demo:offline
-```
-
-The offline eval uses mocked retrieved evidence and tool outputs. It also checks graph-node parity for route and review outcomes. `lib/experimental/graph/**` is parity scaffolding for future orchestration, not the active runtime path. The live eval is still the real retrieval-quality gate.
+The RAG contract eval uses mocked retrieved evidence and tool outputs and checks graph-node parity for route and review outcomes. `lib/experimental/graph/**` is parity scaffolding for future orchestration, not the active runtime path. Live eval is still recommended before release to validate external-service behavior.
 
 The eval runner now reports route correctness, review status, retrieval evidence keywords, tool evidence, and top retrieved docs. It exits non-zero if the grounded behavior drifts.
 
@@ -213,8 +213,8 @@ Run these before claiming the slice is ready:
 npm run lint
 npm run format:check
 npm run test
+npm run eval:rag-contract
 npm run build
-npm run eval:demo
 ```
 
 ## CI and Security Automation
