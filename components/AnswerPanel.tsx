@@ -1,18 +1,10 @@
 import type { SupportLevel } from "@/lib/types";
-import type {
-  CitationId,
-  DocsGapReport,
-  InvestigationResult,
-  StructuredClaim,
-} from "@/lib/types/investigation";
+import type { InvestigationResult, StructuredClaim } from "@/lib/types/investigation";
 import {
   AlertTriangle,
   CheckCircle2,
   ClipboardCheck,
-  Copy,
-  FileWarning,
   FileSearch,
-  ListChecks,
   MessageSquareText,
   RotateCcw,
   Stethoscope,
