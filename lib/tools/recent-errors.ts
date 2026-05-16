@@ -1,4 +1,4 @@
-import { listRecentErrorsByAccountId } from "@/lib/db";
+import { listRecentErrorsByAccountId } from "@/src/server/db";
 
 export async function getRecentErrors(input: {
   accountId: string;

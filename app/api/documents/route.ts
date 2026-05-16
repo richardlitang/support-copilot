@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { deleteDocumentById, deleteDocumentsBySessionId, listDocuments } from "@/lib/db";
+import { deleteDocumentById, deleteDocumentsBySessionId, listDocuments } from "@/src/server/db";
 import { createRequestLogger } from "@/lib/log";
 import {
   ingestBundledSampleDocument,

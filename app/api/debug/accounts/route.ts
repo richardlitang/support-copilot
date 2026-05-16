@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { listAccountsSafe } from "@/lib/db";
+import { listAccountsSafe } from "@/src/server/db";
 import { createRequestLogger } from "@/lib/log";
 import { captureServerException } from "@/src/server/observability/sentry";
 

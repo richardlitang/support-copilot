@@ -36,10 +36,10 @@ Document ingestion
     -> src/server/queue/workers/documentIngestionWorker.ts
     -> lib/parse.ts
     -> lib/chunk.ts
-    -> lib/embed.ts
+    -> src/server/ai/embed.ts
 
 Persistence and infrastructure
-  lib/db.ts
+  src/server/db/index.ts
     -> src/server/db/**
     -> supabase/migrations/**
   src/server/queue/**

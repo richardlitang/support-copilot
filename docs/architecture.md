@@ -16,7 +16,7 @@ For a file-oriented map of frontend, backend, worker, and test/demo code, see [`
    - `lib/retrieve.ts` embeds the pasted ticket and queries Supabase Postgres through pgvector.
    - `lib/literal-retrieval.ts` extracts likely exact literals such as error codes, snake_case product strings, and object IDs.
    - Literal matches expand the candidate set before ranking so exact support tokens can enter the evidence pool even when dense retrieval ranks them poorly.
-   - If `COHERE_API_KEY` is configured, `lib/rerank.ts` reranks the merged candidate set before final evidence selection.
+   - If `COHERE_API_KEY` is configured, `src/server/ai/rerank.ts` reranks the merged candidate set before final evidence selection.
    - Retrieved chunks become document evidence items with source IDs such as `S1`, `S2`, and `S3`.
 
 3. **Classify**
@@ -39,7 +39,7 @@ For a file-oriented map of frontend, backend, worker, and test/demo code, see [`
    - `lib/docs-gap-report.ts` turns failed or weak-support runs into a structured docs-gap report.
 
 7. **Persist and inspect**
-   - `lib/db.ts` is a facade over `src/server/db/*` adapters that store tickets, investigations, sources, tool calls, and structured JSON outputs.
+   - `src/server/db/index.ts` is a facade over `src/server/db/*` adapters that store tickets, investigations, sources, tool calls, and structured JSON outputs.
    - Current-schema deployments use `create_investigation_run` to write the ticket, investigation, source links, and tool-call rows in one database transaction.
    - The UI shows document evidence, tool evidence, and tool-call records separately.
    - Investigation responses now include deterministic `qualityCheck` metadata with retrieval coverage, grounding counts, readiness reasons, and missing-information signals.

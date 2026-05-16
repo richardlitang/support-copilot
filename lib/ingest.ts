@@ -3,8 +3,8 @@ import {
   createDocumentRecord as createDocumentRecordAdapter,
   insertDocumentChunks as insertDocumentChunksAdapter,
   updateDocumentStatus as updateDocumentStatusAdapter,
-} from "@/lib/db";
-import { embedTexts as embedTextsAdapter } from "@/lib/embed";
+} from "@/src/server/db";
+import { embedTexts as embedTextsAdapter } from "@/src/server/ai/embed";
 import type { ParsedDocument } from "@/lib/types";
 
 type IngestDependencies = {

@@ -1,4 +1,4 @@
-import { getCohereApiKey, getRerankModel } from "@/lib/openai";
+import { getCohereApiKey, getRerankModel } from "@/src/server/ai/openai";
 import type { EvidenceChunk } from "@/lib/types";
 
 type CohereRerankResponse = {

@@ -1,7 +1,7 @@
 import { Worker } from "bullmq";
 import os from "node:os";
 import { chunkParsedDocument } from "@/lib/chunk";
-import { embedTexts } from "@/lib/embed";
+import { embedTexts } from "@/src/server/ai/embed";
 import { createRequestLogger } from "@/lib/log";
 import { parseUploadedBuffer } from "@/lib/parse";
 import { replaceDocumentChunksWithClient } from "@/src/server/db/chunks";

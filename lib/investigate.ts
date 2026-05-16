@@ -1,6 +1,6 @@
 import { detectConflict } from "@/lib/conflict-policy";
 import { buildDocsGapReport } from "@/lib/docs-gap-report";
-import { persistInvestigationRun as persistInvestigationRunAdapter } from "@/lib/db";
+import { persistInvestigationRun as persistInvestigationRunAdapter } from "@/src/server/db";
 import {
   generateGroundedAnswer as generateGroundedAnswerAdapter,
   generateInvestigationAnswer as generateInvestigationAnswerAdapter,

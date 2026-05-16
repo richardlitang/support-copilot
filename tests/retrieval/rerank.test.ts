@@ -1,4 +1,4 @@
-import { rerankEvidenceCandidates } from "@/lib/rerank";
+import { rerankEvidenceCandidates } from "@/src/server/ai/rerank";
 import type { EvidenceChunk } from "@/lib/types";
 
 function candidate(id: string, content: string): EvidenceChunk {

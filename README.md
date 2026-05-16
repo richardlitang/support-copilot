@@ -54,7 +54,7 @@ For a file-by-file orientation, see [`docs/code-map.md`](docs/code-map.md).
 - `lib/parse.ts`: text extraction and heading-aware parsing
 - `lib/chunk.ts`: deterministic chunking for retrieval
 - `lib/retrieve.ts`: dense retrieval against `match_document_chunks`, literal-aware candidate expansion, candidate merging, and reranking
-- `lib/literal-retrieval.ts` and `lib/rerank.ts`: deterministic literal extraction and hosted reranker adapter
+- `lib/literal-retrieval.ts` and `src/server/ai/rerank.ts`: deterministic literal extraction and hosted reranker adapter
 - `lib/docs-gap-report.ts`: structured documentation-gap artifact generation for failed or weak-support runs
 - `lib/answer.ts`: stable facade for answer generation modules in `lib/ai/**`
 - `lib/classify.ts`: deterministic routing for docs-only vs docs-plus-tools vs human-review

@@ -5,7 +5,7 @@ import {
   deleteDocumentsByFilenameAndStatus,
   getSupabaseAdminClient,
   listDocuments,
-} from "../lib/db";
+} from "../src/server/db";
 import { directIngestParsedDocument } from "../lib/ingest";
 import { parseTextDocument } from "../lib/parse";
 

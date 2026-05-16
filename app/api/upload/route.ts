@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getDocumentCount, listDocuments, createDocumentRecord } from "@/lib/db";
+import { getDocumentCount, listDocuments, createDocumentRecord } from "@/src/server/db";
 import { getRuntimeConfig } from "@/lib/env";
 import { createRequestLogger } from "@/lib/log";
 import { ensureSessionId } from "@/lib/session";

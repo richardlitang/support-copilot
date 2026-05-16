@@ -1,7 +1,7 @@
-import { matchDocumentChunks, matchLiteralDocumentChunks } from "@/lib/db";
-import { embedText } from "@/lib/embed";
+import { matchDocumentChunks, matchLiteralDocumentChunks } from "@/src/server/db";
+import { embedText } from "@/src/server/ai/embed";
 import { extractLikelyLiterals } from "@/lib/literal-retrieval";
-import { rerankEvidenceCandidates } from "@/lib/rerank";
+import { rerankEvidenceCandidates } from "@/src/server/ai/rerank";
 import { applyRerankScores, mergeRetrievalCandidates } from "@/lib/retrieval-candidates";
 
 const DEFAULT_TOP_K = 8;

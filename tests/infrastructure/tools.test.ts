@@ -9,7 +9,7 @@ const dbMock = vi.hoisted(() => ({
   listRecentErrorsByAccountId: vi.fn(),
 }));
 
-vi.mock("@/lib/db", () => dbMock);
+vi.mock("@/src/server/db", () => dbMock);
 
 describe("tool modules", () => {
   beforeEach(() => {
