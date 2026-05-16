@@ -4,10 +4,21 @@ import { useCallback, useEffect, useState } from "react";
 import { Sparkles } from "lucide-react";
 import { AnswerPanel } from "@/components/AnswerPanel";
 import { EvidencePanel } from "@/components/EvidencePanel";
+import { RecentInvestigations } from "@/components/RecentInvestigations";
 import {
-  RecentInvestigations,
+  clearDocuments,
+  deleteDocument,
+  fetchAccounts,
+  fetchDocuments,
+  runInvestigation,
+  uploadDocuments,
+} from "@/components/support-shell/api";
+import {
+  historyLimit,
+  readStoredHistory,
   type InvestigationHistoryItem,
-} from "@/components/RecentInvestigations";
+  writeStoredHistory,
+} from "@/components/support-shell/history-storage";
 import { TicketForm } from "@/components/TicketForm";
 import { UploadPanel } from "@/components/UploadPanel";
 import { Badge } from "@/components/ui/badge";
@@ -19,21 +30,6 @@ import type {
   InvestigationResult,
 } from "@/lib/types/investigation";
 
-type UploadResponse = {
-  documents: DocumentRecord[];
-  outcomes: UploadOutcome[];
-  error?: string;
-};
-
-type DocumentsResponse = {
-  documents: DocumentRecord[];
-};
-
-type AccountsResponse = {
-  accounts: AccountRecord[];
-  error?: string;
-};
-
 export type DemoScenario = {
   id: string;
   label?: string;
@@ -42,31 +38,6 @@ export type DemoScenario = {
   investigationContext?: string;
   selectedAccountId?: string;
 };
-
-const historyStorageKey = "support-copilot:recent-investigations";
-const historyLimit = 6;
-
-function readStoredHistory() {
-  try {
-    const stored = window.localStorage.getItem(historyStorageKey);
-
-    if (!stored) {
-      return [];
-    }
-
-    return (JSON.parse(stored) as InvestigationHistoryItem[]).slice(0, historyLimit);
-  } catch {
-    return [];
-  }
-}
-
-function writeStoredHistory(items: InvestigationHistoryItem[]) {
-  try {
-    window.localStorage.setItem(historyStorageKey, JSON.stringify(items.slice(0, historyLimit)));
-  } catch {
-    // History is a convenience. Investigation results still work if browser storage is unavailable.
-  }
-}
 
 export function SupportCopilotShell({
   initialAccounts,
@@ -103,18 +74,14 @@ export function SupportCopilotShell({
   );
 
   const refreshDocuments = useCallback(async (options?: { silent?: boolean }) => {
-    const response = await fetch("/api/documents");
-    const payload = (await response.json()) as DocumentsResponse & { error?: string };
-
-    if (!response.ok) {
+    try {
+      const documents = await fetchDocuments();
+      setDocuments(documents);
+    } catch (error) {
       if (!options?.silent) {
-        throw new Error(payload.error ?? "Failed to refresh documents.");
+        throw error;
       }
-
-      return;
     }
-
-    setDocuments(payload.documents);
   }, []);
 
   const refreshAccounts = useCallback(
@@ -123,18 +90,14 @@ export function SupportCopilotShell({
         return;
       }
 
-      const response = await fetch("/api/debug/accounts");
-      const payload = (await response.json()) as AccountsResponse;
-
-      if (!response.ok) {
+      try {
+        const accounts = await fetchAccounts();
+        setAccounts(accounts);
+      } catch (error) {
         if (!options?.silent) {
-          throw new Error(payload.error ?? "Failed to refresh debug accounts.");
+          throw error;
         }
-
-        return;
       }
-
-      setAccounts(payload.accounts);
     },
     [showDebugToggle],
   );
@@ -172,20 +135,8 @@ export function SupportCopilotShell({
     setError(null);
 
     try {
-      const response = await fetch("/api/documents", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ documentId }),
-      });
-      const payload = (await response.json()) as DocumentsResponse & { error?: string };
-
-      if (!response.ok) {
-        throw new Error(payload.error ?? "Failed to delete document.");
-      }
-
-      setDocuments(payload.documents);
+      const documents = await deleteDocument(documentId);
+      setDocuments(documents);
     } catch (deleteError) {
       setError(deleteError instanceof Error ? deleteError.message : "Failed to delete document.");
     }
@@ -195,20 +146,8 @@ export function SupportCopilotShell({
     setError(null);
 
     try {
-      const response = await fetch("/api/documents", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ clearAll: true }),
-      });
-      const payload = (await response.json()) as DocumentsResponse & { error?: string };
-
-      if (!response.ok) {
-        throw new Error(payload.error ?? "Failed to clear documents.");
-      }
-
-      setDocuments(payload.documents);
+      const documents = await clearDocuments();
+      setDocuments(documents);
       setUploadOutcomes([]);
       setResult(null);
     } catch (clearError) {
@@ -223,30 +162,11 @@ export function SupportCopilotShell({
 
     setError(null);
     setIsUploading(true);
-    const formData = new FormData();
-
-    files.forEach((file) => {
-      formData.append("files", file);
-    });
 
     try {
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-      const payload = (await response.json()) as UploadResponse;
-      const requestId = response.headers.get("x-request-id");
-
-      if (!response.ok && !payload.outcomes) {
-        throw new Error(
-          requestId
-            ? `${payload.error ?? "Upload failed."} (requestId: ${requestId})`
-            : (payload.error ?? "Upload failed."),
-        );
-      }
-
-      setDocuments(payload.documents ?? []);
-      setUploadOutcomes(payload.outcomes ?? []);
+      const payload = await uploadDocuments(files);
+      setDocuments(payload.documents);
+      setUploadOutcomes(payload.outcomes);
       void refreshDocuments({ silent: true });
     } catch (uploadError) {
       setError(uploadError instanceof Error ? uploadError.message : "Upload failed.");
@@ -267,29 +187,13 @@ export function SupportCopilotShell({
     setIsComposerExpandedAfterRun(false);
 
     try {
-      const response = await fetch("/api/investigate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ticket,
-          executionMode: nextExecutionMode,
-          ragEnabled,
-          selectedAccountId,
-          investigationContext,
-        }),
+      const payload = await runInvestigation({
+        ticket,
+        executionMode: nextExecutionMode,
+        ragEnabled,
+        selectedAccountId,
+        investigationContext,
       });
-      const payload = (await response.json()) as InvestigationResult & { error?: string };
-      const requestId = response.headers.get("x-request-id");
-
-      if (!response.ok) {
-        throw new Error(
-          requestId
-            ? `${payload.error ?? "Investigation failed."} (requestId: ${requestId})`
-            : (payload.error ?? "Investigation failed."),
-        );
-      }
 
       setResult(payload);
       setExecutionMode(payload.executionMode);
