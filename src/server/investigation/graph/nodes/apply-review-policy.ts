@@ -1,9 +1,9 @@
-import { markInvestigationGraphStep } from "@/lib/experimental/graph/investigation-state";
+import { markInvestigationGraphStep } from "@/src/server/investigation/graph/investigation-state";
 import { determineReviewDecision } from "@/lib/review-decision";
 import { determineReviewStatus, shouldEscalateToHumanReview } from "@/lib/review-policy";
 import { determineSupportLevel } from "@/lib/support-level";
 import type { InvestigationMode } from "@/lib/types/investigation";
-import type { InvestigationGraphState } from "@/lib/experimental/graph/investigation-state";
+import type { InvestigationGraphState } from "@/src/server/investigation/graph/investigation-state";
 
 export function applyReviewPolicyNode(state: InvestigationGraphState): InvestigationGraphState {
   if (!state.routing) {

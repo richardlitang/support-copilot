@@ -1,7 +1,7 @@
-import { markInvestigationGraphStep } from "@/lib/experimental/graph/investigation-state";
+import { markInvestigationGraphStep } from "@/src/server/investigation/graph/investigation-state";
 import { retrieveEvidence as retrieveEvidenceAdapter } from "@/src/server/retrieval/retrieve";
 import type { EvidenceChunk } from "@/lib/types";
-import type { InvestigationGraphState } from "@/lib/experimental/graph/investigation-state";
+import type { InvestigationGraphState } from "@/src/server/investigation/graph/investigation-state";
 
 export type RetrieveDocumentationDependencies = {
   retrieveEvidence: (input: {

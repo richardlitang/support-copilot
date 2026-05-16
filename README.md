@@ -200,7 +200,7 @@ Run live retrieval evals against Supabase/OpenAI before release:
 npm run eval:demo
 ```
 
-The RAG contract eval uses mocked retrieved evidence and tool outputs and checks graph-node parity for route and review outcomes. `lib/experimental/graph/**` is parity scaffolding for future orchestration, not the active runtime path. Live eval is still recommended before release to validate external-service behavior.
+The RAG contract eval uses mocked retrieved evidence and tool outputs and checks graph-node parity for route and review outcomes. `src/server/investigation/graph/**` is parity scaffolding for future orchestration, not the active runtime path. Live eval is still recommended before release to validate external-service behavior.
 
 The eval runner now reports route correctness, review status, retrieval evidence keywords, tool evidence, and top retrieved docs. It exits non-zero if the grounded behavior drifts.
 

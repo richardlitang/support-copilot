@@ -204,7 +204,7 @@ Verification from this live run:
 ### Batch Progress: 2026-04-27 Graph State Contract
 
 - Started Phase 2 without changing runtime behavior or adding LangGraph as a dependency.
-- Added `lib/experimental/graph/investigation-state.ts` with the typed state object that future graph nodes will pass through.
+- Added `src/server/investigation/graph/investigation-state.ts` with the typed state object that future graph nodes will pass through.
 - Captured request input, retrieved evidence, routing decision, doc/tool evidence, generated claims, grounding validation, review policy, persistence IDs, missing-context state, and conflict state in one contract.
 - Added small state helpers for initial state creation and step tracking.
 - Added `tests/investigation-state.test.ts` coverage for the empty state, idempotent step recording, and a populated future graph-node state.
@@ -509,7 +509,7 @@ npm run build
 
 **Files:**
 
-- Create `lib/experimental/graph/investigation-state.ts`
+- Create `src/server/investigation/graph/investigation-state.ts`
 - Create `tests/investigation-state.test.ts`
 
 **Action:** Define the state object that moves through graph nodes. It should include ticket, session, retrieved evidence, routing decision, tool evidence, draft claims, validation result, support level, review status, and persistence IDs.
@@ -528,12 +528,12 @@ npm run test -- investigation-state
 
 **Files:**
 
-- Create `lib/experimental/graph/nodes/retrieve-documentation.ts`
-- Create `lib/experimental/graph/nodes/classify-investigation.ts`
-- Create `lib/experimental/graph/nodes/run-context-tools.ts`
-- Create `lib/experimental/graph/nodes/generate-claims.ts`
-- Create `lib/experimental/graph/nodes/validate-grounding.ts`
-- Create `lib/experimental/graph/nodes/apply-review-policy.ts`
+- Create `src/server/investigation/graph/nodes/retrieve-documentation.ts`
+- Create `src/server/investigation/graph/nodes/classify-investigation.ts`
+- Create `src/server/investigation/graph/nodes/run-context-tools.ts`
+- Create `src/server/investigation/graph/nodes/generate-claims.ts`
+- Create `src/server/investigation/graph/nodes/validate-grounding.ts`
+- Create `src/server/investigation/graph/nodes/apply-review-policy.ts`
 - Create `tests/graph-nodes.test.ts`
 
 **Action:** Wrap existing deterministic modules as isolated graph nodes. Do not change behavior yet.
@@ -552,7 +552,7 @@ npm run test -- graph-nodes
 
 **Files:**
 
-- Create `lib/experimental/graph/investigation-graph.ts`
+- Create `src/server/investigation/graph/investigation-graph.ts`
 - Modify `src/server/investigation/investigate.ts`
 - Modify `.env.example`
 
@@ -595,8 +595,8 @@ SUPPORT_USE_LANGGRAPH=true npm run eval
 
 **Files:**
 
-- Modify `lib/experimental/graph/investigation-state.ts`
-- Modify `lib/experimental/graph/investigation-graph.ts`
+- Modify `src/server/investigation/graph/investigation-state.ts`
+- Modify `src/server/investigation/graph/investigation-graph.ts`
 - Modify `components/AnswerPanel.tsx`
 - Modify `components/EvidencePanel.tsx`
 
@@ -619,7 +619,7 @@ npm run build
 
 - Modify `app/api/investigate/route.ts`
 - Modify `components/TicketForm.tsx`
-- Modify `lib/experimental/graph/investigation-graph.ts`
+- Modify `src/server/investigation/graph/investigation-graph.ts`
 
 **Action:** Let the user add missing context and rerun the investigation from the review state. Keep this local to the app; do not add external workflow integrations.
 

@@ -1,8 +1,8 @@
 import {
   createInitialInvestigationGraphState,
   markInvestigationGraphStep,
-} from "@/lib/experimental/graph/investigation-state";
-import type { InvestigationGraphState } from "@/lib/experimental/graph/investigation-state";
+} from "@/src/server/investigation/graph/investigation-state";
+import type { InvestigationGraphState } from "@/src/server/investigation/graph/investigation-state";
 
 describe("investigation graph state", () => {
   it("creates an inspectable empty graph state from request input", () => {

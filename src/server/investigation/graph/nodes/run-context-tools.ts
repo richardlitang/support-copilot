@@ -1,6 +1,6 @@
 import { detectConflict as detectConflictAdapter } from "@/lib/conflict-policy";
 import { createDocEvidence } from "@/lib/evidence-builder";
-import { markInvestigationGraphStep } from "@/lib/experimental/graph/investigation-state";
+import { markInvestigationGraphStep } from "@/src/server/investigation/graph/investigation-state";
 import {
   collectToolArtifacts as collectToolArtifactsAdapter,
   createSyntheticToolEvidence,
@@ -9,7 +9,7 @@ import {
 import type {
   InvestigationGraphState,
   ToolArtifactState,
-} from "@/lib/experimental/graph/investigation-state";
+} from "@/src/server/investigation/graph/investigation-state";
 
 export type RunContextToolsDependencies = ToolRunnerDependencies & {
   collectToolArtifacts: typeof collectToolArtifactsAdapter;

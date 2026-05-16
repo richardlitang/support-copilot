@@ -1,13 +1,13 @@
-import { createInitialInvestigationGraphState } from "../../lib/experimental/graph/investigation-state";
-import { applyReviewPolicyNode } from "../../lib/experimental/graph/nodes/apply-review-policy";
-import { classifyInvestigationNode } from "../../lib/experimental/graph/nodes/classify-investigation";
-import { generateClaimsNode } from "../../lib/experimental/graph/nodes/generate-claims";
-import { retrieveDocumentationNode } from "../../lib/experimental/graph/nodes/retrieve-documentation";
+import { createInitialInvestigationGraphState } from "../../src/server/investigation/graph/investigation-state";
+import { applyReviewPolicyNode } from "../../src/server/investigation/graph/nodes/apply-review-policy";
+import { classifyInvestigationNode } from "../../src/server/investigation/graph/nodes/classify-investigation";
+import { generateClaimsNode } from "../../src/server/investigation/graph/nodes/generate-claims";
+import { retrieveDocumentationNode } from "../../src/server/investigation/graph/nodes/retrieve-documentation";
 import {
   defaultRunContextToolsAdapters,
   runContextToolsNode,
-} from "../../lib/experimental/graph/nodes/run-context-tools";
-import { validateGroundingNode } from "../../lib/experimental/graph/nodes/validate-grounding";
+} from "../../src/server/investigation/graph/nodes/run-context-tools";
+import { validateGroundingNode } from "../../src/server/investigation/graph/nodes/validate-grounding";
 import type { EvidenceChunk, StructuredAnswer } from "../../lib/types";
 import type {
   AccountRecord,

@@ -1,6 +1,6 @@
 import { collectCitationIds } from "@/lib/evidence-builder";
-import { markInvestigationGraphStep } from "@/lib/experimental/graph/investigation-state";
-import type { InvestigationGraphState } from "@/lib/experimental/graph/investigation-state";
+import { markInvestigationGraphStep } from "@/src/server/investigation/graph/investigation-state";
+import type { InvestigationGraphState } from "@/src/server/investigation/graph/investigation-state";
 
 export function validateGroundingNode(state: InvestigationGraphState): InvestigationGraphState {
   if (!state.claimDraft) {

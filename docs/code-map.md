@@ -82,9 +82,9 @@ The queued path is the production-style runtime path. The direct path is for det
 
 ## Graph Parity Work
 
-`lib/experimental/graph/**` is not the active runtime. It contains typed graph-state wrappers around the current deterministic modules so future LangGraph orchestration can be introduced behind a feature flag and checked against direct-pipeline eval parity.
+`src/server/investigation/graph/**` is not the active runtime. It contains typed graph-state wrappers around the current deterministic modules so future LangGraph orchestration can be introduced behind a feature flag and checked against direct-pipeline eval parity.
 
-If you are tracing production behavior today, start with `src/server/investigation/investigate.ts`, not `lib/experimental/graph/**`.
+If you are tracing production behavior today, start with `src/server/investigation/investigate.ts`, not `src/server/investigation/graph/**`.
 
 ## Test And Demo Harness
 
