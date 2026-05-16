@@ -59,7 +59,6 @@ Persistence and infrastructure
 Next.js route handlers under `app/api/**/route.ts` are backend code:
 
 - `documents`: list/delete session documents and seed the bundled sample when appropriate.
-- `upload`: validate files, store raw objects locally, create document records, and enqueue ingestion.
 - `upload`: validate files, store raw objects locally, create document + ingestion-job records, and enqueue ingestion.
 - `investigate`: validate a ticket request, run the investigation pipeline, persist the result, and return structured output.
 - `health` and `ready`: process/dependency checks.

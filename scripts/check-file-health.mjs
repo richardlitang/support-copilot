@@ -12,6 +12,20 @@ const budgets = [
   { file: "components/AnswerPanel.tsx", maxLines: 560 },
 ];
 
+const forbiddenServerRuntimePaths = [
+  "lib/ai",
+  "lib/answer.ts",
+  "lib/db.ts",
+  "lib/embed.ts",
+  "lib/ingest.ts",
+  "lib/investigate.ts",
+  "lib/investigation",
+  "lib/openai.ts",
+  "lib/rerank.ts",
+  "lib/retrieve.ts",
+  "lib/tools",
+];
+
 function countLines(contents) {
   if (!contents) {
     return 0;
@@ -20,6 +34,15 @@ function countLines(contents) {
 }
 
 const failures = [];
+const forbiddenPathFailures = [];
+
+for (const forbiddenPath of forbiddenServerRuntimePaths) {
+  const fullPath = path.join(ROOT, forbiddenPath);
+
+  if (fs.existsSync(fullPath)) {
+    forbiddenPathFailures.push(forbiddenPath);
+  }
+}
 
 for (const budget of budgets) {
   const fullPath = path.join(ROOT, budget.file);
@@ -39,11 +62,15 @@ for (const budget of budgets) {
   }
 }
 
-if (failures.length) {
+if (failures.length || forbiddenPathFailures.length) {
   console.error("File health check failed:");
 
   for (const failure of failures) {
     console.error(`- ${failure.file}: ${failure.lines} lines (max ${failure.maxLines})`);
+  }
+
+  for (const forbiddenPath of forbiddenPathFailures) {
+    console.error(`- ${forbiddenPath}: server runtime code belongs under src/server`);
   }
 
   process.exit(1);
