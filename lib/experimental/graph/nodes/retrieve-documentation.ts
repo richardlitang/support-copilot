@@ -1,5 +1,5 @@
 import { markInvestigationGraphStep } from "@/lib/experimental/graph/investigation-state";
-import { retrieveEvidence as retrieveEvidenceAdapter } from "@/lib/retrieve";
+import { retrieveEvidence as retrieveEvidenceAdapter } from "@/src/server/retrieval/retrieve";
 import type { EvidenceChunk } from "@/lib/types";
 import type { InvestigationGraphState } from "@/lib/experimental/graph/investigation-state";
 

@@ -13,7 +13,7 @@ For a file-oriented map of frontend, backend, worker, and test/demo code, see [`
    - `documents.status` remains product-facing (`uploaded | processing | ready | failed`), while `document_ingestion_jobs` carries queue-operability metadata (attempt count, worker lock, last safe error, and completion state).
 
 2. **Retrieve**
-   - `lib/retrieve.ts` embeds the pasted ticket and queries Supabase Postgres through pgvector.
+   - `src/server/retrieval/retrieve.ts` embeds the pasted ticket and queries Supabase Postgres through pgvector.
    - `lib/literal-retrieval.ts` extracts likely exact literals such as error codes, snake_case product strings, and object IDs.
    - Literal matches expand the candidate set before ranking so exact support tokens can enter the evidence pool even when dense retrieval ranks them poorly.
    - If `COHERE_API_KEY` is configured, `src/server/ai/rerank.ts` reranks the merged candidate set before final evidence selection.
@@ -46,7 +46,7 @@ For a file-oriented map of frontend, backend, worker, and test/demo code, see [`
 
 ## Key Boundaries
 
-- `lib/ingest.ts`: direct seed/demo ingestion helper for deterministic local setup.
+- `src/server/ingestion/directIngest.ts`: direct seed/demo ingestion helper for deterministic local setup.
 - `lib/investigate.ts`: orchestration entrypoint with stages in `lib/investigation/stages.ts` and trace assembly in `lib/investigation/trace.ts`.
 - `lib/claim-generation.ts`: shared claim-generation boundary used by the direct pipeline and graph-node parity wrappers.
 - `lib/evidence-builder.ts`: source registry and claim/evidence formatting helpers.

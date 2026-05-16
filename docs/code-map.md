@@ -21,7 +21,7 @@ Investigation pipeline
   lib/investigate.ts
     -> lib/investigation/stages.ts
     -> lib/investigation/trace.ts
-    -> lib/retrieve.ts
+    -> src/server/retrieval/retrieve.ts
     -> lib/classify.ts
     -> lib/tool-runner.ts
     -> lib/claim-generation.ts
@@ -75,7 +75,7 @@ Next.js route handlers under `app/api/**/route.ts` are backend code:
 There are two ingestion entrypoints by design:
 
 - User uploads go through the queue-backed path: `app/api/upload/route.ts` -> BullMQ -> `documentIngestionWorker.ts`.
-- Demo/sample setup uses `directIngestParsedDocument` from `lib/ingest.ts` to synchronously seed known documents without starting Redis.
+- Demo/sample setup uses `directIngestParsedDocument` from `src/server/ingestion/directIngest.ts` to synchronously seed known documents without starting Redis.
 
 The queued path is the production-style runtime path. The direct path is for deterministic local seed/demo setup.
 

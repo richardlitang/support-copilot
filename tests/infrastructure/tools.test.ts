@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getAccountContext } from "@/lib/tools/account-context";
-import { getFeatureFlags } from "@/lib/tools/feature-flags";
-import { getRecentErrors } from "@/lib/tools/recent-errors";
+import { getAccountContext } from "@/src/server/tools/account-context";
+import { getFeatureFlags } from "@/src/server/tools/feature-flags";
+import { getRecentErrors } from "@/src/server/tools/recent-errors";
 
 const dbMock = vi.hoisted(() => ({
   getAccountById: vi.fn(),

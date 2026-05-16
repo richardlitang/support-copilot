@@ -5,10 +5,10 @@ import {
   generateGroundedAnswer as generateGroundedAnswerAdapter,
   generateInvestigationAnswer as generateInvestigationAnswerAdapter,
 } from "@/lib/answer";
-import { retrieveEvidence as retrieveEvidenceAdapter } from "@/lib/retrieve";
-import { getAccountContext as getAccountContextAdapter } from "@/lib/tools/account-context";
-import { getFeatureFlags as getFeatureFlagsAdapter } from "@/lib/tools/feature-flags";
-import { getRecentErrors as getRecentErrorsAdapter } from "@/lib/tools/recent-errors";
+import { retrieveEvidence as retrieveEvidenceAdapter } from "@/src/server/retrieval/retrieve";
+import { getAccountContext as getAccountContextAdapter } from "@/src/server/tools/account-context";
+import { getFeatureFlags as getFeatureFlagsAdapter } from "@/src/server/tools/feature-flags";
+import { getRecentErrors as getRecentErrorsAdapter } from "@/src/server/tools/recent-errors";
 import type { InvestigationExecutionMode, InvestigationResult } from "@/lib/types/investigation";
 import {
   buildEvidenceOnlyInvestigation,

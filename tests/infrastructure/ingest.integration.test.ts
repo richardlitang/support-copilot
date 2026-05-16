@@ -1,4 +1,4 @@
-import { directIngestParsedDocument } from "@/lib/ingest";
+import { directIngestParsedDocument } from "@/src/server/ingestion/directIngest";
 import { parseTextDocument } from "@/lib/parse";
 
 describe("directIngestParsedDocument", () => {

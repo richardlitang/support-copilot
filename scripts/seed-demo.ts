@@ -6,7 +6,7 @@ import {
   getSupabaseAdminClient,
   listDocuments,
 } from "../src/server/db";
-import { directIngestParsedDocument } from "../lib/ingest";
+import { directIngestParsedDocument } from "../src/server/ingestion/directIngest";
 import { parseTextDocument } from "../lib/parse";
 
 const __filename = fileURLToPath(import.meta.url);
