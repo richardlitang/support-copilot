@@ -8,8 +8,9 @@ For a file-oriented map of frontend, backend, worker, and test/demo code, see [`
 
 1. **Upload and ingest**
    - The user uploads `.md`, `.txt`, or best-effort text-based `.pdf` files.
-   - `app/api/upload/route.ts` parses files, chunks text, embeds each chunk, and persists document metadata plus vectors.
-   - Raw files are not retained for the chunk-1/chunk-2 demo path.
+   - `app/api/upload/route.ts` stores raw files to local durable storage, creates a `documents` row with `uploaded` status, creates a `document_ingestion_jobs` row with `queued` status, and enqueues BullMQ work.
+   - The worker (`src/server/queue/workers/documentIngestionWorker.ts`) loads the stored object, parses/chunks/embeds it, replaces chunks idempotently, and transitions both document and ingestion-job status.
+   - `documents.status` remains product-facing (`uploaded | processing | ready | failed`), while `document_ingestion_jobs` carries queue-operability metadata (attempt count, worker lock, last safe error, and completion state).
 
 2. **Retrieve**
    - `lib/retrieve.ts` embeds the pasted ticket and queries Supabase Postgres through pgvector.
@@ -40,6 +41,7 @@ For a file-oriented map of frontend, backend, worker, and test/demo code, see [`
    - `lib/db.ts` is a facade over `src/server/db/*` adapters that store tickets, investigations, sources, tool calls, and structured JSON outputs.
    - Current-schema deployments use `create_investigation_run` to write the ticket, investigation, source links, and tool-call rows in one database transaction.
    - The UI shows document evidence, tool evidence, and tool-call records separately.
+   - Investigation responses now include deterministic `qualityCheck` metadata with retrieval coverage, grounding counts, readiness reasons, and missing-information signals.
 
 ## Key Boundaries
 
@@ -62,6 +64,7 @@ The project relies on explicit artifacts instead of hidden reasoning:
 - Support level is heuristic, not model self-confidence.
 - Missing account/context evidence is a safe review state, not a UI blocker.
 - Eval cases track expected route, review state, tool evidence, and broad retrieved-evidence keywords.
+- The deterministic RAG contract suite also checks citation readiness and expected ignored document statuses (`uploaded`, `processing`, `failed`) through `qualityCheck`.
 - Supabase reads and writes happen through server-side service-role adapters; public table access and RPC execution are revoked from `anon` and `authenticated` roles.
 
 ## Current Limitations

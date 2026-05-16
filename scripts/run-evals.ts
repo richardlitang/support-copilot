@@ -38,6 +38,7 @@ type EvalCase = {
   minDocEvidence?: number;
   requireToolEvidence?: boolean;
   requireCitedClaimsWhenReady?: boolean;
+  expectedIgnoredDocStatuses?: Array<"uploaded" | "processing" | "failed">;
 };
 
 type EvalSummary = {
@@ -77,6 +78,7 @@ type EvalSummary = {
   forbiddenClaimPassed: boolean;
   toolPassed: boolean;
   citationPassed: boolean;
+  ignoredStatusPassed: boolean;
   graphParityPassed: boolean | null;
   passed: boolean;
   topDocs: Array<{
@@ -492,6 +494,15 @@ async function main() {
       (result.customerReply.claims.length > 0 &&
         result.internalDiagnosis.claims.length > 0 &&
         citationCount > 0);
+    const expectedIgnoredDocStatuses = testCase.expectedIgnoredDocStatuses ?? [
+      "uploaded",
+      "processing",
+      "failed",
+    ];
+    const actualIgnoredDocStatuses = result.qualityCheck.retrieval.ignoredDocStatuses;
+    const ignoredStatusPassed = expectedIgnoredDocStatuses.every((status) =>
+      actualIgnoredDocStatuses.includes(status),
+    );
 
     if (!routePassed) {
       failures.push(`${testCase.id}: expected mode ${testCase.expectedMode}, got ${result.mode}`);
@@ -548,6 +559,11 @@ async function main() {
         `${testCase.id}: expected cited customer/internal claims for ready review status, got ${citationCount} citation(s)`,
       );
     }
+    if (!ignoredStatusPassed) {
+      failures.push(
+        `${testCase.id}: expected ignored doc statuses ${expectedIgnoredDocStatuses.join(", ")}, got ${actualIgnoredDocStatuses.join(", ")}`,
+      );
+    }
 
     if (graphParityPassed === false && graphResult) {
       failures.push(
@@ -592,6 +608,7 @@ async function main() {
       forbiddenClaimPassed,
       toolPassed,
       citationPassed,
+      ignoredStatusPassed,
       graphParityPassed,
       passed:
         routePassed &&
@@ -603,6 +620,7 @@ async function main() {
         forbiddenClaimPassed &&
         toolPassed &&
         citationPassed &&
+        ignoredStatusPassed &&
         graphParityPassed !== false,
       topDocs: result.docEvidence.slice(0, 3).map((item) => ({
         id: item.id,
@@ -624,6 +642,7 @@ async function main() {
   const forbiddenClaimPassed = summary.filter((item) => item.forbiddenClaimPassed).length;
   const toolPassed = summary.filter((item) => item.toolPassed).length;
   const citationPassed = summary.filter((item) => item.citationPassed).length;
+  const ignoredStatusPassed = summary.filter((item) => item.ignoredStatusPassed).length;
   const graphParityItems = summary.filter((item) => item.graphParityPassed !== null);
   const graphParityPassed = graphParityItems.filter((item) => item.graphParityPassed).length;
 
@@ -639,6 +658,7 @@ async function main() {
   console.log(`Forbidden claims: ${forbiddenClaimPassed}/${summary.length} passed`);
   console.log(`Tool evidence: ${toolPassed}/${summary.length} passed`);
   console.log(`Citation readiness: ${citationPassed}/${summary.length} passed`);
+  console.log(`Ignored doc statuses: ${ignoredStatusPassed}/${summary.length} passed`);
   if (graphParityItems.length) {
     console.log(`Graph parity: ${graphParityPassed}/${graphParityItems.length} passed`);
   }

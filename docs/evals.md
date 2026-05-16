@@ -11,6 +11,7 @@ This project uses two complementary eval paths:
 - Review correctness: `ready` vs `needs_human_review`.
 - Evidence floor: required doc/tool evidence counts and expected evidence keywords.
 - Grounding guardrails: cited-claim expectations and forbidden-claim checks for known scenarios.
+- Readiness metadata: expected ignored document statuses are present in `qualityCheck.retrieval`.
 - Parity checks: direct pipeline output vs graph-wrapper output for mode/review decisions in offline runs.
 
 ## What The Contract Does Not Prove

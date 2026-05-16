@@ -30,6 +30,7 @@ Investigation pipeline
 
 Document ingestion
   app/api/upload/route.ts
+    -> src/server/db/documentIngestionJobs.ts
     -> src/server/storage/localObjectStorage.ts
     -> src/server/queue/client.ts
     -> src/server/queue/workers/documentIngestionWorker.ts
@@ -58,6 +59,7 @@ Next.js route handlers under `app/api/**/route.ts` are backend code:
 
 - `documents`: list/delete session documents and seed the bundled sample when appropriate.
 - `upload`: validate files, store raw objects locally, create document records, and enqueue ingestion.
+- `upload`: validate files, store raw objects locally, create document + ingestion-job records, and enqueue ingestion.
 - `investigate`: validate a ticket request, run the investigation pipeline, persist the result, and return structured output.
 - `health` and `ready`: process/dependency checks.
 
@@ -75,6 +77,8 @@ There are two ingestion entrypoints by design:
 - Demo/sample setup uses `directIngestParsedDocument` from `lib/ingest.ts` to synchronously seed known documents without starting Redis.
 
 The queued path is the production-style runtime path. The direct path is for deterministic local seed/demo setup.
+
+`document_ingestion_jobs` is the operational queue-state table for the queued path. It tracks queue job id, attempt counts, worker lock metadata, safe error details, and terminal state independently from `documents.status`.
 
 ## Graph Parity Work
 
