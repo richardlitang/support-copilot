@@ -2,27 +2,14 @@
 
 import { useId, useRef, useState } from "react";
 import type { ChangeEvent, DragEvent } from "react";
-import { ChevronDown, FileText, Trash2, UploadCloud } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { IntakeDropzone } from "@/components/upload/intake-dropzone";
+import { LatestIngestion } from "@/components/upload/latest-ingestion";
+import { SessionDocsList } from "@/components/upload/session-docs-list";
 import type { DocumentRecord, UploadOutcome } from "@/lib/types";
-
-function statusTone(status: DocumentRecord["status"]) {
-  if (status === "ready") {
-    return "success" as const;
-  }
-
-  if (status === "failed") {
-    return "danger" as const;
-  }
-
-  return "warn" as const;
-}
-
-const bundledSampleFilename = "paybridge-api-support-guide.md";
 
 export function UploadPanel({
   documents,
@@ -115,43 +102,17 @@ export function UploadPanel({
       </CardHeader>
       {showIntake ? (
         <CardContent className="space-y-4">
-          <div
-            onDragOver={handleDragOver}
+          <IntakeDropzone
+            inputId={inputId}
+            inputRef={inputRef}
+            isAtSessionLimit={isAtSessionLimit}
+            isDragActive={isDragActive}
+            isUploading={isUploading}
+            onChange={handleChange}
             onDragLeave={handleDragLeave}
+            onDragOver={handleDragOver}
             onDrop={handleDrop}
-            className={`rounded-lg border border-dashed p-4 transition ${
-              isAtSessionLimit
-                ? "cursor-not-allowed border-zinc-200 bg-zinc-100/80 opacity-75"
-                : isDragActive
-                  ? "border-zinc-950 bg-zinc-50"
-                  : "border-zinc-300 bg-zinc-50/70"
-            }`}
-          >
-            <UploadCloud className="h-4 w-4 text-zinc-500" />
-            <p className="mt-3 text-sm font-medium text-zinc-950">Add docs</p>
-            <p className="mt-2 text-xs leading-5 text-zinc-600">
-              Drop files here, or choose `.md`, `.txt`, or text-based `.pdf` files.
-            </p>
-            <Button
-              type="button"
-              onClick={() => inputRef.current?.click()}
-              disabled={isUploading || isAtSessionLimit}
-              size="sm"
-              className="mt-3 rounded-md"
-            >
-              {isAtSessionLimit ? "Limit reached" : isUploading ? "Uploading..." : "Choose files"}
-            </Button>
-            <input
-              ref={inputRef}
-              id={inputId}
-              className="hidden"
-              type="file"
-              multiple
-              accept=".md,.txt,.pdf,application/pdf,text/markdown,text/plain"
-              onChange={handleChange}
-              disabled={isUploading || isAtSessionLimit}
-            />
-          </div>
+          />
 
           {isAtSessionLimit ? (
             <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -161,120 +122,19 @@ export function UploadPanel({
 
           <Separator />
 
-          <div className="space-y-3">
-            <div className="grid gap-3">
-              <div className="flex min-w-0 items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="eyebrow">Session docs</p>
-                  <p className="mt-1 text-sm text-zinc-500">
-                    {documents.length
-                      ? documents.some(
-                          (document) =>
-                            document.status === "uploaded" || document.status === "processing",
-                        )
-                        ? "Processing uploads."
-                        : "Ready for retrieval."
-                      : "No docs loaded yet."}
-                  </p>
-                </div>
-                <Badge variant="secondary" className="shrink-0">
-                  {documents.length}/{maxSessionDocs}
-                </Badge>
-              </div>
-
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                {documents.length ? (
-                  <Button type="button" variant="ghost" size="sm" onClick={onClearDocuments}>
-                    Clear all
-                  </Button>
-                ) : (
-                  <span />
-                )}
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setShowDocs((value) => !value)}
-                  aria-label={docsExpanded ? "Hide session docs" : "Show session docs"}
-                >
-                  <ChevronDown
-                    className={`h-4 w-4 transition ${docsExpanded ? "rotate-180" : ""}`}
-                  />
-                </Button>
-              </div>
-            </div>
-
-            {docsExpanded ? (
-              <ScrollArea className="h-[190px]">
-                <div className="space-y-3">
-                  {documents.length ? (
-                    documents.map((document) => (
-                      <div key={document.id} className="surface-muted p-3">
-                        <div className="grid gap-3">
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2">
-                              <FileText className="h-4 w-4 shrink-0 text-zinc-500" />
-                              <p className="truncate text-sm font-medium text-zinc-950">
-                                {document.filename}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center justify-between gap-2">
-                            <Badge variant={statusTone(document.status)}>{document.status}</Badge>
-                            {document.filename === bundledSampleFilename ? (
-                              <Badge variant="outline">sample</Badge>
-                            ) : null}
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => onDeleteDocument(document.id)}
-                              aria-label={`Remove ${document.filename}`}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="surface-muted p-4 text-sm text-zinc-500">
-                      No docs loaded yet.
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
-            ) : null}
-          </div>
+          <SessionDocsList
+            docsExpanded={docsExpanded}
+            documents={documents}
+            maxSessionDocs={maxSessionDocs}
+            onClearDocuments={onClearDocuments}
+            onDeleteDocument={onDeleteDocument}
+            onToggleDocs={() => setShowDocs((value) => !value)}
+          />
 
           {uploadOutcomes.length ? (
             <>
               <Separator />
-              <div className="space-y-3">
-                <div>
-                  <p className="eyebrow">Latest ingestion</p>
-                  <p className="mt-1 text-sm text-zinc-500">Last upload</p>
-                </div>
-                <div className="space-y-2">
-                  {uploadOutcomes.map((outcome) => (
-                    <div
-                      key={`${outcome.filename}-${outcome.status}`}
-                      className="surface-muted p-3 text-sm"
-                    >
-                      <div className="grid gap-2">
-                        <p className="truncate text-zinc-700">{outcome.filename}</p>
-                        <p
-                          className={
-                            outcome.status === "failed" ? "text-red-700" : "text-emerald-700"
-                          }
-                        >
-                          {outcome.message}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <LatestIngestion uploadOutcomes={uploadOutcomes} />
             </>
           ) : null}
         </CardContent>
