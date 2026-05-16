@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DocsGapReportCard } from "@/components/answer/docs-gap-report-card";
 import { PipelineTrace } from "@/components/answer/pipeline-trace";
+import { QualityCheckCard } from "@/components/answer/quality-check-card";
 import {
   CitationMarker,
   SourceLedger,
@@ -386,6 +387,7 @@ export function AnswerPanel({
             <EvidenceOnlySummary result={result} onDraftFromEvidence={onDraftFromEvidence} />
           ) : (
             <>
+              <QualityCheckCard result={result} showDebugDetails={showDebugDetails} />
               {result.docsGapReport ? <DocsGapReportCard report={result.docsGapReport} /> : null}
 
               <AnswerSection

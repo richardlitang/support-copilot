@@ -103,6 +103,29 @@ export interface DocsGapReport {
   evidenceSnapshot: DocsGapEvidenceSnapshot[];
 }
 
+export interface AnswerQualityCheck {
+  retrieval: {
+    sourceCount: number;
+    topK: number;
+    ignoredDocStatuses: Array<"uploaded" | "processing" | "failed">;
+  };
+  grounding: {
+    totalClaims: number;
+    supportedClaims: number;
+    weakClaims: number;
+    unsupportedClaims: number;
+    invalidCitations: number;
+  };
+  readiness: {
+    status: "ready" | "needs_human_review" | "blocked";
+    reasons: string[];
+  };
+  missingInfo: {
+    hasDocsGap: boolean;
+    missingItems: string[];
+  };
+}
+
 export interface InvestigationResult {
   investigationId: string;
   ticketId: string;
@@ -118,6 +141,7 @@ export interface InvestigationResult {
   toolEvidence: ToolEvidenceItem[];
   toolCalls: ToolCallRecord[];
   pipelineTrace: PipelineTraceStep[];
+  qualityCheck: AnswerQualityCheck;
   docsGapReport?: DocsGapReport;
 }
 

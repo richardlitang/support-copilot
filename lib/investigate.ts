@@ -20,6 +20,7 @@ import {
   type InvestigationDependencies,
   type InvestigationInput,
 } from "@/lib/investigation/stages";
+import { buildAnswerQualityCheck } from "@/lib/investigation/quality-check";
 import { buildPipelineTrace } from "@/lib/investigation/trace";
 
 const defaultDependencies: InvestigationDependencies = {
@@ -121,6 +122,21 @@ export async function investigateTicket(
     docEvidence: retrieval.docEvidence,
     toolEvidence: toolArtifacts.toolEvidence,
   });
+  const totalClaims =
+    generated.customerReply.claims.length + generated.internalDiagnosis.claims.length;
+  const invalidCitations = [
+    ...generated.customerReply.claims,
+    ...generated.internalDiagnosis.claims,
+  ].filter((claim) => claim.citations.length === 0).length;
+  const qualityCheck = buildAnswerQualityCheck({
+    reviewDecision: review.reviewDecision,
+    routingReason,
+    docEvidenceCount: retrieval.docEvidence.length,
+    toolEvidenceCount: toolArtifacts.toolEvidence.length,
+    totalClaims,
+    invalidCitations,
+    ...(docsGapReport ? { docsGapReport } : {}),
+  });
 
   return {
     investigationId: persisted.investigationId,
@@ -137,6 +153,7 @@ export async function investigateTicket(
     toolEvidence: toolArtifacts.toolEvidence,
     toolCalls: toolArtifacts.toolCalls,
     pipelineTrace,
+    qualityCheck,
     ...(docsGapReport ? { docsGapReport } : {}),
   } satisfies InvestigationResult;
 }

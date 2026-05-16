@@ -25,6 +25,28 @@ const baseResult: InvestigationResult = {
   toolEvidence: [],
   toolCalls: [],
   pipelineTrace: [],
+  qualityCheck: {
+    retrieval: {
+      sourceCount: 0,
+      topK: 5,
+      ignoredDocStatuses: ["uploaded", "processing", "failed"],
+    },
+    grounding: {
+      totalClaims: 0,
+      supportedClaims: 0,
+      weakClaims: 0,
+      unsupportedClaims: 0,
+      invalidCitations: 0,
+    },
+    readiness: {
+      status: "needs_human_review",
+      reasons: ["Retrieved evidence was not strong enough for a supported answer."],
+    },
+    missingInfo: {
+      hasDocsGap: false,
+      missingItems: [],
+    },
+  },
 };
 
 describe("getReviewAction", () => {
