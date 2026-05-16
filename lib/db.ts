@@ -7,11 +7,7 @@ import {
   listDocumentsDirect,
   updateDocumentStatusDirect,
 } from "@/src/server/db/documents";
-import {
-  matchDocumentChunksDirect,
-  matchLiteralDocumentChunksDirect,
-  replaceDocumentChunks,
-} from "@/src/server/db/chunks";
+import { replaceDocumentChunks } from "@/src/server/db/chunks";
 import { withPgClient } from "@/src/server/db/client";
 import {
   createInvestigationDirect,
@@ -27,6 +23,7 @@ import {
   listFeatureFlagsByAccountIdDirect,
   listRecentErrorsByAccountIdDirect,
 } from "@/src/server/db/supportContext";
+import { createTicketDirect } from "@/src/server/db/tickets";
 import type {
   InvestigationMode,
   ReviewDecision,
@@ -301,18 +298,7 @@ export async function insertDocumentChunks(
 }
 
 export async function createTicket(rawText: string) {
-  const supabase = getSupabaseAdminClient();
-  const { data, error } = await supabase
-    .from("tickets")
-    .insert({ raw_text: rawText })
-    .select("id")
-    .single();
-
-  if (error || !data) {
-    throw new Error(`Failed to create ticket: ${error?.message ?? "Unknown error"}`);
-  }
-
-  return data.id as string;
+  return createTicketDirect(rawText);
 }
 
 export async function createInvestigation(input: {
