@@ -41,7 +41,7 @@ Support Copilot is a single-app Next.js support investigation workspace built to
 - TypeScript
 - Tailwind CSS
 - Supabase Postgres with pgvector
-- OpenAI embeddings and structured answer generation
+- Provider-gated embeddings and structured answer generation, with OpenAI as the live provider
 - Vitest for unit and pipeline tests
 
 ## Architecture
@@ -91,7 +91,7 @@ For local-first Milestone 1 development, the required values are:
 - `AI_PROVIDER=mock`
 - `UPLOAD_DIR=uploads`
 
-`AI_PROVIDER=mock` uses deterministic 1536-dimensional embeddings so tests and local verification do not require paid APIs. Set `AI_PROVIDER=openai` only when you want live model quality, then provide `OPENAI_API_KEY`.
+`AI_PROVIDER=mock` uses deterministic 1536-dimensional embeddings and local structured-answer fixtures so tests and local verification do not require paid APIs. Set `AI_PROVIDER=openai` only when you want live model quality, then provide one `OPENAI_API_KEY` for both embeddings and structured answer generation.
 
 Hosted Supabase mode remains optional. If using hosted Supabase instead of local Docker Postgres, fill in:
 

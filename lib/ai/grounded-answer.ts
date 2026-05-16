@@ -1,7 +1,7 @@
 import { buildCitationReferences, normalizeCitationLabels } from "@/lib/citations";
 import { getRuntimeConfig } from "@/lib/env";
-import { getAnswerModel, getOpenAIClient } from "@/lib/openai";
 import { answerSchema } from "@/lib/ai/schemas";
+import { createStructuredJsonResponse } from "@/src/server/ai/provider";
 import type { EvidenceChunk, GroundedClaim, StructuredAnswer } from "@/lib/types";
 
 export function buildInsufficientSupportAnswer(): StructuredAnswer {
@@ -138,13 +138,12 @@ async function requestGroundedAnswer(input: {
     } satisfies StructuredAnswer;
   }
 
-  const client = getOpenAIClient();
-  const model = getAnswerModel();
   const citations = buildCitationReferences(input.evidence);
 
-  const response = await client.responses.create({
-    model,
-    input: [
+  return createStructuredJsonResponse<StructuredAnswer>({
+    schema: answerSchema,
+    emptyResponseMessage: "The answer model returned an empty response.",
+    messages: [
       {
         role: "system",
         content: [
@@ -171,21 +170,7 @@ async function requestGroundedAnswer(input: {
         ],
       },
     ],
-    text: {
-      format: {
-        type: "json_schema",
-        ...answerSchema,
-      },
-    },
   });
-
-  const outputText = response.output_text;
-
-  if (!outputText) {
-    throw new Error("The answer model returned an empty response.");
-  }
-
-  return JSON.parse(outputText) as StructuredAnswer;
 }
 
 export async function generateGroundedAnswer(input: { ticket: string; evidence: EvidenceChunk[] }) {

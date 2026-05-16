@@ -1,7 +1,27 @@
 import { getRuntimeConfig } from "@/lib/env";
-import { getEmbeddingModel, getOpenAIClient } from "@/lib/openai";
+import { getAnswerModel, getEmbeddingModel, getOpenAIClient } from "@/lib/openai";
 
 const MOCK_EMBEDDING_DIMENSIONS = 1536;
+
+type AiTextMessage = {
+  role: "system" | "user";
+  content: Array<{
+    type: "input_text";
+    text: string;
+  }>;
+};
+
+export type StructuredJsonRequest = {
+  messages: AiTextMessage[];
+  schema: {
+    readonly name: string;
+    readonly schema: {
+      readonly [key: string]: unknown;
+    };
+    readonly strict?: boolean;
+  };
+  emptyResponseMessage: string;
+};
 
 function normalizeVector(vector: number[]) {
   const magnitude = Math.sqrt(vector.reduce((sum, value) => sum + value * value, 0));
@@ -59,4 +79,39 @@ export async function createEmbeddings(texts: string[]) {
   }
 
   return embeddings;
+}
+
+export async function createStructuredJsonResponse<T>(input: StructuredJsonRequest) {
+  const provider = getRuntimeConfig().aiProvider;
+
+  if (provider === "mock") {
+    throw new Error("Mock structured responses must be supplied by the caller.");
+  }
+
+  if (provider === "ollama") {
+    throw new Error("Structured responses are not implemented for AI_PROVIDER=ollama.");
+  }
+
+  const client = getOpenAIClient();
+  const model = getAnswerModel();
+  const response = await client.responses.create({
+    model,
+    input: input.messages,
+    text: {
+      format: {
+        type: "json_schema",
+        name: input.schema.name,
+        strict: input.schema.strict,
+        schema: input.schema.schema,
+      },
+    },
+  });
+
+  const outputText = response.output_text;
+
+  if (!outputText) {
+    throw new Error(input.emptyResponseMessage);
+  }
+
+  return JSON.parse(outputText) as T;
 }

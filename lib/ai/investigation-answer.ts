@@ -1,7 +1,7 @@
 import { normalizeSourceLabels } from "@/lib/citations";
 import { getRuntimeConfig } from "@/lib/env";
-import { getAnswerModel, getOpenAIClient } from "@/lib/openai";
 import { investigationAnswerSchema, type StructuredInvestigationDraft } from "@/lib/ai/schemas";
+import { createStructuredJsonResponse } from "@/src/server/ai/provider";
 import type {
   CitationId,
   DocEvidenceItem,
@@ -381,8 +381,6 @@ async function requestInvestigationAnswer(input: {
     } satisfies StructuredInvestigationDraft;
   }
 
-  const client = getOpenAIClient();
-  const model = getAnswerModel();
   const docBlock = input.docEvidence.length
     ? input.docEvidence
         .map(
@@ -398,9 +396,10 @@ async function requestInvestigationAnswer(input: {
     : "None";
   const requiredDiagnosticTokens = extractRequiredDiagnosticTokens(input.toolEvidence);
 
-  const response = await client.responses.create({
-    model,
-    input: [
+  return createStructuredJsonResponse<StructuredInvestigationDraft>({
+    schema: investigationAnswerSchema,
+    emptyResponseMessage: "The investigation model returned an empty response.",
+    messages: [
       {
         role: "system",
         content: [
@@ -428,21 +427,7 @@ async function requestInvestigationAnswer(input: {
         ],
       },
     ],
-    text: {
-      format: {
-        type: "json_schema",
-        ...investigationAnswerSchema,
-      },
-    },
   });
-
-  const outputText = response.output_text;
-
-  if (!outputText) {
-    throw new Error("The investigation model returned an empty response.");
-  }
-
-  return JSON.parse(outputText) as StructuredInvestigationDraft;
 }
 
 export async function generateInvestigationAnswer(input: {

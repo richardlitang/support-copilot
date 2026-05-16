@@ -28,7 +28,8 @@ For a file-oriented map of frontend, backend, worker, and test/demo code, see [`
    - Tool outputs become separate evidence items with source IDs such as `T1`, `T2`, and `T3`.
 
 5. **Generate structured claims**
-   - `lib/answer.ts` is a stable facade over `lib/ai/*` modules that ask OpenAI for structured output, not a freeform blob.
+   - `lib/answer.ts` is a stable facade over `lib/ai/*` modules that request provider-gated structured output, not a freeform blob.
+   - Live structured generation currently uses OpenAI through `src/server/ai/provider.ts`; tests and CI use the deterministic mock provider.
    - The app renders customer-facing reply and internal diagnosis from claim arrays.
 
 6. **Validate and review**
