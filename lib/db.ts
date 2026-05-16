@@ -8,12 +8,7 @@ import {
   updateDocumentRecordStatus,
 } from "@/src/server/db/documentRecords";
 import { insertDocumentChunksRecord } from "@/src/server/db/documentChunkWrites";
-import {
-  createInvestigationDirect,
-  insertInvestigationSourcesDirect,
-  insertInvestigationToolCallsDirect,
-  persistInvestigationRunDirect,
-} from "@/src/server/db/investigations";
+import { persistInvestigationRunDirect } from "@/src/server/db/investigations";
 import { matchDocumentChunksDb, matchLiteralDocumentChunksDb } from "@/src/server/db/retrieval";
 import { getSupabaseAdminClient, hasDatabaseConfig } from "@/src/server/db/supabaseAdmin";
 import {
@@ -22,7 +17,6 @@ import {
   listFeatureFlagsByAccountIdDirect,
   listRecentErrorsByAccountIdDirect,
 } from "@/src/server/db/supportContext";
-import { createTicketDirect } from "@/src/server/db/tickets";
 import type {
   InvestigationMode,
   ReviewDecision,
@@ -123,48 +117,6 @@ export async function insertDocumentChunks(
   rows: Array<ChunkCandidate & { documentId: string; embedding: number[] }>,
 ) {
   return insertDocumentChunksRecord(rows);
-}
-
-export async function createTicket(rawText: string) {
-  return createTicketDirect(rawText);
-}
-
-export async function createInvestigation(input: {
-  ticketId: string;
-  status: string;
-  answerMarkdown: string;
-  supportLevel: SupportLevel;
-  mode?: InvestigationMode | null;
-  reviewStatus?: ReviewStatus | null;
-  reviewDecision?: ReviewDecision | null;
-  routingReason?: string | null;
-  accountId?: string | null;
-  customerReplyJson?: StructuredClaimSet | null;
-  internalDiagnosisJson?: StructuredClaimSetWithOpenQuestions | null;
-}) {
-  return createInvestigationDirect(input);
-}
-
-export async function insertInvestigationSources(
-  rows: Array<{
-    investigationId: string;
-    documentChunkId: string;
-    rank: number;
-    score: number;
-  }>,
-) {
-  return insertInvestigationSourcesDirect(rows);
-}
-
-export async function insertInvestigationToolCalls(
-  rows: Array<{
-    investigationId: string;
-    toolName: ToolCallRecord["toolName"];
-    input: Record<string, unknown>;
-    output: unknown;
-  }>,
-) {
-  return insertInvestigationToolCallsDirect(rows);
 }
 
 export async function persistInvestigationRun(input: {
