@@ -5,6 +5,11 @@ import { createRequestLogger } from "@/lib/log";
 import { ensureSessionId } from "@/lib/session";
 import type { UploadOutcome } from "@/lib/types";
 import { recordPipelineEvent } from "@/src/server/db/pipelineEvents";
+import {
+  createDocumentIngestionJob,
+  markDocumentIngestionJobFailure,
+  markDocumentIngestionJobQueued,
+} from "@/src/server/db/documentIngestionJobs";
 import { captureServerException } from "@/src/server/observability/sentry";
 import { enqueueDocumentIngestionJob } from "@/src/server/queue/client";
 import { putLocalObject } from "@/src/server/storage/localObjectStorage";
@@ -79,6 +84,9 @@ export async function POST(request: Request) {
         continue;
       }
 
+      let ingestionJobId: string | null = null;
+      let documentId: string | null = null;
+
       try {
         const buffer = Buffer.from(await file.arrayBuffer());
         const stored = await putLocalObject({
@@ -93,6 +101,11 @@ export async function POST(request: Request) {
           status: "uploaded",
           storagePath: stored.storagePath,
           sizeBytes: file.size,
+        });
+        documentId = document.id;
+        ingestionJobId = await createDocumentIngestionJob({
+          documentId: document.id,
+          maxAttempts: 3,
         });
 
         await recordPipelineEvent({
@@ -110,7 +123,13 @@ export async function POST(request: Request) {
 
         const job = await enqueueDocumentIngestionJob({
           documentId: document.id,
+          ingestionJobId: ingestionJobId,
           sessionId,
+        });
+        await markDocumentIngestionJobQueued({
+          ingestionJobId,
+          queueJobId: String(job.id),
+          maxAttempts: 3,
         });
 
         await recordPipelineEvent({
@@ -121,6 +140,7 @@ export async function POST(request: Request) {
           sessionId,
           metadata: {
             jobId: job.id,
+            ingestionJobId,
             queueName: "document-ingestion",
           },
         }).catch(() => undefined);
@@ -134,6 +154,7 @@ export async function POST(request: Request) {
         logger.info("file_accepted", {
           filename: file.name,
           documentId: document.id,
+          ingestionJobId,
           jobId: job.id,
           sizeBytes: file.size,
         });
@@ -154,9 +175,37 @@ export async function POST(request: Request) {
           status: "failed",
           message: "Upload failed before ingestion could start.",
         });
+        const errorMessage = error instanceof Error ? error.message : "Upload failed.";
+        if (ingestionJobId) {
+          await markDocumentIngestionJobFailure({
+            ingestionJobId,
+            attemptCount: 1,
+            maxAttempts: 3,
+            finalAttempt: true,
+            errorCode: "INGESTION_ENQUEUE_FAILED",
+            errorMessageSafe: "Document ingestion could not be enqueued.",
+          }).catch(() => undefined);
+        }
+        if (documentId) {
+          await recordPipelineEvent({
+            eventType: "DOCUMENT_INGESTION_FAILED",
+            status: "failed",
+            entityType: "document",
+            entityId: documentId,
+            sessionId,
+            errorCode: "INGESTION_ENQUEUE_FAILED",
+            errorMessageSafe: "Document ingestion could not be enqueued.",
+          }).catch(() => undefined);
+        }
+        const match = errorMessage.match(
+          /duplicate key value violates unique constraint "document_ingestion_jobs_queue_job_id_key"/i,
+        );
+        if (match) {
+          logger.error("ingestion_job_queue_id_conflict", { filename: file.name, errorMessage });
+        }
         logger.error("file_ingest_failed", {
           filename: file.name,
-          message: error instanceof Error ? error.message : "Upload failed.",
+          message: errorMessage,
         });
       }
     }

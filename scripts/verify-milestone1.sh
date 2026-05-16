@@ -61,7 +61,7 @@ console.error('Timed out waiting for document readiness');
 process.exit(1);
 " "$DOCUMENT_ID" "$APP_URL" "$(tr -s '\t' ' ' < "$COOKIE_JAR" | awk '/support_session_id/ {print "support_session_id="$7}' | tail -n 1)"
 
-echo "Checking chunks and pipeline events..."
+echo "Checking chunks, pipeline events, and ingestion job records..."
 node --input-type=module -e "
 import pg from 'pg';
 const documentId = process.argv[1];
@@ -69,6 +69,7 @@ const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
 await client.connect();
 const chunks = await client.query('select count(*)::int as count from document_chunks where document_id = \$1', [documentId]);
 const events = await client.query('select event_type from pipeline_events where entity_id = \$1 order by created_at asc', [documentId]);
+const jobs = await client.query('select status, attempt_count from document_ingestion_jobs where document_id = \$1 order by created_at desc limit 1', [documentId]);
 await client.end();
 if ((chunks.rows[0]?.count ?? 0) < 1) {
   console.error('Expected document chunks to exist');
@@ -80,6 +81,15 @@ for (const required of ['DOCUMENT_UPLOADED', 'DOCUMENT_INGESTION_ENQUEUED', 'DOC
     console.error('Missing pipeline event: ' + required);
     process.exit(1);
   }
+}
+const latestJob = jobs.rows[0];
+if (!latestJob) {
+  console.error('Expected document_ingestion_jobs row for uploaded document');
+  process.exit(1);
+}
+if (latestJob.status !== 'completed') {
+  console.error('Expected ingestion job status completed, got ' + latestJob.status);
+  process.exit(1);
 }
 " "$DOCUMENT_ID"
 

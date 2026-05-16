@@ -1,4 +1,5 @@
 import { Worker } from "bullmq";
+import os from "node:os";
 import { chunkParsedDocument } from "@/lib/chunk";
 import { embedTexts } from "@/lib/embed";
 import { createRequestLogger } from "@/lib/log";
@@ -10,6 +11,11 @@ import {
   updateDocumentStatusDirect,
   updateDocumentStatusWithClient,
 } from "@/src/server/db/documents";
+import {
+  markDocumentIngestionJobCompleted,
+  markDocumentIngestionJobFailure,
+  markDocumentIngestionJobProcessing,
+} from "@/src/server/db/documentIngestionJobs";
 import { recordPipelineEvent, sanitizeError } from "@/src/server/db/pipelineEvents";
 import { captureServerException } from "@/src/server/observability/sentry";
 import { getLocalObject } from "@/src/server/storage/localObjectStorage";
@@ -17,12 +23,30 @@ import { getRedisConnection } from "@/src/server/queue/client";
 import type { DocumentIngestionJob } from "@/src/server/queue/jobs";
 import { JOB_NAMES, QUEUE_NAMES } from "@/src/server/queue/names";
 
-async function processDocumentIngestion(jobData: DocumentIngestionJob, jobId?: string) {
+async function processDocumentIngestion(
+  jobData: DocumentIngestionJob,
+  meta: {
+    queueJobId?: string;
+    attemptCount: number;
+    maxAttempts: number;
+  },
+) {
+  const queueJobId = meta.queueJobId;
+  const workerId = `${os.hostname()}:${process.pid}`;
   const logger = createRequestLogger("document-ingestion-worker", {
     documentId: jobData.documentId,
-    jobId,
+    jobId: queueJobId,
   });
   const startedAt = Date.now();
+  const finalAttempt = meta.attemptCount >= meta.maxAttempts;
+
+  await markDocumentIngestionJobProcessing({
+    ingestionJobId: jobData.ingestionJobId,
+    queueJobId,
+    attemptCount: meta.attemptCount,
+    maxAttempts: meta.maxAttempts,
+    workerId,
+  }).catch(() => undefined);
 
   await recordPipelineEvent({
     eventType: "DOCUMENT_INGESTION_STARTED",
@@ -30,7 +54,12 @@ async function processDocumentIngestion(jobData: DocumentIngestionJob, jobId?: s
     entityType: "document",
     entityId: jobData.documentId,
     sessionId: jobData.sessionId,
-    metadata: { jobId },
+    metadata: {
+      jobId: queueJobId,
+      ingestionJobId: jobData.ingestionJobId,
+      attemptCount: meta.attemptCount,
+      maxAttempts: meta.maxAttempts,
+    },
   });
 
   try {
@@ -138,9 +167,17 @@ async function processDocumentIngestion(jobData: DocumentIngestionJob, jobId?: s
       durationMs: Date.now() - startedAt,
       metadata: {
         chunkCount: result.chunkCount,
-        jobId,
+        jobId: queueJobId,
+        ingestionJobId: jobData.ingestionJobId,
       },
     });
+    await markDocumentIngestionJobCompleted({
+      ingestionJobId: jobData.ingestionJobId,
+      queueJobId,
+      attemptCount: meta.attemptCount,
+      maxAttempts: meta.maxAttempts,
+      workerId,
+    }).catch(() => undefined);
 
     logger.info("document_ingestion_completed", {
       chunkCount: result.chunkCount,
@@ -154,7 +191,7 @@ async function processDocumentIngestion(jobData: DocumentIngestionJob, jobId?: s
         route: "document-ingestion-worker",
         jobName: JOB_NAMES.documentIngestion,
         documentId: jobData.documentId,
-        jobId: jobId ?? "unknown",
+        jobId: queueJobId ?? "unknown",
       },
       extra: {
         errorCode: safeError.errorCode,
@@ -162,9 +199,20 @@ async function processDocumentIngestion(jobData: DocumentIngestionJob, jobId?: s
       },
     });
 
+    await markDocumentIngestionJobFailure({
+      ingestionJobId: jobData.ingestionJobId,
+      queueJobId,
+      attemptCount: meta.attemptCount,
+      maxAttempts: meta.maxAttempts,
+      workerId,
+      finalAttempt,
+      errorCode: safeError.errorCode ?? null,
+      errorMessageSafe: safeError.errorMessageSafe,
+    }).catch(() => undefined);
+
     await updateDocumentStatusDirect({
       documentId: jobData.documentId,
-      status: "failed",
+      status: finalAttempt ? "failed" : "processing",
       errorCode: safeError.errorCode,
       errorMessageSafe: safeError.errorMessageSafe,
     }).catch(() => undefined);
@@ -176,7 +224,12 @@ async function processDocumentIngestion(jobData: DocumentIngestionJob, jobId?: s
       entityId: jobData.documentId,
       sessionId: jobData.sessionId,
       durationMs: Date.now() - startedAt,
-      metadata: { jobId },
+      metadata: {
+        jobId: queueJobId,
+        ingestionJobId: jobData.ingestionJobId,
+        attemptCount: meta.attemptCount,
+        maxAttempts: meta.maxAttempts,
+      },
       errorCode: safeError.errorCode,
       errorMessageSafe: safeError.errorMessageSafe,
     }).catch(() => undefined);
@@ -185,6 +238,9 @@ async function processDocumentIngestion(jobData: DocumentIngestionJob, jobId?: s
       errorCode: safeError.errorCode,
       errorMessageSafe: safeError.errorMessageSafe,
       durationMs: Date.now() - startedAt,
+      finalAttempt,
+      attemptCount: meta.attemptCount,
+      maxAttempts: meta.maxAttempts,
     });
 
     throw error;
@@ -199,7 +255,11 @@ export function createDocumentIngestionWorker() {
         return;
       }
 
-      await processDocumentIngestion(job.data, job.id);
+      await processDocumentIngestion(job.data, {
+        queueJobId: job.id,
+        attemptCount: job.attemptsMade + 1,
+        maxAttempts: job.opts.attempts ?? 1,
+      });
     },
     {
       connection: getRedisConnection(),
