@@ -198,7 +198,7 @@ For restricted/offline environments, use:
 npm run eval:demo:offline
 ```
 
-The offline eval uses mocked retrieved evidence and tool outputs. It also checks graph-node parity for route and review outcomes. `lib/graph/**` is parity scaffolding for future orchestration, not the active runtime path. The live eval is still the real retrieval-quality gate.
+The offline eval uses mocked retrieved evidence and tool outputs. It also checks graph-node parity for route and review outcomes. `lib/experimental/graph/**` is parity scaffolding for future orchestration, not the active runtime path. The live eval is still the real retrieval-quality gate.
 
 The eval runner now reports route correctness, review status, retrieval evidence keywords, tool evidence, and top retrieved docs. It exits non-zero if the grounded behavior drifts.
 

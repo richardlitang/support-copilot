@@ -54,7 +54,7 @@ const config = [
     },
   },
   {
-    files: ["lib/graph/**/*.{ts,tsx}"],
+    files: ["lib/experimental/graph/**/*.{ts,tsx}"],
     rules: {
       "no-restricted-imports": [
         "error",

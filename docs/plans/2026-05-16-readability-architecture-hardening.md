@@ -57,7 +57,7 @@ npm run verify
 - Add scoped `no-restricted-imports` rules:
   - `components/**` must not import from `@/src/server/**`.
   - `components/**` must not import from API route files.
-  - `lib/graph/**` must not import UI or route modules.
+  - `lib/experimental/graph/**` must not import UI or route modules.
   - `src/server/**` must not import React components.
 - Keep the first rules narrow enough that they pass immediately.
 
@@ -191,7 +191,7 @@ npm run build
 
 **Files:**
 
-- Modify/move: `lib/graph/**`
+- Modify/move: `lib/experimental/graph/**`
 - Modify: `docs/code-map.md`
 - Modify: `docs/architecture.md`
 

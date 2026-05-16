@@ -1,10 +1,10 @@
-import { classifyInvestigationNode } from "@/lib/graph/nodes/classify-investigation";
-import { applyReviewPolicyNode } from "@/lib/graph/nodes/apply-review-policy";
-import { generateClaimsNode } from "@/lib/graph/nodes/generate-claims";
-import { retrieveDocumentationNode } from "@/lib/graph/nodes/retrieve-documentation";
-import { runContextToolsNode } from "@/lib/graph/nodes/run-context-tools";
-import { validateGroundingNode } from "@/lib/graph/nodes/validate-grounding";
-import { createInitialInvestigationGraphState } from "@/lib/graph/investigation-state";
+import { classifyInvestigationNode } from "@/lib/experimental/graph/nodes/classify-investigation";
+import { applyReviewPolicyNode } from "@/lib/experimental/graph/nodes/apply-review-policy";
+import { generateClaimsNode } from "@/lib/experimental/graph/nodes/generate-claims";
+import { retrieveDocumentationNode } from "@/lib/experimental/graph/nodes/retrieve-documentation";
+import { runContextToolsNode } from "@/lib/experimental/graph/nodes/run-context-tools";
+import { validateGroundingNode } from "@/lib/experimental/graph/nodes/validate-grounding";
+import { createInitialInvestigationGraphState } from "@/lib/experimental/graph/investigation-state";
 import type { EvidenceChunk } from "@/lib/types";
 import type { AccountRecord, FeatureFlagRecord } from "@/lib/types/investigation";
 

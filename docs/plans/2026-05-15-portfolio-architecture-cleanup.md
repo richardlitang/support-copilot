@@ -10,7 +10,7 @@ The active runtime remains the direct `lib/investigate.ts` pipeline. Graph modul
 
 ## Tasks
 
-1. Extract shared claim-generation branching from `lib/investigate.ts` and `lib/graph/nodes/generate-claims.ts` into `lib/claim-generation.ts`.
+1. Extract shared claim-generation branching from `lib/investigate.ts` and `lib/experimental/graph/nodes/generate-claims.ts` into `lib/claim-generation.ts`.
 2. Rename `ingestParsedDocument` to `directIngestParsedDocument` and update seed/sample/tests.
 3. Add `docs/code-map.md` with current runtime boundaries and reading order.
 4. Update README and architecture docs to point reviewers at the code map and label future graph work.

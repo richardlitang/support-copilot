@@ -2,16 +2,16 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { hasDatabaseConfig } from "../lib/db";
-import { createInitialInvestigationGraphState } from "../lib/graph/investigation-state";
-import { applyReviewPolicyNode } from "../lib/graph/nodes/apply-review-policy";
-import { classifyInvestigationNode } from "../lib/graph/nodes/classify-investigation";
-import { generateClaimsNode } from "../lib/graph/nodes/generate-claims";
-import { retrieveDocumentationNode } from "../lib/graph/nodes/retrieve-documentation";
+import { createInitialInvestigationGraphState } from "../lib/experimental/graph/investigation-state";
+import { applyReviewPolicyNode } from "../lib/experimental/graph/nodes/apply-review-policy";
+import { classifyInvestigationNode } from "../lib/experimental/graph/nodes/classify-investigation";
+import { generateClaimsNode } from "../lib/experimental/graph/nodes/generate-claims";
+import { retrieveDocumentationNode } from "../lib/experimental/graph/nodes/retrieve-documentation";
 import {
   defaultRunContextToolsAdapters,
   runContextToolsNode,
-} from "../lib/graph/nodes/run-context-tools";
-import { validateGroundingNode } from "../lib/graph/nodes/validate-grounding";
+} from "../lib/experimental/graph/nodes/run-context-tools";
+import { validateGroundingNode } from "../lib/experimental/graph/nodes/validate-grounding";
 import { investigateTicket } from "../lib/investigate";
 import type { EvidenceChunk, StructuredAnswer } from "../lib/types";
 import type {

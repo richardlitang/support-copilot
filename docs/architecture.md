@@ -72,7 +72,7 @@ The project relies on explicit artifacts instead of hidden reasoning:
 - PDF parsing is best effort and should not be the primary demo path.
 - Chunking has basic table preservation but is not a full layout-aware document parser.
 - Literal expansion currently uses simple Postgres `ILIKE` matching. Trigram or full-text retrieval should be added only if evals show missed literal/prose cases.
-- LangGraph is not implemented yet. `lib/graph/**` contains parity wrappers around deterministic modules, but the runtime intentionally stays direct until evals prove stability.
+- LangGraph is not implemented yet. `lib/experimental/graph/**` contains parity wrappers around deterministic modules, but the runtime intentionally stays direct until evals prove stability.
 
 ## Future Direction
 
