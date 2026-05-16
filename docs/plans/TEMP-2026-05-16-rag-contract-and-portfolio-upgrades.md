@@ -399,13 +399,13 @@ When the RAG contract and UI quality panel are done, update the README with lang
 
 ## Current Status
 
-- [ ] Slice 1: RAG contract gate
-- [ ] Slice 2: Golden RAG contract cases
-- [ ] Slice 3: Answer quality contract
-- [ ] Slice 4: Compact Answer Quality UI
-- [ ] Slice 5: Durable document ingestion jobs
-- [ ] Slice 6: Persistence facade cleanup
-- [ ] Slice 7: Eval runner split
-- [ ] Slice 8: Large UI surface split
-- [ ] Slice 9: Security and privacy evals
+- [x] Slice 1: RAG contract gate
+- [x] Slice 2: Golden RAG contract cases
+- [x] Slice 3: Answer quality contract
+- [x] Slice 4: Compact Answer Quality UI
+- [x] Slice 5: Durable document ingestion jobs
+- [x] Slice 6: Persistence facade cleanup
+- [x] Slice 7: Eval runner split
+- [x] Slice 8: Large UI surface split
+- [x] Slice 9: Security and privacy evals
 - [ ] Slice 10: Optional AI PR reviewer
