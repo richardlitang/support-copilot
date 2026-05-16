@@ -25,20 +25,8 @@ jobs:
       - name: Install
         run: npm ci
 
-      - name: Lint
-        run: npm run lint
-
-      - name: Format check
-        run: npm run format:check
-
-      - name: Typecheck
-        run: npm run typecheck
-
-      - name: Test
-        run: npm run test
-
-      - name: Build
-        run: npm run build
+      - name: Verify
+        run: npm run verify
 
   docker-build:
     runs-on: ubuntu-latest
