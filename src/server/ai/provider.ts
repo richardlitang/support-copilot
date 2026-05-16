@@ -1,4 +1,4 @@
-import { getRuntimeConfig } from "@/lib/env";
+import { getRuntimeConfig } from "@/src/server/config/env";
 import { getAnswerModel, getEmbeddingModel, getOpenAIClient } from "@/src/server/ai/openai";
 
 const MOCK_EMBEDDING_DIMENSIONS = 1536;

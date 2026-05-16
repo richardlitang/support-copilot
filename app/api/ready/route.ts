@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getRuntimeConfig } from "@/lib/env";
+import { getRuntimeConfig } from "@/src/server/config/env";
 import { checkDatabaseReady } from "@/src/server/db/health";
 import { checkRedisReady } from "@/src/server/queue/client";
 

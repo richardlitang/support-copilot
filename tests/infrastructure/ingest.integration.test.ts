@@ -1,5 +1,5 @@
 import { directIngestParsedDocument } from "@/src/server/ingestion/directIngest";
-import { parseTextDocument } from "@/lib/parse";
+import { parseTextDocument } from "@/src/server/ingestion/parse";
 
 describe("directIngestParsedDocument", () => {
   it("chunks, embeds, and persists a parsed document", async () => {

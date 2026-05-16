@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { ensureEnvLoaded } from "@/lib/env";
+import { ensureEnvLoaded } from "@/src/server/config/env";
 
 function getSupabaseUrl() {
   ensureEnvLoaded();

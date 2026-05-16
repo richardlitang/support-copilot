@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { getRuntimeConfig } from "@/lib/env";
+import { getRuntimeConfig } from "@/src/server/config/env";
 
 function extensionFromFilename(filename: string) {
   const extension = path.extname(filename).toLowerCase();

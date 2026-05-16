@@ -1,5 +1,5 @@
 import pg from "pg";
-import { getRuntimeConfig } from "@/lib/env";
+import { getRuntimeConfig } from "@/src/server/config/env";
 
 const { Pool } = pg;
 

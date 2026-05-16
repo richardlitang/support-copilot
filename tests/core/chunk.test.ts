@@ -1,5 +1,5 @@
 import { chunkParsedDocument } from "@/lib/chunk";
-import { parseTextDocument } from "@/lib/parse";
+import { parseTextDocument } from "@/src/server/ingestion/parse";
 
 describe("chunkParsedDocument", () => {
   it("preserves markdown headings in chunk metadata", () => {

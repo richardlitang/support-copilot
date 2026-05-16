@@ -1,5 +1,5 @@
 import { buildCitationReferences, normalizeCitationLabels } from "@/lib/citations";
-import { getRuntimeConfig } from "@/lib/env";
+import { getRuntimeConfig } from "@/src/server/config/env";
 import { answerSchema } from "@/src/server/ai/answers/schemas";
 import { createStructuredJsonResponse } from "@/src/server/ai/provider";
 import type { EvidenceChunk, GroundedClaim, StructuredAnswer } from "@/lib/types";

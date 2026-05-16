@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { ensureEnvLoaded } from "@/lib/env";
+import { ensureEnvLoaded } from "@/src/server/config/env";
 
 let client: OpenAI | null = null;
 

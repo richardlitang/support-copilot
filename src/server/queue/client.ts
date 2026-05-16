@@ -1,6 +1,6 @@
 import { Queue } from "bullmq";
 import IORedis from "ioredis";
-import { getRuntimeConfig } from "@/lib/env";
+import { getRuntimeConfig } from "@/src/server/config/env";
 import { JOB_NAMES, QUEUE_NAMES } from "@/src/server/queue/names";
 import type { DocumentIngestionJob } from "@/src/server/queue/jobs";
 

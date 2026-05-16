@@ -1,7 +1,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { Client } from "pg";
-import { ensureEnvLoaded } from "../lib/env";
+import { ensureEnvLoaded } from "../src/server/config/env";
 
 ensureEnvLoaded();
 

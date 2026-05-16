@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { directIngestParsedDocument } from "@/src/server/ingestion/directIngest";
-import { parseTextDocument } from "@/lib/parse";
+import { parseTextDocument } from "@/src/server/ingestion/parse";
 import type { DocumentRecord } from "@/lib/types";
 
 export const BUNDLED_SAMPLE_FILENAME = "paybridge-api-support-guide.md";

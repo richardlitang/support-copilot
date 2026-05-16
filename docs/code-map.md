@@ -34,7 +34,7 @@ Document ingestion
     -> src/server/storage/localObjectStorage.ts
     -> src/server/queue/client.ts
     -> src/server/queue/workers/documentIngestionWorker.ts
-    -> lib/parse.ts
+    -> src/server/ingestion/parse.ts
     -> lib/chunk.ts
     -> src/server/ai/embed.ts
 

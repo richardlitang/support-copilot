@@ -52,7 +52,7 @@ Use this section first if another conversation picks up the project without chat
 - `components/AnswerPanel.tsx`: structured customer reply and internal diagnosis rendering.
 - `components/EvidencePanel.tsx`: retrieved doc evidence, tool evidence, and tool-call inspection.
 - `lib/ingest.ts`: file ingestion boundary.
-- `lib/parse.ts`: text extraction for markdown, text, and PDF.
+- `src/server/ingestion/parse.ts`: text extraction for markdown, text, and PDF.
 - `lib/chunk.ts`: deterministic chunking.
 - `lib/embed.ts`: OpenAI embedding generation.
 - `lib/retrieve.ts`: pgvector retrieval.
@@ -135,7 +135,7 @@ Verification from this batch:
 - `npm run test` passed.
 - `npm run typecheck` passed.
 - `npm run lint` passed.
-- `npm run build` passed with existing warnings about `tailwind.config.ts` module type and Turbopack NFT tracing through `lib/env.ts`.
+- `npm run build` passed with existing warnings about `tailwind.config.ts` module type and Turbopack NFT tracing through `src/server/config/env.ts`.
 - `npm run eval:demo` could not reach Supabase in this environment: first sandbox blocked the `tsx` IPC pipe, then escalated execution failed at `createTicket` with `TypeError: fetch failed`.
 
 ### Batch Progress: 2026-04-27 Continued

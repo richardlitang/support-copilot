@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { listAccountsSafe } from "@/src/server/db";
-import { createRequestLogger } from "@/lib/log";
+import { createRequestLogger } from "@/src/server/observability/log";
 import { captureServerException } from "@/src/server/observability/sentry";
 
 export async function GET() {

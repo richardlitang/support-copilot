@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { deleteDocumentById, deleteDocumentsBySessionId, listDocuments } from "@/src/server/db";
-import { createRequestLogger } from "@/lib/log";
+import { createRequestLogger } from "@/src/server/observability/log";
 import {
   ingestBundledSampleDocument,
   includesBundledSampleDocument,
   SAMPLE_DOCUMENT_OPT_OUT_COOKIE,
-} from "@/lib/sample-document";
-import { ensureSessionId } from "@/lib/session";
+} from "@/src/server/ingestion/sampleDocument";
+import { ensureSessionId } from "@/src/server/session";
 import { captureServerException } from "@/src/server/observability/sentry";
 
 export async function GET() {

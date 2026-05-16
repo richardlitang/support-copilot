@@ -1,4 +1,4 @@
-import { hasDirectDatabaseConfig } from "@/lib/env";
+import { hasDirectDatabaseConfig } from "@/src/server/config/env";
 import type { ChunkCandidate } from "@/lib/types";
 import { replaceDocumentChunks } from "@/src/server/db/chunks";
 import { getSupabaseAdminClient } from "@/src/server/db/supabaseAdmin";

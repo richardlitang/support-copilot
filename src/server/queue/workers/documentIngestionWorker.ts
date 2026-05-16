@@ -2,8 +2,8 @@ import { Worker } from "bullmq";
 import os from "node:os";
 import { chunkParsedDocument } from "@/lib/chunk";
 import { embedTexts } from "@/src/server/ai/embed";
-import { createRequestLogger } from "@/lib/log";
-import { parseUploadedBuffer } from "@/lib/parse";
+import { createRequestLogger } from "@/src/server/observability/log";
+import { parseUploadedBuffer } from "@/src/server/ingestion/parse";
 import { replaceDocumentChunksWithClient } from "@/src/server/db/chunks";
 import { withPgClient } from "@/src/server/db/client";
 import {

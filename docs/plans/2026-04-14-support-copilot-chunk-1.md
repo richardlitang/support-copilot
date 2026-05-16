@@ -59,7 +59,7 @@ npm run test -- schema
 
 **Files:**
 
-- Create `lib/parse.ts`
+- Create `src/server/ingestion/parse.ts`
 - Create `lib/chunk.ts`
 - Create `lib/embed.ts`
 - Create `app/api/upload/route.ts`

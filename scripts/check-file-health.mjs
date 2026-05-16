@@ -17,12 +17,17 @@ const forbiddenServerRuntimePaths = [
   "lib/answer.ts",
   "lib/db.ts",
   "lib/embed.ts",
+  "lib/env.ts",
   "lib/ingest.ts",
   "lib/investigate.ts",
   "lib/investigation",
+  "lib/log.ts",
   "lib/openai.ts",
+  "lib/parse.ts",
   "lib/rerank.ts",
   "lib/retrieve.ts",
+  "lib/sample-document.ts",
+  "lib/session.ts",
   "lib/tools",
 ];
 

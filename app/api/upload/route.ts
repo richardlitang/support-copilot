@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { getDocumentCount, listDocuments, createDocumentRecord } from "@/src/server/db";
-import { getRuntimeConfig } from "@/lib/env";
-import { createRequestLogger } from "@/lib/log";
-import { ensureSessionId } from "@/lib/session";
+import { getRuntimeConfig } from "@/src/server/config/env";
+import { createRequestLogger } from "@/src/server/observability/log";
+import { ensureSessionId } from "@/src/server/session";
 import type { UploadOutcome } from "@/lib/types";
 import { recordPipelineEvent } from "@/src/server/db/pipelineEvents";
 import {

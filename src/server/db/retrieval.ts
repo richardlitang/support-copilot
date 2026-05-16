@@ -1,4 +1,4 @@
-import { hasDirectDatabaseConfig } from "@/lib/env";
+import { hasDirectDatabaseConfig } from "@/src/server/config/env";
 import type { EvidenceChunk } from "@/lib/types";
 import {
   matchDocumentChunksDirect,

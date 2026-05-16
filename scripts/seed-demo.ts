@@ -7,7 +7,7 @@ import {
   listDocuments,
 } from "../src/server/db";
 import { directIngestParsedDocument } from "../src/server/ingestion/directIngest";
-import { parseTextDocument } from "../lib/parse";
+import { parseTextDocument } from "../src/server/ingestion/parse";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

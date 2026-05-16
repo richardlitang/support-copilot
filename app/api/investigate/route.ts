@@ -4,8 +4,8 @@ import {
   InvestigationRequestError,
   normalizeInvestigationRequest,
 } from "@/lib/investigation-request";
-import { createRequestLogger } from "@/lib/log";
-import { ensureSessionId } from "@/lib/session";
+import { createRequestLogger } from "@/src/server/observability/log";
+import { ensureSessionId } from "@/src/server/session";
 import { recordPipelineEvent } from "@/src/server/db/pipelineEvents";
 import { captureServerException } from "@/src/server/observability/sentry";
 

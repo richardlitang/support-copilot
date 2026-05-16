@@ -44,7 +44,7 @@ npm run typecheck
 
 **Files:**
 
-- Modify: `lib/env.ts`
+- Modify: `src/server/config/env.ts`
 - Add: `src/server/storage/localObjectStorage.ts`
 
 **Action:** Add centralized config values for DB, Redis, AI provider, uploads, and local object storage.

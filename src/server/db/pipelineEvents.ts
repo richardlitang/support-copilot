@@ -1,4 +1,4 @@
-import { hasDirectDatabaseConfig } from "@/lib/env";
+import { hasDirectDatabaseConfig } from "@/src/server/config/env";
 import { withPgClient } from "@/src/server/db/client";
 
 const forbiddenMetadataKeys = new Set([

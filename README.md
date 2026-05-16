@@ -51,7 +51,7 @@ For a file-by-file orientation, see [`docs/code-map.md`](docs/code-map.md).
 
 - `app/api/upload/route.ts`: upload, parse, chunk, embed, and persist documents
 - `app/api/investigate/route.ts`: retrieve docs, deterministically decide whether tools are needed, run tool-backed investigation, and store structured investigation metadata
-- `lib/parse.ts`: text extraction and heading-aware parsing
+- `src/server/ingestion/parse.ts`: text extraction and heading-aware parsing
 - `lib/chunk.ts`: deterministic chunking for retrieval
 - `src/server/retrieval/retrieve.ts`: dense retrieval against `match_document_chunks`, literal-aware candidate expansion, candidate merging, and reranking
 - `lib/literal-retrieval.ts` and `src/server/ai/rerank.ts`: deterministic literal extraction and hosted reranker adapter
