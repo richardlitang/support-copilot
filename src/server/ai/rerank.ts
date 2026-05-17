@@ -1,4 +1,4 @@
-import { getCohereApiKey, getRerankModel } from "@/src/server/ai/openai";
+import { ensureEnvLoaded } from "@/src/server/config/env";
 import type { EvidenceChunk } from "@/lib/types";
 
 type CohereRerankResponse = {
@@ -7,6 +7,16 @@ type CohereRerankResponse = {
     relevance_score?: number;
   }>;
 };
+
+function getCohereApiKey() {
+  ensureEnvLoaded();
+  return process.env.COHERE_API_KEY ?? "";
+}
+
+function getRerankModel() {
+  ensureEnvLoaded();
+  return process.env.COHERE_RERANK_MODEL ?? "rerank-v4.0-fast";
+}
 
 export async function rerankEvidenceCandidates(input: {
   query: string;

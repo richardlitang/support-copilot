@@ -24,13 +24,3 @@ export function getAnswerModel() {
   ensureEnvLoaded();
   return process.env.OPENAI_ANSWER_MODEL ?? "gpt-4o-mini";
 }
-
-export function getCohereApiKey() {
-  ensureEnvLoaded();
-  return process.env.COHERE_API_KEY ?? "";
-}
-
-export function getRerankModel() {
-  ensureEnvLoaded();
-  return process.env.COHERE_RERANK_MODEL ?? "rerank-v4.0-fast";
-}
