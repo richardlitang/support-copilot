@@ -46,6 +46,14 @@ Persistence and infrastructure
   src/server/observability/sentry.ts
 ```
 
+## Folder Ownership
+
+- `app/**`: Next.js page and API route boundaries.
+- `components/**`: client-facing workflow and UI components. Components may import shared types/helpers from `lib`, but not backend runtime modules from `src/server`.
+- `src/server/**`: backend runtime code, including database adapters, AI providers, ingestion, retrieval, queue workers, observability, session handling, and investigation orchestration.
+- `lib/**`: shared domain policies, value helpers, contracts, and UI-safe utilities. Server-only runtime code should not be added here.
+- `tests/**`, `scripts/**`, and `demo/**`: regression harnesses, local setup tools, and deterministic demo/eval fixtures.
+
 ## Frontend
 
 - `app/page.tsx` is the page entrypoint.
@@ -67,7 +75,7 @@ Next.js route handlers under `app/api/**/route.ts` are backend code:
 
 `src/server/investigation/investigate.ts` is the current orchestration entrypoint. Stage logic now lives in `src/server/investigation/stages.ts` and trace rendering payload assembly lives in `src/server/investigation/trace.ts`.
 
-`lib/claim-generation.ts` is the shared claim-generation boundary used by both the current direct pipeline and the graph-node parity wrappers. Docs-only runs still use the older grounded-answer generator internally, but the conversion into the current structured claim contract lives in one place.
+`lib/claim-generation.ts` is the shared claim-generation boundary used by the current direct pipeline. Docs-only runs still use the older grounded-answer generator internally, but the conversion into the current structured claim contract lives in one place.
 
 ## Ingestion Paths
 
@@ -80,17 +88,11 @@ The queued path is the production-style runtime path. The direct path is for det
 
 `document_ingestion_jobs` is the operational queue-state table for the queued path. It tracks queue job id, attempt counts, worker lock metadata, safe error details, and terminal state independently from `documents.status`.
 
-## Graph Parity Work
-
-`src/server/investigation/graph/**` is not the active runtime. It contains typed graph-state wrappers around the current deterministic modules so future LangGraph orchestration can be introduced behind a feature flag and checked against direct-pipeline eval parity.
-
-If you are tracing production behavior today, start with `src/server/investigation/investigate.ts`, not `src/server/investigation/graph/**`.
-
 ## Test And Demo Harness
 
 - `tests/ai/**`: answer-generation and model-boundary tests.
 - `tests/core/**`: routing/review/policy/value-level core checks.
-- `tests/investigation/**`: pipeline orchestration and graph parity wrappers.
+- `tests/investigation/**`: pipeline orchestration and structured investigation tests.
 - `tests/retrieval/**`: retrieval helper and ranking tests.
 - `tests/infrastructure/**`: ingestion and tool-runner integration tests.
 - `demo/**`: PayBridge support docs, tickets, account/tool context, and eval cases used for walkthroughs.

@@ -57,7 +57,6 @@ npm run verify
 - Add scoped `no-restricted-imports` rules:
   - `components/**` must not import from `@/src/server/**`.
   - `components/**` must not import from API route files.
-  - `src/server/investigation/graph/**` must not import UI or route modules.
   - `src/server/**` must not import React components.
 - Keep the first rules narrow enough that they pass immediately.
 
@@ -187,29 +186,27 @@ npm run build
 
 ---
 
-### Task 7: Decide The Graph Boundary
+### Task 7: Remove Dead Experimental Runtime
 
 **Files:**
 
-- Modify/move: `src/server/investigation/graph/**`
+- Remove stale experimental runtime files that are not part of the app flow
 - Modify: `docs/code-map.md`
 - Modify: `docs/architecture.md`
 
 **Action:**
 
 - Pick one:
-  - Move graph code to `experimental/graph/**`.
-  - Or formalize `SUPPORT_PIPELINE=direct|graph` with parity tests.
-- Update docs so reviewers know whether graph code is runtime or experimental.
+- Update docs so reviewers see only the current runtime path.
 
 **Verify:**
 
 ```bash
-npm run test -- tests/graph-nodes.test.ts tests/investigation-state.test.ts
+npm run test -- tests/investigation
 npm run typecheck
 ```
 
-**Commit:** `refactor(graph): clarify graph pipeline boundary`
+**Commit:** `refactor(structure): remove stale experimental runtime`
 
 ---
 
@@ -293,7 +290,7 @@ npm run format:check
 
 ## Execution Order
 
-Do Tasks 1-2 first because they create the safety rail. Then do Tasks 3-6 as the main readability pass. Do Task 7 before deeper graph work. Do Tasks 8-10 after the code shape stabilizes.
+Do Tasks 1-2 first because they create the safety rail. Then do Tasks 3-6 as the main readability pass. Do Task 7 before deeper runtime refactors. Do Tasks 8-10 after the code shape stabilizes.
 
 ## Stop Conditions
 

@@ -53,22 +53,6 @@ const config = [
       ],
     },
   },
-  {
-    files: ["src/server/investigation/graph/**/*.{ts,tsx}"],
-    rules: {
-      "no-restricted-imports": [
-        "error",
-        {
-          patterns: [
-            {
-              group: ["@/components/**", "@/app/**"],
-              message: "Graph pipeline code must stay independent from app and UI layers.",
-            },
-          ],
-        },
-      ],
-    },
-  },
   prettierConfig,
 ];
 

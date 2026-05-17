@@ -60,7 +60,7 @@ For a file-by-file orientation, see [`docs/code-map.md`](docs/code-map.md).
 - `lib/classify.ts`: deterministic routing for docs-only vs docs-plus-tools vs human-review
 - `src/server/tools/*`: Postgres-backed read-only investigation tools for account context, feature flags, and recent errors
 - `src/server/investigation/investigate.ts`: investigation orchestration boundary (stages in `src/server/investigation/**`)
-- `lib/claim-generation.ts`: shared structured-claim generation boundary used by the direct pipeline and graph parity wrappers
+- `lib/claim-generation.ts`: shared structured-claim generation boundary used by the investigation pipeline
 - `src/server/ingestion/directIngest.ts`: direct seed/demo ingestion helper; user uploads use the queue-backed worker path
 
 ## Retrieval Surfacing
@@ -200,7 +200,7 @@ Run live retrieval evals against Supabase/OpenAI before release:
 npm run eval:demo
 ```
 
-The RAG contract eval uses mocked retrieved evidence and tool outputs and checks graph-node parity for route and review outcomes. `src/server/investigation/graph/**` is parity scaffolding for future orchestration, not the active runtime path. Live eval is still recommended before release to validate external-service behavior.
+The RAG contract eval uses mocked retrieved evidence and tool outputs to verify route, review, retrieval, citation, and safety behavior against the actual investigation pipeline. Live eval is still recommended before release to validate external-service behavior.
 
 The eval runner now reports route correctness, review status, retrieval evidence keywords, tool evidence, and top retrieved docs. It exits non-zero if the grounded behavior drifts.
 

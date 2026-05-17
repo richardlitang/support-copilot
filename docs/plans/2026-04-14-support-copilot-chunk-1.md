@@ -6,7 +6,7 @@ Build a single-app Next.js demo that ingests support documents into Supabase/Pos
 
 ## Architecture Overview
 
-The app stays in one Next.js root project. Server-side modules handle parsing, chunking, embedding, retrieval, and answer generation behind Route Handlers so the UI stays thin and LangGraph can be added later without rewriting core logic.
+The app stays in one Next.js root project. Server-side modules handle parsing, chunking, embedding, retrieval, and answer generation behind Route Handlers so the UI stays thin.
 
 ## Tech Stack
 

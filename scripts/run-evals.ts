@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { hasDatabaseConfig } from "../src/server/db";
 import { investigateTicket } from "../src/server/investigation/investigate";
-import { createOfflineDependencies, runOfflineGraphParity } from "./evals/offline";
+import { createOfflineDependencies } from "./evals/offline";
 import type { EvalCase, EvalSummary } from "./evals/types";
 import { countClaimCitations, formatRuntimeFailure } from "./evals/utils";
 
@@ -40,19 +40,6 @@ async function main() {
         `Eval case ${testCase.id} failed before assertions:\n${formatRuntimeFailure(error)}`,
       );
     });
-    const graphResult = offlineDependencies
-      ? await runOfflineGraphParity({
-          testCase,
-          evalSessionId,
-          dependencies: offlineDependencies,
-        })
-      : null;
-    const graphParityPassed = graphResult
-      ? graphResult.mode === result.mode &&
-        graphResult.reviewStatus === result.reviewStatus &&
-        graphResult.reviewDecision.reasonCode === result.reviewDecision.reasonCode &&
-        graphResult.reviewDecision.action === result.reviewDecision.action
-      : null;
     const expectedEvidenceKeywords = testCase.expectedEvidenceKeywords ?? [];
     const expectedClaimKeywords = testCase.expectedClaimKeywords ?? [];
     const forbiddenClaimKeywords = testCase.forbiddenClaimKeywords ?? [];
@@ -172,12 +159,6 @@ async function main() {
       );
     }
 
-    if (graphParityPassed === false && graphResult) {
-      failures.push(
-        `${testCase.id}: graph parity failed, direct ${result.mode}/${result.reviewStatus}/${result.reviewDecision.reasonCode}/${result.reviewDecision.action}, graph ${graphResult.mode}/${graphResult.reviewStatus}/${graphResult.reviewDecision.reasonCode}/${graphResult.reviewDecision.action}`,
-      );
-    }
-
     summary.push({
       id: testCase.id,
       bucket: testCase.bucket,
@@ -216,7 +197,6 @@ async function main() {
       toolPassed,
       citationPassed,
       ignoredStatusPassed,
-      graphParityPassed,
       passed:
         routePassed &&
         reviewPassed &&
@@ -227,8 +207,7 @@ async function main() {
         forbiddenClaimPassed &&
         toolPassed &&
         citationPassed &&
-        ignoredStatusPassed &&
-        graphParityPassed !== false,
+        ignoredStatusPassed,
       topDocs: result.docEvidence.slice(0, 3).map((item) => ({
         id: item.id,
         filename: item.filename,
@@ -250,8 +229,6 @@ async function main() {
   const toolPassed = summary.filter((item) => item.toolPassed).length;
   const citationPassed = summary.filter((item) => item.citationPassed).length;
   const ignoredStatusPassed = summary.filter((item) => item.ignoredStatusPassed).length;
-  const graphParityItems = summary.filter((item) => item.graphParityPassed !== null);
-  const graphParityPassed = graphParityItems.filter((item) => item.graphParityPassed).length;
 
   console.log(`Support Copilot ${offlineMode ? "RAG contract" : "live eval"} summary`);
   console.log(`Mode: ${offlineMode ? "offline mock" : "live Supabase/OpenAI"}`);
@@ -266,9 +243,6 @@ async function main() {
   console.log(`Tool evidence: ${toolPassed}/${summary.length} passed`);
   console.log(`Citation readiness: ${citationPassed}/${summary.length} passed`);
   console.log(`Ignored doc statuses: ${ignoredStatusPassed}/${summary.length} passed`);
-  if (graphParityItems.length) {
-    console.log(`Graph parity: ${graphParityPassed}/${graphParityItems.length} passed`);
-  }
 
   console.log("\nCase results:");
   for (const item of summary) {

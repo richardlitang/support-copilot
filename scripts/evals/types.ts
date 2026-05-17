@@ -57,7 +57,6 @@ export type EvalSummary = {
   toolPassed: boolean;
   citationPassed: boolean;
   ignoredStatusPassed: boolean;
-  graphParityPassed: boolean | null;
   passed: boolean;
   topDocs: Array<{
     id: string;

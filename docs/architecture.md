@@ -48,7 +48,7 @@ For a file-oriented map of frontend, backend, worker, and test/demo code, see [`
 
 - `src/server/ingestion/directIngest.ts`: direct seed/demo ingestion helper for deterministic local setup.
 - `src/server/investigation/investigate.ts`: orchestration entrypoint with stages in `src/server/investigation/stages.ts` and trace assembly in `src/server/investigation/trace.ts`.
-- `lib/claim-generation.ts`: shared claim-generation boundary used by the direct pipeline and graph-node parity wrappers.
+- `lib/claim-generation.ts`: shared claim-generation boundary used by the investigation pipeline.
 - `lib/evidence-builder.ts`: source registry and claim/evidence formatting helpers.
 - `lib/tool-runner.ts`: deterministic tool execution and tool evidence construction.
 - `lib/conflict-policy.ts`: policy for unresolved doc/tool state.
@@ -76,11 +76,11 @@ The project relies on explicit artifacts instead of hidden reasoning:
 - PDF parsing is best effort and should not be the primary demo path.
 - Chunking has basic table preservation but is not a full layout-aware document parser.
 - Literal expansion currently uses simple Postgres `ILIKE` matching. Trigram or full-text retrieval should be added only if evals show missed literal/prose cases.
-- LangGraph is not implemented yet. `src/server/investigation/graph/**` contains parity wrappers around deterministic modules, but the runtime intentionally stays direct until evals prove stability.
+- The direct investigation pipeline is the only runtime path.
 
 ## Future Direction
 
-The next major step is not "more agents." It is graph-orchestrated investigation:
+If workflow orchestration becomes necessary later, the target shape should stay explicit and eval-gated:
 
 ```text
 RetrieveDocumentation
@@ -94,4 +94,4 @@ RetrieveDocumentation
   -> PersistInvestigation
 ```
 
-LangGraph should be introduced behind a feature flag and proven against the direct pipeline with eval parity.
+Any future orchestration rewrite should be justified by clearer operations or human-review workflows, not by novelty alone.

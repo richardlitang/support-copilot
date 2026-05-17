@@ -1,13 +1,3 @@
-import { createInitialInvestigationGraphState } from "../../src/server/investigation/graph/investigation-state";
-import { applyReviewPolicyNode } from "../../src/server/investigation/graph/nodes/apply-review-policy";
-import { classifyInvestigationNode } from "../../src/server/investigation/graph/nodes/classify-investigation";
-import { generateClaimsNode } from "../../src/server/investigation/graph/nodes/generate-claims";
-import { retrieveDocumentationNode } from "../../src/server/investigation/graph/nodes/retrieve-documentation";
-import {
-  defaultRunContextToolsAdapters,
-  runContextToolsNode,
-} from "../../src/server/investigation/graph/nodes/run-context-tools";
-import { validateGroundingNode } from "../../src/server/investigation/graph/nodes/validate-grounding";
 import type { EvidenceChunk, StructuredAnswer } from "../../lib/types";
 import type {
   AccountRecord,
@@ -248,42 +238,5 @@ export function createOfflineDependencies(testCase: EvalCase) {
           error.accountId === input.accountId &&
           (!input.productArea || error.productArea === input.productArea),
       ),
-  };
-}
-
-export async function runOfflineGraphParity(input: {
-  testCase: EvalCase;
-  evalSessionId: string;
-  dependencies: ReturnType<typeof createOfflineDependencies>;
-}) {
-  const initialState = createInitialInvestigationGraphState({
-    ticket: input.testCase.ticket,
-    sessionId: input.evalSessionId,
-    ragEnabled: true,
-    selectedAccountId: input.testCase.selectedAccountId ?? null,
-  });
-  const retrieved = await retrieveDocumentationNode(initialState, {
-    retrieveEvidence: input.dependencies.retrieveEvidence,
-  });
-  const classified = classifyInvestigationNode(retrieved);
-  const withTools = await runContextToolsNode(classified, {
-    ...input.dependencies,
-    ...defaultRunContextToolsAdapters,
-  });
-  const generated = await generateClaimsNode(withTools, {
-    generateGroundedAnswer: input.dependencies.generateGroundedAnswer,
-    generateInvestigationAnswer: input.dependencies.generateInvestigationAnswer,
-  });
-  const grounded = validateGroundingNode(generated);
-  const reviewed = applyReviewPolicyNode(grounded);
-
-  if (!reviewed.review) {
-    throw new Error(`Graph parity run did not produce review state for ${input.testCase.id}.`);
-  }
-
-  return {
-    mode: reviewed.review.finalMode,
-    reviewStatus: reviewed.review.reviewStatus,
-    reviewDecision: reviewed.review.reviewDecision,
   };
 }

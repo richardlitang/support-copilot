@@ -6,7 +6,7 @@ Extend the existing grounded RAG app into a trust-preserving support investigati
 
 ## Architecture Overview
 
-Chunk 2 is additive. The existing doc retrieval pipeline remains intact, while a structured investigation contract layers on top with deterministic routing, Postgres-backed read-only tools, mixed-citation validation, and separate customer/internal outputs. The UI stays thin and the backend remains modular so LangGraph can be added later without reworking the evidence model.
+Chunk 2 is additive. The existing doc retrieval pipeline remains intact, while a structured investigation contract layers on top with deterministic routing, Postgres-backed read-only tools, mixed-citation validation, and separate customer/internal outputs. The UI stays thin and the backend remains modular.
 
 ## Tech Stack
 
