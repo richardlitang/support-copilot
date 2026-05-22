@@ -33,7 +33,7 @@
     "@radix-ui/react-separator": "^1.1.8",
     "@radix-ui/react-slot": "^1.2.4",
     "@sentry/node": "^10.53.1",
-    "@supabase/supabase-js": "^2.103.0",
+    "@supabase/supabase-js": "^2.106.1",
     "@types/pg": "^8.20.0",
     "bullmq": "^5.76.8",
     "class-variance-authority": "^0.7.1",
