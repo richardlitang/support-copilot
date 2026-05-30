@@ -51,12 +51,9 @@ describe("conflict-policy", () => {
         account,
         flags: [enabledExportFlag],
         errors: [],
-        missingRequiredContext: false,
+        blocker: { kind: "none" },
       }),
-    ).toEqual({
-      hasConflict: true,
-      reason: "Docs and current tool state do not explain the reported issue.",
-    });
+    ).toEqual({ kind: "conflict", reason: "Docs and current tool state do not explain the reported issue." });
   });
 
   it("does not flag conflict when tool state explains the issue", () => {
@@ -71,11 +68,8 @@ describe("conflict-policy", () => {
         },
         flags: [enabledExportFlag],
         errors: [],
-        missingRequiredContext: false,
+        blocker: { kind: "none" },
       }),
-    ).toEqual({
-      hasConflict: false,
-      reason: null,
-    });
+    ).toEqual({ kind: "none" });
   });
 });

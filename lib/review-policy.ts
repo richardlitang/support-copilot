@@ -1,19 +1,15 @@
-import type { InvestigationMode, ReviewStatus } from "@/lib/types/investigation";
+import type { InvestigationMode, InvestigationBlocker, ReviewStatus } from "@/lib/types/investigation";
 import type { SupportLevel } from "@/lib/types";
 
 export function determineReviewStatus(input: {
   mode: InvestigationMode;
   supportLevel: SupportLevel;
-  hasConflict: boolean;
-  missingRequiredContext: boolean;
-  validationFailed: boolean;
+  blocker: InvestigationBlocker;
 }): ReviewStatus {
   if (
     input.mode === "needs_human_review" ||
     input.supportLevel === "insufficient_support" ||
-    input.hasConflict ||
-    input.missingRequiredContext ||
-    input.validationFailed
+    input.blocker.kind !== "none"
   ) {
     return "needs_human_review";
   }
@@ -22,15 +18,8 @@ export function determineReviewStatus(input: {
 }
 
 export function shouldEscalateToHumanReview(input: {
-  hasConflict: boolean;
-  missingRequiredContext: boolean;
+  blocker: InvestigationBlocker;
   supportLevel: SupportLevel;
-  validationFailed: boolean;
 }) {
-  return (
-    input.hasConflict ||
-    input.missingRequiredContext ||
-    input.supportLevel === "insufficient_support" ||
-    input.validationFailed
-  );
+  return input.blocker.kind !== "none" || input.supportLevel === "insufficient_support";
 }

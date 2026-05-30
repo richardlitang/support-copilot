@@ -4,6 +4,7 @@ import type {
   DocEvidenceItem,
   ErrorEventRecord,
   FeatureFlagRecord,
+  InvestigationBlocker,
   InvestigationMode,
 } from "@/lib/types/investigation";
 
@@ -37,13 +38,10 @@ export function detectConflict(input: {
   account: AccountRecord | null;
   flags: FeatureFlagRecord[];
   errors: ErrorEventRecord[];
-  missingRequiredContext: boolean;
-}) {
-  if (input.missingRequiredContext || input.mode !== "docs_plus_tools") {
-    return {
-      hasConflict: false,
-      reason: null,
-    };
+  blocker: InvestigationBlocker;
+}): InvestigationBlocker {
+  if (input.blocker.kind !== "none" || input.mode !== "docs_plus_tools") {
+    return input.blocker;
   }
 
   const productArea = inferProductArea(input.ticket);
@@ -58,28 +56,16 @@ export function detectConflict(input: {
   );
 
   if (!hasStructuredToolState) {
-    return {
-      hasConflict: false,
-      reason: null,
-    };
+    return { kind: "none" };
   }
 
   if (accountInactive || hasDisabledFlag || !hasModule || hasRecentErrors) {
-    return {
-      hasConflict: false,
-      reason: null,
-    };
+    return { kind: "none" };
   }
 
   if (docsSuggestProcedure) {
-    return {
-      hasConflict: true,
-      reason: "Docs and current tool state do not explain the reported issue.",
-    };
+    return { kind: "conflict", reason: "Docs and current tool state do not explain the reported issue." };
   }
 
-  return {
-    hasConflict: false,
-    reason: null,
-  };
+  return { kind: "none" };
 }

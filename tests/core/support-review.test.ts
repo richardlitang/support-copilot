@@ -10,9 +10,7 @@ describe("determineSupportLevel", () => {
       toolEvidenceCount: 0,
       customerClaimCount: 2,
       internalClaimCount: 2,
-      hasConflict: false,
-      missingRequiredContext: false,
-      validationFailed: false,
+      blocker: { kind: "none" },
     });
 
     expect(result).toBe("high");
@@ -26,9 +24,7 @@ describe("determineSupportLevel", () => {
       toolEvidenceCount: 0,
       customerClaimCount: 1,
       internalClaimCount: 1,
-      hasConflict: false,
-      missingRequiredContext: true,
-      validationFailed: false,
+      blocker: { kind: "missing_context" },
     });
 
     expect(result).toBe("insufficient_support");
@@ -42,9 +38,7 @@ describe("determineSupportLevel", () => {
       toolEvidenceCount: 1,
       customerClaimCount: 1,
       internalClaimCount: 1,
-      hasConflict: false,
-      missingRequiredContext: false,
-      validationFailed: false,
+      blocker: { kind: "none" },
     });
 
     expect(result).toBe("low");
@@ -58,9 +52,7 @@ describe("determineSupportLevel", () => {
       toolEvidenceCount: 0,
       customerClaimCount: 2,
       internalClaimCount: 2,
-      hasConflict: false,
-      missingRequiredContext: false,
-      validationFailed: false,
+      blocker: { kind: "none" },
     });
 
     expect(result).toBe("low");
@@ -73,9 +65,7 @@ describe("review policy", () => {
       determineReviewStatus({
         mode: "docs_only",
         supportLevel: "insufficient_support",
-        hasConflict: false,
-        missingRequiredContext: false,
-        validationFailed: false,
+        blocker: { kind: "none" },
       }),
     ).toBe("needs_human_review");
   });
@@ -83,10 +73,8 @@ describe("review policy", () => {
   it("escalates when docs and tool evidence conflict", () => {
     expect(
       shouldEscalateToHumanReview({
-        hasConflict: true,
-        missingRequiredContext: false,
+        blocker: { kind: "conflict", reason: "Docs and tool state conflict." },
         supportLevel: "medium",
-        validationFailed: false,
       }),
     ).toBe(true);
   });

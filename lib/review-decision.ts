@@ -1,12 +1,14 @@
 import type { SupportLevel } from "@/lib/types";
-import type { ReviewDecision, ReviewStatus } from "@/lib/types/investigation";
+import type {
+  InvestigationBlocker,
+  ReviewDecision,
+  ReviewStatus,
+} from "@/lib/types/investigation";
 
 export function determineReviewDecision(input: {
   reviewStatus: ReviewStatus;
   supportLevel: SupportLevel;
-  missingRequiredContext: boolean;
-  hasConflict: boolean;
-  validationFailed: boolean;
+  blocker: InvestigationBlocker;
 }): ReviewDecision {
   if (input.reviewStatus === "ready") {
     return {
@@ -16,28 +18,27 @@ export function determineReviewDecision(input: {
     };
   }
 
-  if (input.missingRequiredContext) {
-    return {
-      status: input.reviewStatus,
-      reasonCode: "missing_account_context",
-      action: "add_context",
-    };
-  }
-
-  if (input.hasConflict) {
-    return {
-      status: input.reviewStatus,
-      reasonCode: "unresolved_evidence_conflict",
-      action: "inspect_conflict",
-    };
-  }
-
-  if (input.validationFailed) {
-    return {
-      status: input.reviewStatus,
-      reasonCode: "grounding_validation_failed",
-      action: "review_claims",
-    };
+  switch (input.blocker.kind) {
+    case "missing_context":
+      return {
+        status: input.reviewStatus,
+        reasonCode: "missing_account_context",
+        action: "add_context",
+      };
+    case "conflict":
+      return {
+        status: input.reviewStatus,
+        reasonCode: "unresolved_evidence_conflict",
+        action: "inspect_conflict",
+      };
+    case "validation_failed":
+      return {
+        status: input.reviewStatus,
+        reasonCode: "grounding_validation_failed",
+        action: "review_claims",
+      };
+    default:
+      break;
   }
 
   if (input.supportLevel === "insufficient_support") {

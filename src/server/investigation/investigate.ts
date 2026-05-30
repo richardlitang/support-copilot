@@ -17,6 +17,7 @@ import {
   generateClaimsForInvestigation,
   persistInvestigation,
   retrieveAndRouteInvestigation,
+  type GeneratedInvestigation,
   type InvestigationDependencies,
   type InvestigationInput,
 } from "@/src/server/investigation/stages";
@@ -47,48 +48,48 @@ export async function investigateTicket(
     input,
     dependencies: deps,
     routing: retrieval.routing,
-    missingRequiredContext: retrieval.missingRequiredContext,
+    blocker: retrieval.blocker,
   });
 
-  const conflict = detectConflict({
+  const blocker = detectConflict({
     mode: retrieval.routing.mode,
     ticket: input.ticket,
     docEvidence: retrieval.docEvidence,
     account: toolArtifacts.account,
     flags: toolArtifacts.flags,
     errors: toolArtifacts.errors,
-    missingRequiredContext: retrieval.missingRequiredContext,
+    blocker: retrieval.blocker,
   });
 
   const executionMode: InvestigationExecutionMode = input.executionMode ?? "draft_answer";
-  const generated =
-    executionMode === "evidence_only"
-      ? buildEvidenceOnlyInvestigation({
-          missingRequiredContext: retrieval.missingRequiredContext,
-          hasConflict: conflict.hasConflict,
-          conflictReason: conflict.reason,
-        })
-      : await generateClaimsForInvestigation({
-          input,
-          dependencies: deps,
-          evidence: retrieval.evidence,
-          docEvidence: retrieval.docEvidence,
-          routing: retrieval.routing,
-          toolArtifacts,
-          missingRequiredContext: retrieval.missingRequiredContext,
-          hasConflict: conflict.hasConflict,
-          conflictReason: conflict.reason,
-        });
+  let generated: GeneratedInvestigation;
+  let finalBlocker = blocker;
+
+  if (executionMode === "evidence_only") {
+    generated = buildEvidenceOnlyInvestigation({ blocker });
+  } else {
+    const claimResult = await generateClaimsForInvestigation({
+      input,
+      dependencies: deps,
+      evidence: retrieval.evidence,
+      docEvidence: retrieval.docEvidence,
+      routing: retrieval.routing,
+      toolArtifacts,
+      blocker,
+    });
+    generated = claimResult.generated;
+    finalBlocker = claimResult.blocker;
+  }
 
   const review = decideInvestigationReview({
     routing: retrieval.routing,
     generated,
     docEvidence: retrieval.docEvidence,
     toolArtifacts,
-    missingRequiredContext: retrieval.missingRequiredContext,
-    hasConflict: conflict.hasConflict,
+    blocker: finalBlocker,
   });
-  const routingReason = conflict.reason ?? retrieval.routing.routingReason;
+  const routingReason =
+    finalBlocker.kind === "conflict" ? finalBlocker.reason : retrieval.routing.routingReason;
   const persisted = await persistInvestigation({
     input,
     dependencies: deps,
@@ -108,8 +109,7 @@ export async function investigateTicket(
     docEvidence: retrieval.docEvidence,
     routing: retrieval.routing,
     toolArtifacts,
-    hasConflict: conflict.hasConflict,
-    conflictReason: conflict.reason,
+    blocker: finalBlocker,
     generated,
     review,
     persisted,

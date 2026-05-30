@@ -1,4 +1,5 @@
 import type { SupportLevel } from "@/lib/types";
+import type { InvestigationBlocker } from "@/lib/types/investigation";
 
 export function determineSupportLevel(input: {
   topDocScore: number;
@@ -7,11 +8,9 @@ export function determineSupportLevel(input: {
   toolEvidenceCount: number;
   customerClaimCount: number;
   internalClaimCount: number;
-  hasConflict: boolean;
-  missingRequiredContext: boolean;
-  validationFailed: boolean;
+  blocker: InvestigationBlocker;
 }): SupportLevel {
-  if (input.validationFailed || input.missingRequiredContext || input.hasConflict) {
+  if (input.blocker.kind !== "none") {
     return "insufficient_support";
   }
 

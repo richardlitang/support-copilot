@@ -8,6 +8,7 @@ import { collectToolArtifacts, createSyntheticToolEvidence } from "@/lib/tool-ru
 import type { ToolRunnerDependencies } from "@/lib/tool-runner";
 import type { EvidenceChunk } from "@/lib/types";
 import type {
+  InvestigationBlocker,
   InvestigationExecutionMode,
   InvestigationMode,
   ToolCallRecord,
@@ -82,36 +83,34 @@ export async function retrieveAndRouteInvestigation(
     investigationContext: input.investigationContext,
     evidence,
   });
-  const missingRequiredContext =
+  const blocker: InvestigationBlocker =
     routing.mode === "needs_human_review" &&
     !input.selectedAccountId &&
-    !input.investigationContext?.trim();
+    !input.investigationContext?.trim()
+      ? { kind: "missing_context" }
+      : { kind: "none" };
 
   return {
     evidence,
     docEvidence,
     routing,
-    missingRequiredContext,
+    blocker,
   };
 }
 
 export function buildEvidenceOnlyInvestigation(input: {
-  missingRequiredContext: boolean;
-  hasConflict: boolean;
-  conflictReason: string | null;
+  blocker: InvestigationBlocker;
 }): GeneratedInvestigation {
-  const openQuestions = [];
+  const openQuestions: string[] = [];
 
-  if (input.missingRequiredContext) {
+  if (input.blocker.kind === "missing_context") {
     openQuestions.push(
       "Add investigation context or select a debug account before drafting an answer.",
     );
   }
 
-  if (input.hasConflict) {
-    openQuestions.push(
-      input.conflictReason ?? "Resolve the evidence conflict before drafting an answer.",
-    );
+  if (input.blocker.kind === "conflict") {
+    openQuestions.push(input.blocker.reason);
   }
 
   return {
@@ -130,7 +129,7 @@ export async function collectContextEvidence(input: {
   input: InvestigationInput;
   dependencies: InvestigationDependencies;
   routing: RoutingDecision;
-  missingRequiredContext: boolean;
+  blocker: InvestigationBlocker;
 }) {
   const toolArtifacts = await collectToolArtifacts({
     requiredTools: input.routing.requiredTools,
@@ -140,7 +139,7 @@ export async function collectContextEvidence(input: {
     dependencies: input.dependencies,
   });
 
-  if (!input.missingRequiredContext || toolArtifacts.toolEvidence.length > 0) {
+  if (input.blocker.kind !== "missing_context" || toolArtifacts.toolEvidence.length > 0) {
     return toolArtifacts;
   }
 
@@ -173,11 +172,9 @@ export async function generateClaimsForInvestigation(input: {
   docEvidence: ReturnType<typeof createDocEvidence>;
   routing: RoutingDecision;
   toolArtifacts: ToolArtifacts;
-  missingRequiredContext: boolean;
-  hasConflict: boolean;
-  conflictReason: string | null;
-}): Promise<GeneratedInvestigation> {
-  return generateClaimsFromEvidence(
+  blocker: InvestigationBlocker;
+}): Promise<{ generated: GeneratedInvestigation; blocker: InvestigationBlocker }> {
+  const generated = await generateClaimsFromEvidence(
     {
       ticket: input.input.ticket,
       mode: input.routing.mode,
@@ -185,15 +182,18 @@ export async function generateClaimsForInvestigation(input: {
       evidence: input.evidence,
       docEvidence: input.docEvidence,
       toolEvidence: input.toolArtifacts.toolEvidence,
-      missingRequiredContext: input.missingRequiredContext,
-      hasConflict: input.hasConflict,
-      conflictReason: input.conflictReason,
+      blocker: input.blocker,
     },
     {
       generateGroundedAnswer: input.dependencies.generateGroundedAnswer,
       generateInvestigationAnswer: input.dependencies.generateInvestigationAnswer,
     },
   );
+  const blocker: InvestigationBlocker =
+    input.blocker.kind === "none" && generated.validationFailed
+      ? { kind: "validation_failed" }
+      : input.blocker;
+  return { generated, blocker };
 }
 
 export function decideInvestigationReview(input: {
@@ -201,11 +201,8 @@ export function decideInvestigationReview(input: {
   generated: GeneratedInvestigation;
   docEvidence: ReturnType<typeof createDocEvidence>;
   toolArtifacts: ToolArtifacts;
-  missingRequiredContext: boolean;
-  hasConflict: boolean;
+  blocker: InvestigationBlocker;
 }) {
-  const validationFailed =
-    "validationFailed" in input.generated && input.generated.validationFailed === true;
   const supportLevel = determineSupportLevel({
     topDocScore: input.docEvidence[0]?.score ?? 0,
     secondDocScore: input.docEvidence[1]?.score ?? 0,
@@ -213,25 +210,16 @@ export function decideInvestigationReview(input: {
     toolEvidenceCount: input.toolArtifacts.toolEvidence.length,
     customerClaimCount: input.generated.customerReply.claims.length,
     internalClaimCount: input.generated.internalDiagnosis.claims.length,
-    hasConflict: input.hasConflict,
-    missingRequiredContext: input.missingRequiredContext,
-    validationFailed,
+    blocker: input.blocker,
   });
   const reviewStatus = determineReviewStatus({
     mode: input.routing.mode,
     supportLevel,
-    hasConflict: input.hasConflict,
-    missingRequiredContext: input.missingRequiredContext,
-    validationFailed,
+    blocker: input.blocker,
   });
   const finalMode: InvestigationMode =
     reviewStatus === "needs_human_review" ||
-    shouldEscalateToHumanReview({
-      hasConflict: input.hasConflict,
-      missingRequiredContext: input.missingRequiredContext,
-      supportLevel,
-      validationFailed,
-    })
+    shouldEscalateToHumanReview({ blocker: input.blocker, supportLevel })
       ? "needs_human_review"
       : input.routing.mode;
 
@@ -242,9 +230,7 @@ export function decideInvestigationReview(input: {
     reviewDecision: determineReviewDecision({
       reviewStatus,
       supportLevel,
-      missingRequiredContext: input.missingRequiredContext,
-      hasConflict: input.hasConflict,
-      validationFailed,
+      blocker: input.blocker,
     }),
   };
 }

@@ -1,6 +1,7 @@
 import { createDocEvidence } from "@/lib/evidence-builder";
 import type { EvidenceChunk } from "@/lib/types";
 import type {
+  InvestigationBlocker,
   InvestigationExecutionMode,
   PipelineTraceStep,
   ToolEvidenceItem,
@@ -43,8 +44,7 @@ export function buildPipelineTrace(input: {
   docEvidence: ReturnType<typeof createDocEvidence>;
   routing: RoutingDecision;
   toolArtifacts: ToolArtifacts;
-  hasConflict: boolean;
-  conflictReason: string | null;
+  blocker: InvestigationBlocker;
   generated: GeneratedInvestigation;
   review: {
     finalMode: string;
@@ -138,16 +138,19 @@ export function buildPipelineTrace(input: {
     {
       id: "conflict",
       label: "Conflict check",
-      status: input.hasConflict ? "blocked" : "complete",
-      summary: input.conflictReason ?? "No blocking conflict found between docs and context.",
+      status: input.blocker.kind === "conflict" ? "blocked" : "complete",
+      summary:
+        input.blocker.kind === "conflict"
+          ? input.blocker.reason
+          : "No blocking conflict found between docs and context.",
       input: {
         mode: input.routing.mode,
         docEvidence,
         toolEvidence,
       },
       output: {
-        hasConflict: input.hasConflict,
-        reason: input.conflictReason,
+        hasConflict: input.blocker.kind === "conflict",
+        reason: input.blocker.kind === "conflict" ? input.blocker.reason : null,
       },
     },
     {
@@ -188,7 +191,7 @@ export function buildPipelineTrace(input: {
       input: {
         supportLevel: input.review.supportLevel,
         hasOpenQuestions: input.generated.internalDiagnosis.openQuestions.length > 0,
-        hasConflict: input.hasConflict,
+        hasConflict: input.blocker.kind === "conflict",
       },
       output: {
         mode: input.review.finalMode,

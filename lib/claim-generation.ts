@@ -7,6 +7,7 @@ import type { EvidenceChunk } from "@/lib/types";
 import type {
   CitationId,
   DocEvidenceItem,
+  InvestigationBlocker,
   InvestigationMode,
   StructuredClaimSet,
   StructuredClaimSetWithOpenQuestions,
@@ -45,9 +46,7 @@ export async function generateClaimsFromEvidence(
     evidence: EvidenceChunk[];
     docEvidence: DocEvidenceItem[];
     toolEvidence: ToolEvidenceItem[];
-    missingRequiredContext: boolean;
-    hasConflict: boolean;
-    conflictReason: string | null;
+    blocker: InvestigationBlocker;
   },
   dependencies: Partial<ClaimGenerationDependencies> = {},
 ): Promise<ClaimGenerationResult> {
@@ -57,18 +56,20 @@ export async function generateClaimsFromEvidence(
   };
   const firstCitation = firstAvailableCitation(input);
 
-  if (input.missingRequiredContext || input.hasConflict) {
+  if (input.blocker.kind !== "none") {
     return buildStructuredHumanReviewFallback({
       customerMessage: firstCitation
         ? "I cannot confirm the cause without the required investigation context."
         : undefined,
       internalMessage:
-        input.conflictReason ??
-        "Structured product or account context required but not provided for this investigation.",
+        input.blocker.kind === "conflict"
+          ? input.blocker.reason
+          : "Structured product or account context required but not provided for this investigation.",
       citations: firstCitation ? [firstCitation] : [],
-      openQuestions: input.missingRequiredContext
-        ? ["Add investigation context or select a debug account and rerun the investigation."]
-        : ["The docs and current tool state do not explain the issue."],
+      openQuestions:
+        input.blocker.kind === "missing_context"
+          ? ["Add investigation context or select a debug account and rerun the investigation."]
+          : ["The docs and current tool state do not explain the issue."],
     });
   }
 

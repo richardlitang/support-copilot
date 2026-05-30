@@ -38,9 +38,7 @@ describe("generateClaimsFromEvidence", () => {
         evidence,
         docEvidence,
         toolEvidence: [],
-        missingRequiredContext: false,
-        hasConflict: false,
-        conflictReason: null,
+        blocker: { kind: "none" },
       },
       {
         generateGroundedAnswer: async () => ({
@@ -79,9 +77,7 @@ describe("generateClaimsFromEvidence", () => {
         evidence,
         docEvidence,
         toolEvidence: [],
-        missingRequiredContext: true,
-        hasConflict: false,
-        conflictReason: null,
+        blocker: { kind: "missing_context" },
       },
       {
         generateGroundedAnswer: async () => {
