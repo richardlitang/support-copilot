@@ -6,6 +6,7 @@ import { embedText } from "@/src/server/ai/embed";
 import { extractLikelyLiterals } from "@/lib/literal-retrieval";
 import { rerankEvidenceCandidates } from "@/src/server/ai/rerank";
 import { applyRerankScores, mergeRetrievalCandidates } from "@/lib/retrieval-candidates";
+import { captureServerException } from "@/src/server/observability/sentry";
 
 const DEFAULT_TOP_K = 8;
 const DEFAULT_CANDIDATE_TOP_K = 30;
@@ -77,6 +78,7 @@ export async function retrieveEvidence(input: {
       return applyRerankScores(candidates, rerankScores).slice(0, finalLimit);
     }
   } catch (error) {
+    captureServerException(error, { tags: { route: "retrieval:rerank" } });
     if (process.env.NODE_ENV !== "production") {
       console.warn(error instanceof Error ? error.message : "Rerank request failed.");
     }
