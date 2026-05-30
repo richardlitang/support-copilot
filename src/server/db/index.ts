@@ -1,4 +1,3 @@
-import { listDocumentsRecord } from "@/src/server/db/documentRecords";
 import { hasDatabaseConfig } from "@/src/server/db/supabaseAdmin";
 import { listAccountsDirect } from "@/src/server/db/supportContext";
 
@@ -16,35 +15,6 @@ function emitPerf(event: string, data?: Record<string, unknown>) {
       ...(data ?? {}),
     }),
   );
-}
-
-export async function listDocumentsSafe(sessionId?: string | null) {
-  if (!hasDatabaseConfig() || !sessionId) {
-    emitPerf("listDocumentsSafe_skipped", {
-      hasDatabaseConfig: hasDatabaseConfig(),
-      hasSessionId: Boolean(sessionId),
-    });
-    return [];
-  }
-
-  const startedAt = Date.now();
-
-  try {
-    const documents = await listDocumentsRecord(sessionId);
-    emitPerf("listDocumentsSafe_completed", {
-      sessionId,
-      documentCount: documents.length,
-      durationMs: Date.now() - startedAt,
-    });
-    return documents;
-  } catch (error) {
-    emitPerf("listDocumentsSafe_failed", {
-      sessionId,
-      durationMs: Date.now() - startedAt,
-      message: error instanceof Error ? error.message : "Unknown error",
-    });
-    return [];
-  }
 }
 
 export async function listAccountsSafe() {
