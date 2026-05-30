@@ -23,7 +23,7 @@ import { getRedisConnection } from "@/src/server/queue/client";
 import type { DocumentIngestionJob } from "@/src/server/queue/jobs";
 import { JOB_NAMES, QUEUE_NAMES } from "@/src/server/queue/names";
 
-async function processDocumentIngestion(
+export async function processDocumentIngestion(
   jobData: DocumentIngestionJob,
   meta: {
     queueJobId?: string;
