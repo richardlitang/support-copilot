@@ -64,7 +64,10 @@ export function detectConflict(input: {
   }
 
   if (docsSuggestProcedure) {
-    return { kind: "conflict", reason: "Docs and current tool state do not explain the reported issue." };
+    return {
+      kind: "conflict",
+      reason: "Docs and current tool state do not explain the reported issue.",
+    };
   }
 
   return { kind: "none" };

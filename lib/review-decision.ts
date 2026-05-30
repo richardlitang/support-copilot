@@ -1,9 +1,5 @@
 import type { SupportLevel } from "@/lib/types";
-import type {
-  InvestigationBlocker,
-  ReviewDecision,
-  ReviewStatus,
-} from "@/lib/types/investigation";
+import type { InvestigationBlocker, ReviewDecision, ReviewStatus } from "@/lib/types/investigation";
 
 export function determineReviewDecision(input: {
   reviewStatus: ReviewStatus;

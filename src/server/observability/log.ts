@@ -11,13 +11,7 @@ function getConfiguredLevel(): LogLevel {
   return "info";
 }
 
-function emit(
-  level: LogLevel,
-  route: string,
-  requestId: string,
-  event: string,
-  data?: LogData,
-) {
+function emit(level: LogLevel, route: string, requestId: string, event: string, data?: LogData) {
   if (LOG_LEVEL_RANK[level] < LOG_LEVEL_RANK[getConfiguredLevel()]) {
     return;
   }

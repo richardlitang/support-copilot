@@ -154,9 +154,7 @@ async function fetchDbTools(
     needed.has("getAccountContext")
       ? dependencies.getAccountContext(accountId)
       : Promise.resolve(null),
-    needed.has("getFeatureFlags")
-      ? dependencies.getFeatureFlags(accountId)
-      : Promise.resolve([]),
+    needed.has("getFeatureFlags") ? dependencies.getFeatureFlags(accountId) : Promise.resolve([]),
     needed.has("getRecentErrors")
       ? dependencies.getRecentErrors({ accountId, productArea })
       : Promise.resolve([]),

@@ -53,7 +53,10 @@ describe("conflict-policy", () => {
         errors: [],
         blocker: { kind: "none" },
       }),
-    ).toEqual({ kind: "conflict", reason: "Docs and current tool state do not explain the reported issue." });
+    ).toEqual({
+      kind: "conflict",
+      reason: "Docs and current tool state do not explain the reported issue.",
+    });
   });
 
   it("does not flag conflict when tool state explains the issue", () => {
