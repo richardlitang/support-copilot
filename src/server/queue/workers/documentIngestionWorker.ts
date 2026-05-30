@@ -63,22 +63,23 @@ async function processDocumentIngestion(
   });
 
   try {
-    const result = await withPgClient(async (client) => {
+    // Phase 1: claim the document and mark as processing (short transaction)
+    const document = await withPgClient(async (client) => {
       await client.query("begin");
 
       try {
-        const document = await getDocumentForIngestionWithClient(client, jobData.documentId);
+        const doc = await getDocumentForIngestionWithClient(client, jobData.documentId);
 
-        if (!document) {
+        if (!doc) {
           throw new Error("Document not found for ingestion.");
         }
 
-        if (document.status === "ready") {
+        if (doc.status === "ready") {
           await client.query("commit");
-          return { skipped: true, chunkCount: 0 };
+          return null;
         }
 
-        if (!document.storagePath) {
+        if (!doc.storagePath) {
           throw new Error("Document storage path is missing.");
         }
 
@@ -87,56 +88,98 @@ async function processDocumentIngestion(
           status: "processing",
         });
 
-        const buffer = await getLocalObject(document.storagePath);
-        const parsed = await parseUploadedBuffer({
-          buffer,
-          filename: document.filename,
-          contentType: document.contentType ?? "application/octet-stream",
-        });
+        await client.query("commit");
+        return doc;
+      } catch (error) {
+        await client.query("rollback");
+        throw error;
+      }
+    });
 
-        await recordPipelineEvent({
-          eventType: "DOCUMENT_PARSED",
-          status: "completed",
-          entityType: "document",
-          entityId: jobData.documentId,
-          sessionId: jobData.sessionId,
-          metadata: {
-            filename: document.filename,
-            contentType: document.contentType,
-            sizeBytes: document.sizeBytes,
-          },
-        });
+    if (!document) {
+      await recordPipelineEvent({
+        eventType: "DOCUMENT_INGESTION_SKIPPED",
+        status: "skipped",
+        entityType: "document",
+        entityId: jobData.documentId,
+        sessionId: jobData.sessionId,
+        durationMs: Date.now() - startedAt,
+        metadata: { jobId: queueJobId, ingestionJobId: jobData.ingestionJobId },
+      });
+      await markDocumentIngestionJobCompleted({
+        ingestionJobId: jobData.ingestionJobId,
+        queueJobId,
+        attemptCount: meta.attemptCount,
+        maxAttempts: meta.maxAttempts,
+        workerId,
+      }).catch(() => undefined);
+      logger.info("document_ingestion_completed", {
+        chunkCount: 0,
+        skipped: true,
+        durationMs: Date.now() - startedAt,
+      });
+      return;
+    }
 
-        const chunks = chunkParsedDocument(parsed);
+    // Phase 2: parse, chunk, embed — no transaction held
+    if (!document.storagePath) {
+      throw new Error("Document storage path is missing.");
+    }
+    const buffer = await getLocalObject(document.storagePath);
+    const parsed = await parseUploadedBuffer({
+      buffer,
+      filename: document.filename,
+      contentType: document.contentType ?? "application/octet-stream",
+    });
 
-        if (!chunks.length) {
-          throw new Error("No retrievable chunks were created.");
-        }
+    await recordPipelineEvent({
+      eventType: "DOCUMENT_PARSED",
+      status: "completed",
+      entityType: "document",
+      entityId: jobData.documentId,
+      sessionId: jobData.sessionId,
+      metadata: {
+        filename: document.filename,
+        contentType: document.contentType,
+        sizeBytes: document.sizeBytes,
+      },
+    });
 
-        await recordPipelineEvent({
-          eventType: "DOCUMENT_CHUNKED",
-          status: "completed",
-          entityType: "document",
-          entityId: jobData.documentId,
-          sessionId: jobData.sessionId,
-          metadata: { chunkCount: chunks.length },
-        });
+    const chunks = chunkParsedDocument(parsed);
 
-        const embeddings = await embedTexts(chunks.map((chunk) => chunk.content));
+    if (!chunks.length) {
+      throw new Error("No retrievable chunks were created.");
+    }
 
-        if (embeddings.length !== chunks.length) {
-          throw new Error("Embedding count did not match chunk count.");
-        }
+    await recordPipelineEvent({
+      eventType: "DOCUMENT_CHUNKED",
+      status: "completed",
+      entityType: "document",
+      entityId: jobData.documentId,
+      sessionId: jobData.sessionId,
+      metadata: { chunkCount: chunks.length },
+    });
 
-        await recordPipelineEvent({
-          eventType: "EMBEDDINGS_CREATED",
-          status: "completed",
-          entityType: "document",
-          entityId: jobData.documentId,
-          sessionId: jobData.sessionId,
-          metadata: { chunkCount: chunks.length },
-        });
+    const embeddings = await embedTexts(chunks.map((chunk) => chunk.content));
 
+    if (embeddings.length !== chunks.length) {
+      throw new Error("Embedding count did not match chunk count.");
+    }
+
+    await recordPipelineEvent({
+      eventType: "EMBEDDINGS_CREATED",
+      status: "completed",
+      entityType: "document",
+      entityId: jobData.documentId,
+      sessionId: jobData.sessionId,
+      metadata: { chunkCount: chunks.length },
+    });
+
+    // Phase 3: write chunks and mark ready (short transaction)
+    await withPgClient(async (client) => {
+      await client.query("begin");
+
+      try {
         await replaceDocumentChunksWithClient(client, {
           documentId: jobData.documentId,
           chunks: chunks.map((chunk, index) => ({
@@ -151,25 +194,22 @@ async function processDocumentIngestion(
         });
 
         await client.query("commit");
-        return { skipped: false, chunkCount: chunks.length };
       } catch (error) {
         await client.query("rollback");
         throw error;
       }
     });
 
+    const chunkCount = chunks.length;
+
     await recordPipelineEvent({
-      eventType: result.skipped ? "DOCUMENT_INGESTION_SKIPPED" : "DOCUMENT_READY",
-      status: result.skipped ? "skipped" : "completed",
+      eventType: "DOCUMENT_READY",
+      status: "completed",
       entityType: "document",
       entityId: jobData.documentId,
       sessionId: jobData.sessionId,
       durationMs: Date.now() - startedAt,
-      metadata: {
-        chunkCount: result.chunkCount,
-        jobId: queueJobId,
-        ingestionJobId: jobData.ingestionJobId,
-      },
+      metadata: { chunkCount, jobId: queueJobId, ingestionJobId: jobData.ingestionJobId },
     });
     await markDocumentIngestionJobCompleted({
       ingestionJobId: jobData.ingestionJobId,
@@ -180,8 +220,8 @@ async function processDocumentIngestion(
     }).catch(() => undefined);
 
     logger.info("document_ingestion_completed", {
-      chunkCount: result.chunkCount,
-      skipped: result.skipped,
+      chunkCount,
+      skipped: false,
       durationMs: Date.now() - startedAt,
     });
   } catch (error) {

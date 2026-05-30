@@ -113,5 +113,9 @@ export async function createStructuredJsonResponse<T>(input: StructuredJsonReque
     throw new Error(input.emptyResponseMessage);
   }
 
-  return JSON.parse(outputText) as T;
+  try {
+    return JSON.parse(outputText) as T;
+  } catch {
+    throw new Error(`Model returned malformed JSON. ${input.emptyResponseMessage}`);
+  }
 }

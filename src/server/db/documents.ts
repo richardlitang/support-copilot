@@ -173,3 +173,16 @@ export async function deleteDocumentsBySessionDirect(sessionId: string) {
     await client.query("delete from documents where session_id = $1", [sessionId]);
   });
 }
+
+export async function deleteDocumentsByFilenameAndStatusDirect(
+  filename: string,
+  status: DocumentStatus,
+  sessionId: string,
+) {
+  return withPgClient(async (client) => {
+    await client.query(
+      "delete from documents where filename = $1 and status = $2 and session_id = $3",
+      [filename, status, sessionId],
+    );
+  });
+}

@@ -136,6 +136,35 @@ export function createSyntheticToolEvidence(input: {
   };
 }
 
+type FetchedToolData = {
+  account: AccountRecord | null;
+  flags: FeatureFlagRecord[];
+  errors: ErrorEventRecord[];
+};
+
+async function fetchDbTools(
+  requiredTools: ToolName[],
+  accountId: string,
+  productArea: string | null,
+  dependencies: ToolRunnerDependencies,
+): Promise<FetchedToolData> {
+  const needed = new Set(requiredTools);
+
+  const [account, flags, errors] = await Promise.all([
+    needed.has("getAccountContext")
+      ? dependencies.getAccountContext(accountId)
+      : Promise.resolve(null),
+    needed.has("getFeatureFlags")
+      ? dependencies.getFeatureFlags(accountId)
+      : Promise.resolve([]),
+    needed.has("getRecentErrors")
+      ? dependencies.getRecentErrors({ accountId, productArea })
+      : Promise.resolve([]),
+  ]);
+
+  return { account, flags, errors };
+}
+
 export async function collectToolArtifacts(input: {
   requiredTools: ToolName[];
   selectedAccountId?: string | null;
@@ -146,10 +175,17 @@ export async function collectToolArtifacts(input: {
   const toolCalls: ToolCallRecord[] = [];
   const toolEvidence: ToolEvidenceItem[] = [];
   const productArea = inferProductArea(input.ticket);
-  let account: AccountRecord | null = null;
-  let flags: FeatureFlagRecord[] = [];
-  let errors: ErrorEventRecord[] = [];
   let toolRank = 1;
+
+  // Fetch all DB-backed tools in parallel when an account is selected
+  const fetched: FetchedToolData = input.selectedAccountId
+    ? await fetchDbTools(
+        input.requiredTools,
+        input.selectedAccountId,
+        productArea,
+        input.dependencies,
+      )
+    : { account: null, flags: [], errors: [] };
 
   for (const toolName of input.requiredTools) {
     if (toolName === "getProvidedContext") {
@@ -198,8 +234,7 @@ export async function collectToolArtifacts(input: {
     }
 
     if (toolName === "getAccountContext") {
-      account = await input.dependencies.getAccountContext(input.selectedAccountId);
-      const summary = summarizeAccountContext(account);
+      const summary = summarizeAccountContext(fetched.account);
       toolEvidence.push({
         id: formatToolCitationLabel(toolRank),
         sourceType: "tool",
@@ -218,8 +253,7 @@ export async function collectToolArtifacts(input: {
     }
 
     if (toolName === "getFeatureFlags") {
-      flags = await input.dependencies.getFeatureFlags(input.selectedAccountId);
-      const summary = summarizeFeatureFlags(flags);
+      const summary = summarizeFeatureFlags(fetched.flags);
       toolEvidence.push({
         id: formatToolCitationLabel(toolRank),
         sourceType: "tool",
@@ -237,11 +271,7 @@ export async function collectToolArtifacts(input: {
       continue;
     }
 
-    errors = await input.dependencies.getRecentErrors({
-      accountId: input.selectedAccountId,
-      productArea,
-    });
-    const summary = summarizeRecentErrors(errors, productArea);
+    const summary = summarizeRecentErrors(fetched.errors, productArea);
     toolEvidence.push({
       id: formatToolCitationLabel(toolRank),
       sourceType: "tool",
@@ -261,9 +291,9 @@ export async function collectToolArtifacts(input: {
   return {
     toolCalls,
     toolEvidence,
-    account,
-    flags,
-    errors,
+    account: fetched.account,
+    flags: fetched.flags,
+    errors: fetched.errors,
     productArea,
   };
 }

@@ -2,9 +2,15 @@ import { NextResponse } from "next/server";
 import { listAccountsSafe } from "@/src/server/db";
 import { createRequestLogger } from "@/src/server/observability/log";
 import { captureServerException } from "@/src/server/observability/sentry";
+import { getRuntimeConfig } from "@/src/server/config/env";
 
 export async function GET() {
   const logger = createRequestLogger("/api/debug/accounts:get");
+
+  if (!getRuntimeConfig().debugMode) {
+    logger.finish({ outcome: "disabled" });
+    return NextResponse.json({ error: "Not found." }, { status: 404 });
+  }
 
   try {
     const accounts = await listAccountsSafe();

@@ -19,6 +19,7 @@ export async function ensureSessionId() {
   const sessionId = randomUUID();
   cookieStore.set(SUPPORT_SESSION_COOKIE, sessionId, {
     httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
     maxAge: 60 * 60 * 24 * 14,

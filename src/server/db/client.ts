@@ -18,6 +18,9 @@ export function getPgPool() {
 
   pool = new Pool({
     connectionString: databaseUrl,
+    max: 10,
+    connectionTimeoutMillis: 5000,
+    idleTimeoutMillis: 30000,
   });
 
   return pool;

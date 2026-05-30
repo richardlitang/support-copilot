@@ -1,14 +1,27 @@
 import { randomUUID } from "node:crypto";
 
 type LogData = Record<string, unknown>;
+type LogLevel = "info" | "error";
+
+const LOG_LEVEL_RANK: Record<LogLevel, number> = { info: 0, error: 1 };
+
+function getConfiguredLevel(): LogLevel {
+  const raw = process.env.LOG_LEVEL?.toLowerCase();
+  if (raw === "error") return "error";
+  return "info";
+}
 
 function emit(
-  level: "info" | "error",
+  level: LogLevel,
   route: string,
   requestId: string,
   event: string,
   data?: LogData,
 ) {
+  if (LOG_LEVEL_RANK[level] < LOG_LEVEL_RANK[getConfiguredLevel()]) {
+    return;
+  }
+
   const payload = {
     ts: new Date().toISOString(),
     level,

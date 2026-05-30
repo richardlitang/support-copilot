@@ -3,6 +3,7 @@ import type { DocumentRecord, DocumentStatus } from "@/lib/types";
 import {
   createDocumentDirect,
   deleteDocumentDirect,
+  deleteDocumentsByFilenameAndStatusDirect,
   deleteDocumentsBySessionDirect,
   getDocumentCountDirect,
   listDocumentsDirect,
@@ -135,6 +136,10 @@ export async function deleteDocumentsByFilenameAndStatusRecord(
   status: DocumentStatus,
   sessionId: string,
 ) {
+  if (hasDirectDatabaseConfig()) {
+    return deleteDocumentsByFilenameAndStatusDirect(filename, status, sessionId);
+  }
+
   const supabase = getSupabaseAdminClient();
   const { error } = await supabase
     .from("documents")

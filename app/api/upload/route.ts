@@ -89,6 +89,22 @@ export async function POST(request: Request) {
 
       try {
         const buffer = Buffer.from(await file.arrayBuffer());
+
+        if (buffer.byteLength > maxFileSizeBytes) {
+          outcomes.push({
+            filename: file.name,
+            status: "failed",
+            message: `File exceeds the ${config.maxUploadMb} MB upload limit.`,
+          });
+          logger.info("file_rejected_size_limit", {
+            filename: file.name,
+            reportedBytes: file.size,
+            actualBytes: buffer.byteLength,
+            maxSizeBytes: maxFileSizeBytes,
+          });
+          continue;
+        }
+
         const stored = await putLocalObject({
           buffer,
           filename: file.name,

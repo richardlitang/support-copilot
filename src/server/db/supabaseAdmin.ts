@@ -38,7 +38,24 @@ export function hasDatabaseConfig() {
   return Boolean(getSupabaseUrl() && getSupabaseServiceKey());
 }
 
-export function getSupabaseAdminClient() {
+function buildSupabaseAdminClient(url: string, key: string) {
+  return createClient(url, key, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  });
+}
+
+type SupabaseAdminClient = ReturnType<typeof buildSupabaseAdminClient>;
+
+let supabaseAdminClient: SupabaseAdminClient | null = null;
+
+export function getSupabaseAdminClient(): SupabaseAdminClient {
+  if (supabaseAdminClient) {
+    return supabaseAdminClient;
+  }
+
   const url = getSupabaseUrl();
   const key = getSupabaseServiceKey();
 
@@ -46,10 +63,6 @@ export function getSupabaseAdminClient() {
     throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY.");
   }
 
-  return createClient(url, key, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-    },
-  });
+  supabaseAdminClient = buildSupabaseAdminClient(url, key);
+  return supabaseAdminClient;
 }
