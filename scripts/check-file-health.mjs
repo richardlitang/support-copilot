@@ -4,7 +4,6 @@ import path from "node:path";
 const ROOT = process.cwd();
 
 const budgets = [
-  { file: "src/server/db/index.ts", maxLines: 300 },
   { file: "src/server/investigation/investigate.ts", maxLines: 220 },
   { file: "src/server/investigation/stages.ts", maxLines: 320 },
   { file: "src/server/ai/answers/grounded-answer.ts", maxLines: 260 },

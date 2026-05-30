@@ -1,6 +1,11 @@
 import type { SupportLevel } from "@/lib/types";
 
 export type InvestigationMode = "docs_only" | "docs_plus_tools" | "needs_human_review";
+export type InvestigationBlocker =
+  | { kind: "none" }
+  | { kind: "missing_context" }
+  | { kind: "conflict"; reason: string }
+  | { kind: "validation_failed" };
 export type InvestigationExecutionMode = "evidence_only" | "draft_answer";
 export type ReviewStatus = "ready" | "needs_human_review";
 export type ReviewReasonCode =

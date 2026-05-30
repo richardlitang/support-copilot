@@ -119,6 +119,8 @@ function buildRuntimeConfig() {
     maxUploadMb: readNumber("MAX_UPLOAD_MB", 10),
     logLevel: readOptionalString("LOG_LEVEL") || "info",
     debugMode: readOptionalString("DEBUG_MODE") === "true",
+    cohereApiKey: readOptionalString("COHERE_API_KEY"),
+    cohereRerankModel: readOptionalString("COHERE_RERANK_MODEL") || "rerank-v4.0-fast",
   };
 }
 

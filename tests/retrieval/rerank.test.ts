@@ -1,5 +1,12 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { rerankEvidenceCandidates } from "@/src/server/ai/rerank";
 import type { EvidenceChunk } from "@/lib/types";
+
+const configMock = vi.hoisted(() => ({
+  getRuntimeConfig: vi.fn(),
+}));
+
+vi.mock("@/src/server/config/env", () => configMock);
 
 function candidate(id: string, content: string): EvidenceChunk {
   return {
@@ -15,18 +22,13 @@ function candidate(id: string, content: string): EvidenceChunk {
 }
 
 describe("rerankEvidenceCandidates", () => {
-  const originalApiKey = process.env.COHERE_API_KEY;
-
-  afterEach(() => {
-    if (originalApiKey === undefined) {
-      delete process.env.COHERE_API_KEY;
-    } else {
-      process.env.COHERE_API_KEY = originalApiKey;
-    }
+  beforeEach(() => {
+    vi.resetAllMocks();
   });
 
   it("skips hosted reranking when no Cohere key is configured", async () => {
-    delete process.env.COHERE_API_KEY;
+    configMock.getRuntimeConfig.mockReturnValue({ cohereApiKey: "", cohereRerankModel: "rerank-v4.0-fast" });
+
     const scores = await rerankEvidenceCandidates({
       query: "webhook_signature_failed",
       candidates: [candidate("chunk-1", "Webhook troubleshooting")],
@@ -40,7 +42,8 @@ describe("rerankEvidenceCandidates", () => {
   });
 
   it("maps Cohere rerank results into candidate indexes and scores", async () => {
-    process.env.COHERE_API_KEY = "test-key";
+    configMock.getRuntimeConfig.mockReturnValue({ cohereApiKey: "test-key", cohereRerankModel: "rerank-v4.0-fast" });
+
     const scores = await rerankEvidenceCandidates({
       query: "webhook_signature_failed",
       candidates: [

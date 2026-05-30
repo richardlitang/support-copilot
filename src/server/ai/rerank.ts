@@ -1,4 +1,4 @@
-import { ensureEnvLoaded } from "@/src/server/config/env";
+import { getRuntimeConfig } from "@/src/server/config/env";
 import type { EvidenceChunk } from "@/lib/types";
 
 type CohereRerankResponse = {
@@ -8,25 +8,15 @@ type CohereRerankResponse = {
   }>;
 };
 
-function getCohereApiKey() {
-  ensureEnvLoaded();
-  return process.env.COHERE_API_KEY ?? "";
-}
-
-function getRerankModel() {
-  ensureEnvLoaded();
-  return process.env.COHERE_RERANK_MODEL ?? "rerank-v4.0-fast";
-}
-
 export async function rerankEvidenceCandidates(input: {
   query: string;
   candidates: EvidenceChunk[];
   topN: number;
   fetcher?: typeof fetch;
 }) {
-  const apiKey = getCohereApiKey();
+  const { cohereApiKey, cohereRerankModel } = getRuntimeConfig();
 
-  if (!apiKey || input.candidates.length <= 1) {
+  if (!cohereApiKey || input.candidates.length <= 1) {
     return [];
   }
 
@@ -34,12 +24,12 @@ export async function rerankEvidenceCandidates(input: {
   const response = await fetcher("https://api.cohere.com/v2/rerank", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${apiKey}`,
+      Authorization: `Bearer ${cohereApiKey}`,
       "Content-Type": "application/json",
       "X-Client-Name": "support-copilot",
     },
     body: JSON.stringify({
-      model: getRerankModel(),
+      model: cohereRerankModel,
       query: input.query,
       documents: input.candidates.map((candidate) => candidate.content),
       top_n: Math.min(input.topN, input.candidates.length),

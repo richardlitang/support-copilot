@@ -1,4 +1,4 @@
-import { listRecentErrorsByAccountIdDirect as listRecentErrorsByAccountId } from "@/src/server/db/supportContext";
+import { listRecentErrorsByAccountId } from "@/src/server/db/supportContext";
 
 export async function getRecentErrors(input: {
   accountId: string;

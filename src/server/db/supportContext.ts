@@ -1,5 +1,5 @@
 import type { AccountRecord, ErrorEventRecord, FeatureFlagRecord } from "@/lib/types/investigation";
-import { getSupabaseAdminClient } from "@/src/server/db/supabaseAdmin";
+import { getSupabaseAdminClient, hasDatabaseConfig } from "@/src/server/db/supabaseAdmin";
 
 type DbAccountRow = {
   id: string;
@@ -79,7 +79,7 @@ function mapErrorEventRow(row: DbErrorEventRow): ErrorEventRecord {
   };
 }
 
-export async function listAccountsDirect() {
+export async function listAccounts() {
   const supabase = getSupabaseAdminClient();
   const { data, error } = await supabase
     .from("accounts")
@@ -93,7 +93,7 @@ export async function listAccountsDirect() {
   return (data ?? []).map((row) => mapAccountRow(row as DbAccountRow));
 }
 
-export async function getAccountByIdDirect(accountId: string) {
+export async function getAccountById(accountId: string) {
   const supabase = getSupabaseAdminClient();
   const { data, error } = await supabase
     .from("accounts")
@@ -108,7 +108,7 @@ export async function getAccountByIdDirect(accountId: string) {
   return data ? mapAccountRow(data as DbAccountRow) : null;
 }
 
-export async function listFeatureFlagsByAccountIdDirect(accountId: string) {
+export async function listFeatureFlagsByAccountId(accountId: string) {
   const supabase = getSupabaseAdminClient();
   const { data, error } = await supabase
     .from("feature_flags")
@@ -123,7 +123,7 @@ export async function listFeatureFlagsByAccountIdDirect(accountId: string) {
   return (data ?? []).map((row) => mapFeatureFlagRow(row as DbFeatureFlagRow));
 }
 
-export async function listRecentErrorsByAccountIdDirect(input: {
+export async function listRecentErrorsByAccountId(input: {
   accountId: string;
   productArea?: string | null;
   limit?: number;
@@ -147,4 +147,16 @@ export async function listRecentErrorsByAccountIdDirect(input: {
   }
 
   return (data ?? []).map((row) => mapErrorEventRow(row as DbErrorEventRow));
+}
+
+export async function listAccountsSafe() {
+  if (!hasDatabaseConfig()) {
+    return [];
+  }
+
+  try {
+    return await listAccounts();
+  } catch {
+    return [];
+  }
 }
