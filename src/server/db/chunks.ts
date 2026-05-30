@@ -20,31 +20,35 @@ export async function replaceDocumentChunksWithClient(
 ) {
   await client.query("delete from document_chunks where document_id = $1", [input.documentId]);
 
-  for (const chunk of input.chunks) {
-    await client.query(
-      `
-        insert into document_chunks (
-          document_id,
-          chunk_index,
-          section_title,
-          content,
-          token_count,
-          metadata_json,
-          embedding
-        )
-        values ($1, $2, $3, $4, $5, $6, $7::extensions.vector)
-      `,
-      [
-        input.documentId,
-        chunk.chunkIndex,
-        chunk.sectionTitle,
-        chunk.content,
-        chunk.tokenCount,
-        JSON.stringify(chunk.metadata),
-        toPgVector(chunk.embedding),
-      ],
-    );
+  if (!input.chunks.length) {
+    return;
   }
+
+  const COLS = 7;
+  const rowPlaceholders = input.chunks.map((_, i) => {
+    const base = i * COLS;
+    return `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5}, $${base + 6}, $${base + 7}::extensions.vector)`;
+  });
+  const values = input.chunks.flatMap((chunk) => [
+    input.documentId,
+    chunk.chunkIndex,
+    chunk.sectionTitle,
+    chunk.content,
+    chunk.tokenCount,
+    JSON.stringify(chunk.metadata),
+    toPgVector(chunk.embedding),
+  ]);
+
+  await client.query(
+    `
+      insert into document_chunks (
+        document_id, chunk_index, section_title, content,
+        token_count, metadata_json, embedding
+      )
+      values ${rowPlaceholders.join(", ")}
+    `,
+    values,
+  );
 }
 
 export async function countDocumentChunks(documentId: string) {

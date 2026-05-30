@@ -78,10 +78,7 @@ export function classifyInvestigation(input: {
     requiredTools.push("getFeatureFlags");
   }
 
-  if (
-    (failureNeedsTools || (/\b(import|export|sync|job)\b/i.test(ticket) && hasSeededAccount)) &&
-    hasSeededAccount
-  ) {
+  if ((failureNeedsTools || /\b(import|export|sync|job)\b/i.test(ticket)) && hasSeededAccount) {
     requiredTools.push("getRecentErrors");
   }
 
