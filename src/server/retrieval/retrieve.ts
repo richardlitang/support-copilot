@@ -1,4 +1,7 @@
-import { matchDocumentChunks, matchLiteralDocumentChunks } from "@/src/server/db";
+import {
+  matchDocumentChunksDb as matchDocumentChunks,
+  matchLiteralDocumentChunksDb as matchLiteralDocumentChunks,
+} from "@/src/server/db/retrieval";
 import { embedText } from "@/src/server/ai/embed";
 import { extractLikelyLiterals } from "@/lib/literal-retrieval";
 import { rerankEvidenceCandidates } from "@/src/server/ai/rerank";

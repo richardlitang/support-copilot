@@ -4,12 +4,12 @@ import { getFeatureFlags } from "@/src/server/tools/feature-flags";
 import { getRecentErrors } from "@/src/server/tools/recent-errors";
 
 const dbMock = vi.hoisted(() => ({
-  getAccountById: vi.fn(),
-  listFeatureFlagsByAccountId: vi.fn(),
-  listRecentErrorsByAccountId: vi.fn(),
+  getAccountByIdDirect: vi.fn(),
+  listFeatureFlagsByAccountIdDirect: vi.fn(),
+  listRecentErrorsByAccountIdDirect: vi.fn(),
 }));
 
-vi.mock("@/src/server/db", () => dbMock);
+vi.mock("@/src/server/db/supportContext", () => dbMock);
 
 describe("tool modules", () => {
   beforeEach(() => {
@@ -17,7 +17,7 @@ describe("tool modules", () => {
   });
 
   it("returns account context from the database adapter", async () => {
-    dbMock.getAccountById.mockResolvedValue({
+    dbMock.getAccountByIdDirect.mockResolvedValue({
       id: "acct-1",
       name: "Acme",
       planTier: "Growth",
@@ -34,7 +34,7 @@ describe("tool modules", () => {
   });
 
   it("returns feature flags from the database adapter", async () => {
-    dbMock.listFeatureFlagsByAccountId.mockResolvedValue([
+    dbMock.listFeatureFlagsByAccountIdDirect.mockResolvedValue([
       {
         id: "flag-1",
         accountId: "acct-1",
@@ -50,7 +50,7 @@ describe("tool modules", () => {
   });
 
   it("returns recent errors from the database adapter", async () => {
-    dbMock.listRecentErrorsByAccountId.mockResolvedValue([
+    dbMock.listRecentErrorsByAccountIdDirect.mockResolvedValue([
       {
         id: "error-1",
         accountId: "acct-1",

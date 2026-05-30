@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { getDocumentCount, listDocuments, createDocumentRecord } from "@/src/server/db";
+import {
+  createDocumentRecordDirect as createDocumentRecord,
+  getDocumentCountRecord as getDocumentCount,
+  listDocumentsRecord as listDocuments,
+} from "@/src/server/db/documentRecords";
 import { getRuntimeConfig } from "@/src/server/config/env";
 import { createRequestLogger } from "@/src/server/observability/log";
 import { ensureSessionId } from "@/src/server/session";

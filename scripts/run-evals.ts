@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { hasDatabaseConfig } from "../src/server/db";
+import { hasDatabaseConfig } from "../src/server/db/supabaseAdmin";
 import { investigateTicket } from "../src/server/investigation/investigate";
 import { createOfflineDependencies } from "./evals/offline";
 import type { EvalCase, EvalSummary } from "./evals/types";

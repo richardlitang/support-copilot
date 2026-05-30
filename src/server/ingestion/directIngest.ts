@@ -1,9 +1,9 @@
 import { chunkParsedDocument as chunkParsedDocumentAdapter } from "@/lib/chunk";
+import { insertDocumentChunksRecord as insertDocumentChunksAdapter } from "@/src/server/db/documentChunkWrites";
 import {
-  createDocumentRecord as createDocumentRecordAdapter,
-  insertDocumentChunks as insertDocumentChunksAdapter,
-  updateDocumentStatus as updateDocumentStatusAdapter,
-} from "@/src/server/db";
+  createDocumentRecordDirect as createDocumentRecordAdapter,
+  updateDocumentRecordStatus as updateDocumentStatusAdapter,
+} from "@/src/server/db/documentRecords";
 import { embedTexts as embedTextsAdapter } from "@/src/server/ai/embed";
 import type { ParsedDocument } from "@/lib/types";
 

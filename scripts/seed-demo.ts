@@ -2,10 +2,10 @@ import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-  deleteDocumentsByFilenameAndStatus,
-  getSupabaseAdminClient,
-  listDocuments,
-} from "../src/server/db";
+  deleteDocumentsByFilenameAndStatusRecord as deleteDocumentsByFilenameAndStatus,
+  listDocumentsRecord as listDocuments,
+} from "../src/server/db/documentRecords";
+import { getSupabaseAdminClient } from "../src/server/db/supabaseAdmin";
 import { directIngestParsedDocument } from "../src/server/ingestion/directIngest";
 import { parseTextDocument } from "../src/server/ingestion/parse";
 
