@@ -7,6 +7,7 @@
     "dev": "next dev --webpack",
     "dev:turbo": "next dev",
     "worker:dev": "node --import tsx src/server/queue/workers/index.ts",
+    "worker:start": "node --import tsx src/server/queue/workers/index.ts",
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint . --max-warnings=0",

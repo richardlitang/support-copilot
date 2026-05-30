@@ -1,4 +1,5 @@
 import { classifyInvestigation, type RoutingDecision } from "@/lib/classify";
+import { getRetrievalLimit } from "@/src/server/retrieval/retrieve";
 import { createDocEvidence } from "@/lib/evidence-builder";
 import { determineReviewDecision } from "@/lib/review-decision";
 import { determineReviewStatus, shouldEscalateToHumanReview } from "@/lib/review-policy";
@@ -71,7 +72,7 @@ export async function retrieveAndRouteInvestigation(
     ? await dependencies.retrieveEvidence({
         question: input.ticket,
         sessionId: input.sessionId,
-        limit: 8,
+        limit: getRetrievalLimit(),
       })
     : [];
   const docEvidence = createDocEvidence(evidence);

@@ -91,7 +91,9 @@ function readNumber(key: string, fallback: number) {
   return parsed;
 }
 
-export function getRuntimeConfig() {
+let cachedConfig: ReturnType<typeof buildRuntimeConfig> | null = null;
+
+function buildRuntimeConfig() {
   ensureEnvLoaded();
   const aiProvider = (readOptionalString("AI_PROVIDER") || "mock") as AiProviderName;
 
@@ -118,6 +120,11 @@ export function getRuntimeConfig() {
     logLevel: readOptionalString("LOG_LEVEL") || "info",
     debugMode: readOptionalString("DEBUG_MODE") === "true",
   };
+}
+
+export function getRuntimeConfig() {
+  cachedConfig ??= buildRuntimeConfig();
+  return cachedConfig;
 }
 
 export function hasDirectDatabaseConfig() {

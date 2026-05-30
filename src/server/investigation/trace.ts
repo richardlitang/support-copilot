@@ -94,7 +94,7 @@ export function buildPipelineTrace(input: {
         : "Retrieval was disabled for this run.",
       input: {
         query: input.input.ticket,
-        limit: 8,
+        limit: input.evidence.length,
       },
       output: docEvidence,
     },
