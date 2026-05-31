@@ -105,7 +105,9 @@ describe("processDocumentIngestion", () => {
     const fileBuffer = Buffer.from("pdf-content");
     mocks.getLocalObject.mockResolvedValue(fileBuffer);
     mocks.parseUploadedBuffer.mockResolvedValue({ sections: [{ title: "Intro", text: "Hello." }] });
-    const chunks = [{ content: "Hello.", sectionTitle: "Intro", chunkIndex: 0, tokenCount: 2, metadata: {} }];
+    const chunks = [
+      { content: "Hello.", sectionTitle: "Intro", chunkIndex: 0, tokenCount: 2, metadata: {} },
+    ];
     mocks.chunkParsedDocument.mockReturnValue(chunks);
     mocks.embedTexts.mockResolvedValue([[0.1, 0.2, 0.3]]);
     mocks.replaceDocumentChunksWithClient.mockResolvedValue(undefined);
@@ -125,8 +127,8 @@ describe("processDocumentIngestion", () => {
   it("skips processing when document is already ready", async () => {
     const client = makePgClient();
     mocks.getDocumentForIngestionWithClient.mockResolvedValue({ ...pendingDoc, status: "ready" });
-    mocks.withPgClient.mockImplementationOnce(
-      async (fn: (c: typeof client) => Promise<unknown>) => fn(client),
+    mocks.withPgClient.mockImplementationOnce(async (fn: (c: typeof client) => Promise<unknown>) =>
+      fn(client),
     );
 
     await processDocumentIngestion(jobData, meta);
@@ -138,8 +140,8 @@ describe("processDocumentIngestion", () => {
   it("throws and records failure when document has no storagePath", async () => {
     const client = makePgClient();
     mocks.getDocumentForIngestionWithClient.mockResolvedValue({ ...pendingDoc, storagePath: null });
-    mocks.withPgClient.mockImplementationOnce(
-      async (fn: (c: typeof client) => Promise<unknown>) => fn(client),
+    mocks.withPgClient.mockImplementationOnce(async (fn: (c: typeof client) => Promise<unknown>) =>
+      fn(client),
     );
     mocks.sanitizeError.mockReturnValue({
       errorCode: "MISSING_STORAGE_PATH",

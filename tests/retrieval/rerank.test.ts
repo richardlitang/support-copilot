@@ -27,7 +27,10 @@ describe("rerankEvidenceCandidates", () => {
   });
 
   it("skips hosted reranking when no Cohere key is configured", async () => {
-    configMock.getRuntimeConfig.mockReturnValue({ cohereApiKey: "", cohereRerankModel: "rerank-v4.0-fast" });
+    configMock.getRuntimeConfig.mockReturnValue({
+      cohereApiKey: "",
+      cohereRerankModel: "rerank-v4.0-fast",
+    });
 
     const scores = await rerankEvidenceCandidates({
       query: "webhook_signature_failed",
@@ -42,7 +45,10 @@ describe("rerankEvidenceCandidates", () => {
   });
 
   it("maps Cohere rerank results into candidate indexes and scores", async () => {
-    configMock.getRuntimeConfig.mockReturnValue({ cohereApiKey: "test-key", cohereRerankModel: "rerank-v4.0-fast" });
+    configMock.getRuntimeConfig.mockReturnValue({
+      cohereApiKey: "test-key",
+      cohereRerankModel: "rerank-v4.0-fast",
+    });
 
     const scores = await rerankEvidenceCandidates({
       query: "webhook_signature_failed",

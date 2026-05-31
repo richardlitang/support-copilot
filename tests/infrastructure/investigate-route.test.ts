@@ -19,7 +19,9 @@ vi.mock("@/lib/investigation-request", async (importOriginal) => {
 });
 
 vi.mock("@/src/server/session", () => ({ ensureSessionId: mocks.ensureSessionId }));
-vi.mock("@/src/server/db/pipelineEvents", () => ({ recordPipelineEvent: mocks.recordPipelineEvent }));
+vi.mock("@/src/server/db/pipelineEvents", () => ({
+  recordPipelineEvent: mocks.recordPipelineEvent,
+}));
 vi.mock("@/src/server/observability/sentry", () => ({
   captureServerException: mocks.captureServerException,
 }));
@@ -69,7 +71,11 @@ describe("POST /api/investigate", () => {
   });
 
   it("returns 200 with investigation result on success", async () => {
-    const body = { ticket: "User cannot export CSV.", executionMode: "draft_answer", ragEnabled: true };
+    const body = {
+      ticket: "User cannot export CSV.",
+      executionMode: "draft_answer",
+      ragEnabled: true,
+    };
     mocks.normalizeInvestigationRequest.mockReturnValue({
       ticket: body.ticket,
       executionMode: "draft_answer",
