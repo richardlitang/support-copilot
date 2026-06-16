@@ -49,7 +49,81 @@ Support Copilot is a single-app Next.js support investigation workspace built to
 For a fuller walkthrough, see [`docs/architecture.md`](docs/architecture.md).
 For a file-by-file orientation, see [`docs/code-map.md`](docs/code-map.md).
 
-- `app/api/upload/route.ts`: upload, parse, chunk, embed, and persist documents
+```mermaid
+flowchart TD
+  ui["Browser UI"]
+
+  subgraph http["Next.js API routes"]
+    documentsApi["/api/documents"]
+    uploadApi["/api/upload"]
+    investigateApi["/api/investigate"]
+  end
+
+  subgraph ingestion["Queued document ingestion"]
+    localStorage["Local object storage"]
+    ingestionRows["Document and ingestion job rows"]
+    redisQueue["Redis BullMQ queue"]
+    ingestionWorker["Document ingestion worker"]
+    parseChunk["Parse and chunk"]
+    embedChunks["Embed chunks"]
+    chunkRows["Ready document chunks"]
+  end
+
+  subgraph investigation["Investigation pipeline"]
+    orchestrator["investigateTicket"]
+    retrieve["Retrieve evidence"]
+    routeDecision["Classify route"]
+    toolEvidence["Collect tool evidence"]
+    claimDraft["Generate structured claims"]
+    reviewDecision["Validate and review"]
+    persistRun["Persist investigation run"]
+    resultPayload["Structured result"]
+  end
+
+  subgraph services["Storage and providers"]
+    postgres["Supabase Postgres and pgvector"]
+    aiProvider["Mock or OpenAI provider"]
+    reranker["Optional Cohere reranker"]
+  end
+
+  ui --> documentsApi
+  ui --> uploadApi
+  ui --> investigateApi
+
+  uploadApi --> localStorage
+  uploadApi --> ingestionRows
+  uploadApi --> redisQueue
+  redisQueue --> ingestionWorker
+  ingestionWorker --> localStorage
+  ingestionWorker --> parseChunk
+  parseChunk --> embedChunks
+  embedChunks --> aiProvider
+  embedChunks --> chunkRows
+  chunkRows --> postgres
+  ingestionRows --> postgres
+
+  investigateApi --> orchestrator
+  orchestrator --> retrieve
+  retrieve --> aiProvider
+  retrieve --> postgres
+  retrieve --> reranker
+  retrieve --> routeDecision
+  routeDecision --> toolEvidence
+  toolEvidence --> postgres
+  toolEvidence --> claimDraft
+  routeDecision --> claimDraft
+  claimDraft --> aiProvider
+  claimDraft --> reviewDecision
+  reviewDecision --> persistRun
+  persistRun --> postgres
+  persistRun --> resultPayload
+  resultPayload --> ui
+```
+
+Evidence for this diagram comes from [`components/support-shell/api.ts`](components/support-shell/api.ts), [`app/api/upload/route.ts`](app/api/upload/route.ts), [`src/server/queue/workers/documentIngestionWorker.ts`](src/server/queue/workers/documentIngestionWorker.ts), [`app/api/investigate/route.ts`](app/api/investigate/route.ts), [`src/server/investigation/investigate.ts`](src/server/investigation/investigate.ts), and [`src/server/retrieval/retrieve.ts`](src/server/retrieval/retrieve.ts). The Cohere reranker path is conditional on configuration; mock and OpenAI are selected through the AI provider boundary.
+
+- `app/api/upload/route.ts`: validate uploads, store raw files, create document and ingestion job records, and enqueue ingestion
+- `src/server/queue/workers/documentIngestionWorker.ts`: parse, chunk, embed, and mark documents ready or failed
 - `app/api/investigate/route.ts`: retrieve docs, deterministically decide whether tools are needed, run tool-backed investigation, and store structured investigation metadata
 - `src/server/ingestion/parse.ts`: text extraction and heading-aware parsing
 - `lib/chunk.ts`: deterministic chunking for retrieval
