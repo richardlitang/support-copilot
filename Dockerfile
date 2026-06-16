@@ -17,6 +17,9 @@ ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
+COPY --from=builder /app/src ./src
+COPY --from=builder /app/lib ./lib
+COPY --from=builder /app/tsconfig.json ./tsconfig.json
 COPY package.json ./
 EXPOSE 3000
 CMD ["npm", "run", "start"]

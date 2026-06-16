@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: support-copilot-config
+  namespace: support-copilot
+data:
+  NODE_ENV: "production"
+  APP_URL: "http://support-copilot-web:3000"
+  AI_PROVIDER: "mock"
+  REDIS_URL: "redis://redis:6379"
+  UPLOAD_DIR: "/app/uploads"
+  MAX_UPLOAD_MB: "10"
+  DEBUG_MODE: "false"
