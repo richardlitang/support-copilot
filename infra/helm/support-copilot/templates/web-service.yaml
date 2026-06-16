@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.web.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{ include "support-copilot.componentLabels" (dict "root" . "component" "web") | indent 4 }}
+spec:
+  selector:
+    app.kubernetes.io/name: support-copilot
+    app.kubernetes.io/component: web
+  ports:
+    - name: {{ .Values.web.port.name }}
+      port: {{ .Values.web.port.servicePort }}
+      targetPort: {{ .Values.web.port.name }}

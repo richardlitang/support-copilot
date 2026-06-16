@@ -1,0 +1,6 @@
+apiVersion: v2
+name: support-copilot
+description: Raw Support Copilot Kubernetes manifests packaged as a Helm chart.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

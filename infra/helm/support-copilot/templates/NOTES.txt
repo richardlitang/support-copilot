@@ -1,0 +1,10 @@
+Support Copilot was installed into the {{ .Release.Namespace }} namespace.
+
+Inspect resources:
+  kubectl get all -n {{ .Release.Namespace }}
+
+Port-forward the web service:
+  kubectl port-forward -n {{ .Release.Namespace }} service/{{ .Values.web.name }} 3000:3000
+
+Check health:
+  curl http://localhost:3000/api/health
