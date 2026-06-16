@@ -1,12 +1,18 @@
 "use client";
 
-import { ChevronDown, FileText, Trash2 } from "lucide-react";
+import { ChevronDown, Eye, FileText, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { DocumentRecord } from "@/lib/types";
 
 const bundledSampleFilename = "paybridge-api-support-guide.md";
+
+function canPreviewPdf(document: DocumentRecord) {
+  return (
+    document.contentType === "application/pdf" || document.filename.toLowerCase().endsWith(".pdf")
+  );
+}
 
 function statusTone(status: DocumentRecord["status"]) {
   if (status === "ready") {
@@ -93,19 +99,35 @@ export function SessionDocsList({
                       </div>
                     </div>
                     <div className="flex items-center justify-between gap-2">
-                      <Badge variant={statusTone(document.status)}>{document.status}</Badge>
-                      {document.filename === bundledSampleFilename ? (
-                        <Badge variant="outline">sample</Badge>
-                      ) : null}
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onDeleteDocument(document.id)}
-                        aria-label={`Remove ${document.filename}`}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="flex min-w-0 flex-wrap items-center gap-2">
+                        <Badge variant={statusTone(document.status)}>{document.status}</Badge>
+                        {document.filename === bundledSampleFilename ? (
+                          <Badge variant="outline">sample</Badge>
+                        ) : null}
+                      </div>
+                      <div className="flex shrink-0 items-center gap-1">
+                        {canPreviewPdf(document) ? (
+                          <Button type="button" variant="ghost" size="sm" asChild>
+                            <a
+                              href={`/api/documents/${document.id}/preview`}
+                              target="_blank"
+                              rel="noreferrer"
+                              aria-label={`Preview ${document.filename}`}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </a>
+                          </Button>
+                        ) : null}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onDeleteDocument(document.id)}
+                          aria-label={`Remove ${document.filename}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>

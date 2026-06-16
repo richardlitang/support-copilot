@@ -5,6 +5,7 @@ import {
   deleteDocumentDirect,
   deleteDocumentsByFilenameAndStatusDirect,
   deleteDocumentsBySessionDirect,
+  getDocumentByIdForSessionDirect,
   getDocumentCountDirect,
   listDocumentsDirect,
   updateDocumentStatusDirect,
@@ -76,6 +77,28 @@ export async function getDocumentCountRecord(sessionId: string) {
   }
 
   return count ?? 0;
+}
+
+export async function getDocumentByIdForSessionRecord(documentId: string, sessionId: string) {
+  if (hasDirectDatabaseConfig()) {
+    return getDocumentByIdForSessionDirect(documentId, sessionId);
+  }
+
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("documents")
+    .select(
+      "id, session_id, filename, content_type, status, created_at, storage_path, size_bytes, error_code, error_message_safe, processed_at",
+    )
+    .eq("id", documentId)
+    .eq("session_id", sessionId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Failed to load document: ${error.message}`);
+  }
+
+  return data ? mapDocumentRow(data as DbDocumentRow) : null;
 }
 
 export async function createDocumentRecordDirect(input: {

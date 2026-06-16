@@ -110,6 +110,23 @@ export async function getDocumentForIngestion(documentId: string) {
   return withPgClient(async (client) => getDocumentForIngestionWithClient(client, documentId));
 }
 
+export async function getDocumentByIdForSessionDirect(documentId: string, sessionId: string) {
+  return withPgClient(async (client) => {
+    const result = await client.query<DocumentRow>(
+      `
+        select ${documentSelect}
+        from documents
+        where id = $1 and session_id = $2
+        limit 1
+      `,
+      [documentId, sessionId],
+    );
+
+    const row = result.rows[0];
+    return row ? mapDocument(row) : null;
+  });
+}
+
 export async function getDocumentForIngestionWithClient(client: PoolClient, documentId: string) {
   const result = await client.query<DocumentRow>(
     `

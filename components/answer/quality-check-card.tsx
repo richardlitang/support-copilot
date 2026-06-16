@@ -13,6 +13,33 @@ const readinessLabel = {
   blocked: "Blocked",
 } as const;
 
+function normalizeQualityCheck(result: InvestigationResult) {
+  const quality = result.qualityCheck;
+
+  return {
+    retrieval: quality?.retrieval ?? {
+      sourceCount: result.docEvidence.length + result.toolEvidence.length,
+      topK: result.docEvidence.length,
+      ignoredDocStatuses: [],
+    },
+    grounding: quality?.grounding ?? {
+      totalClaims: result.customerReply.claims.length + result.internalDiagnosis.claims.length,
+      supportedClaims: 0,
+      weakClaims: 0,
+      unsupportedClaims: 0,
+      invalidCitations: 0,
+    },
+    readiness: quality?.readiness ?? {
+      status: result.reviewStatus === "needs_human_review" ? "needs_human_review" : "ready",
+      reasons: [result.routingReason],
+    },
+    missingInfo: quality?.missingInfo ?? {
+      hasDocsGap: Boolean(result.docsGapReport),
+      missingItems: result.docsGapReport?.missingInformation ?? [],
+    },
+  };
+}
+
 export function QualityCheckCard({
   result,
   showDebugDetails,
@@ -20,7 +47,7 @@ export function QualityCheckCard({
   result: InvestigationResult;
   showDebugDetails: boolean;
 }) {
-  const quality = result.qualityCheck;
+  const quality = normalizeQualityCheck(result);
 
   return (
     <section className="rounded-xl border border-zinc-200/80 bg-white/80 p-4">
