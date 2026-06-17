@@ -28,6 +28,10 @@ describe("extractLikelyLiterals", () => {
       extractLikelyLiterals("Got livemode_mismatch and checkout-session-expired after KYC_REVIEW."),
     ).toEqual(["livemode_mismatch", "checkout-session-expired", "KYC_REVIEW"]);
   });
+
+  it("extracts short acronyms and meaningful terms from brief natural-language questions", () => {
+    expect(extractLikelyLiterals("what is ach payment")).toEqual(["ACH", "payment"]);
+  });
 });
 
 describe("mergeRetrievalCandidates", () => {

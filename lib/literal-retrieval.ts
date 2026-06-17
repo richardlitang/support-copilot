@@ -11,6 +11,25 @@ const GENERIC_LITERAL_TOKENS = new Set([
   "ID",
 ]);
 
+const QUESTION_STOPWORDS = new Set([
+  "about",
+  "after",
+  "does",
+  "from",
+  "have",
+  "into",
+  "is",
+  "should",
+  "that",
+  "the",
+  "this",
+  "what",
+  "when",
+  "where",
+  "which",
+  "with",
+]);
+
 const literalPatterns = [
   /`([^`]+)`/g,
   /\b[a-z]+_[a-z0-9_]+\b/g,
@@ -36,6 +55,28 @@ export function extractLikelyLiterals(input: string) {
       }
 
       literals.add(literal);
+    }
+  }
+
+  const words = input.match(/\b[A-Za-z][A-Za-z0-9]{2,}\b/g) ?? [];
+  const shouldUseQuestionFallback = literals.size === 0 && words.length <= 12;
+
+  if (shouldUseQuestionFallback) {
+    for (const word of words) {
+      const upper = word.toUpperCase();
+      const lower = word.toLowerCase();
+      const isShortAcronymCandidate = word.length <= 4;
+      const normalized = isShortAcronymCandidate ? upper : lower;
+
+      if (
+        GENERIC_LITERAL_TOKENS.has(upper) ||
+        QUESTION_STOPWORDS.has(lower) ||
+        (!isShortAcronymCandidate && normalized.length < 4)
+      ) {
+        continue;
+      }
+
+      literals.add(normalized);
     }
   }
 

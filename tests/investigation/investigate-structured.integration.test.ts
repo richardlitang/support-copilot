@@ -21,6 +21,52 @@ describe("investigateTicket structured", () => {
     }),
   };
 
+  it("can answer brief definition questions from literal document evidence", async () => {
+    const result = await investigateTicket(
+      {
+        ticket: "what is ach payment",
+        ragEnabled: true,
+        sessionId: "session-1",
+      },
+      {
+        ...baseDeps,
+        retrieveEvidence: async () => [
+          {
+            id: "chunk-ach",
+            documentId: "doc-payment-methods",
+            filename: "payment-methods-guide.pdf",
+            sectionTitle: "ACH payments",
+            content: "ACH payments move money between bank accounts through the ACH network.",
+            score: 0.62,
+            rank: 1,
+            chunkIndex: 0,
+            retrievalSource: "literal",
+            literalMatches: ["ACH", "payment"],
+          },
+        ],
+        generateGroundedAnswer: async () => ({
+          answer: "ACH payments move money between bank accounts through the ACH network.",
+          claims: [
+            {
+              text: "ACH payments move money between bank accounts through the ACH network.",
+              citationIds: ["S1"],
+            },
+          ],
+          supportLevel: "medium",
+          citations: ["S1"],
+          insufficientSupport: false,
+        }),
+        generateInvestigationAnswer: async () => {
+          throw new Error("docs-plus-tools generator should not run for docs-only cases");
+        },
+      },
+    );
+
+    expect(result.reviewStatus).toBe("ready");
+    expect(result.docEvidence).toHaveLength(1);
+    expect(result.customerReply.claims[0]?.citations).toEqual(["S1"]);
+  });
+
   it("returns docs plus tools when account context is selected", async () => {
     const result = await investigateTicket(
       {
