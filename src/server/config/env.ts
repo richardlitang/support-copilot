@@ -93,6 +93,22 @@ function readNumber(key: string, fallback: number) {
 
 let cachedConfig: ReturnType<typeof buildRuntimeConfig> | null = null;
 
+function readDatabaseUrl() {
+  const databaseUrl = readOptionalString("DATABASE_URL");
+
+  if (databaseUrl) {
+    return databaseUrl;
+  }
+
+  const supabaseUrl = readOptionalString("SUPABASE_URL");
+
+  if (supabaseUrl.startsWith("postgresql://") || supabaseUrl.startsWith("postgres://")) {
+    return supabaseUrl;
+  }
+
+  return "";
+}
+
 function buildRuntimeConfig() {
   ensureEnvLoaded();
   const aiProvider = (readOptionalString("AI_PROVIDER") || "mock") as AiProviderName;
@@ -112,7 +128,7 @@ function buildRuntimeConfig() {
   return {
     nodeEnv: readOptionalString("NODE_ENV") || "development",
     appUrl: readOptionalString("APP_URL") || "http://localhost:3000",
-    databaseUrl: readOptionalString("DATABASE_URL"),
+    databaseUrl: readDatabaseUrl(),
     redisUrl: readOptionalString("REDIS_URL") || "redis://localhost:6379",
     aiProvider,
     uploadDir: readOptionalString("UPLOAD_DIR") || "uploads",
