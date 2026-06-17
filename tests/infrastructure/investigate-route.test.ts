@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   investigateTicket: vi.fn(),
   normalizeInvestigationRequest: vi.fn(),
+  listDocuments: vi.fn(),
   ensureSessionId: vi.fn(),
   recordPipelineEvent: vi.fn(),
   captureServerException: vi.fn(),
@@ -18,6 +19,9 @@ vi.mock("@/lib/investigation-request", async (importOriginal) => {
   return { ...actual, normalizeInvestigationRequest: mocks.normalizeInvestigationRequest };
 });
 
+vi.mock("@/src/server/db/documentRecords", () => ({
+  listDocumentsRecord: mocks.listDocuments,
+}));
 vi.mock("@/src/server/session", () => ({ ensureSessionId: mocks.ensureSessionId }));
 vi.mock("@/src/server/db/pipelineEvents", () => ({
   recordPipelineEvent: mocks.recordPipelineEvent,
@@ -66,6 +70,7 @@ describe("POST /api/investigate", () => {
     vi.resetAllMocks();
     mocks.createRequestLogger.mockReturnValue(makeLogger());
     mocks.ensureSessionId.mockResolvedValue("session-1");
+    mocks.listDocuments.mockResolvedValue([]);
     mocks.recordPipelineEvent.mockResolvedValue(undefined);
     mocks.captureServerException.mockReturnValue(undefined);
   });
@@ -91,6 +96,38 @@ describe("POST /api/investigate", () => {
     const json = await response.json();
     expect(json.investigationId).toBe("inv-1");
     expect(response.headers.get("x-request-id")).toBe("req-test-1");
+  });
+
+  it("returns 409 when retrieval is enabled and session documents are still processing", async () => {
+    const body = {
+      ticket: "Use the new onboarding doc to answer this.",
+      executionMode: "draft_answer",
+      ragEnabled: true,
+    };
+    mocks.normalizeInvestigationRequest.mockReturnValue({
+      ticket: body.ticket,
+      executionMode: "draft_answer",
+      ragEnabled: true,
+      selectedAccountId: null,
+      investigationContext: null,
+    });
+    mocks.listDocuments.mockResolvedValue([
+      {
+        id: "doc-1",
+        sessionId: "session-1",
+        filename: "onboarding.md",
+        contentType: "text/markdown",
+        status: "processing",
+        createdAt: "2026-06-17T00:00:00.000Z",
+      },
+    ]);
+
+    const response = await POST(makeRequest(body));
+
+    expect(response.status).toBe(409);
+    expect(mocks.investigateTicket).not.toHaveBeenCalled();
+    const json = await response.json();
+    expect(json.error).toContain("onboarding.md is still processing");
   });
 
   it("returns 400 when normalizeInvestigationRequest throws InvestigationRequestError", async () => {

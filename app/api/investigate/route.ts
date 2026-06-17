@@ -5,6 +5,7 @@ import {
   normalizeInvestigationRequest,
 } from "@/lib/investigation-request";
 import { createRequestLogger } from "@/src/server/observability/log";
+import { listDocumentsRecord as listDocuments } from "@/src/server/db/documentRecords";
 import { ensureSessionId } from "@/src/server/session";
 import { recordPipelineEvent } from "@/src/server/db/pipelineEvents";
 import { captureServerException } from "@/src/server/observability/sentry";
@@ -16,6 +17,31 @@ export async function POST(request: Request) {
     const sessionId = await ensureSessionId();
     const body = await request.json();
     const payload = normalizeInvestigationRequest(body);
+    if (payload.ragEnabled) {
+      const documents = await listDocuments(sessionId);
+      const pendingDocuments = documents.filter(
+        (document) => document.status === "uploaded" || document.status === "processing",
+      );
+
+      if (pendingDocuments.length) {
+        const pendingNames = pendingDocuments.map((document) => document.filename).join(", ");
+        logger.finish({
+          outcome: "validation_error_documents_processing",
+          sessionId,
+          pendingDocumentCount: pendingDocuments.length,
+        });
+        const response = NextResponse.json(
+          {
+            error: `${pendingNames} ${
+              pendingDocuments.length === 1 ? "is" : "are"
+            } still processing. Wait for the session docs to show ready, then investigate again.`,
+          },
+          { status: 409 },
+        );
+        response.headers.set("x-request-id", logger.requestId);
+        return response;
+      }
+    }
     logger.info("investigate_received", {
       sessionId,
       executionMode: payload.executionMode,

@@ -72,6 +72,9 @@ export function SupportCopilotShell({
   const hasPendingDocuments = documents.some(
     (document) => document.status === "uploaded" || document.status === "processing",
   );
+  const pendingDocumentCount = documents.filter(
+    (document) => document.status === "uploaded" || document.status === "processing",
+  ).length;
 
   const refreshDocuments = useCallback(async (options?: { silent?: boolean }) => {
     try {
@@ -358,6 +361,7 @@ export function SupportCopilotShell({
               focusContextToken={focusContextToken}
               isReviewRetryActive={isReviewRetryActive}
               isCollapsed={hasRunState && !isComposerExpandedAfterRun && !isReviewRetryActive}
+              pendingDocumentCount={pendingDocumentCount}
               accountHint={
                 result?.reviewDecision.action === "add_context"
                   ? "Paste plan, feature, or recent error context to unlock a deeper investigation path."

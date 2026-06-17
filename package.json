@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev --webpack",
+    "dev": "node scripts/dev.mjs",
+    "dev:web": "next dev --webpack",
     "dev:turbo": "next dev",
     "worker:dev": "node --import tsx src/server/queue/workers/index.ts",
     "worker:start": "node --import tsx src/server/queue/workers/index.ts",

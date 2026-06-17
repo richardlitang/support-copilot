@@ -27,6 +27,7 @@ export function TicketForm({
   focusContextToken,
   isReviewRetryActive,
   isCollapsed,
+  pendingDocumentCount,
   onEdit,
   onSelectAccount,
   onInvestigationContextChange,
@@ -51,6 +52,7 @@ export function TicketForm({
   focusContextToken: number;
   isReviewRetryActive: boolean;
   isCollapsed: boolean;
+  pendingDocumentCount: number;
   onEdit: () => void;
   onSelectAccount: (value: string | null) => void;
   onInvestigationContextChange: (value: string) => void;
@@ -65,6 +67,7 @@ export function TicketForm({
   const [showDemos, setShowDemos] = useState(false);
   const contextRef = useRef<HTMLTextAreaElement | null>(null);
   const contextExpanded = showContext || Boolean(investigationContext.trim());
+  const isSubmitBlockedByPendingDocs = ragEnabled && pendingDocumentCount > 0;
   const lowerTicket = ticket.toLowerCase();
   const likelyNeedsContext = [
     "this customer",
@@ -366,10 +369,18 @@ export function TicketForm({
           </details>
         ) : null}
 
+        {isSubmitBlockedByPendingDocs ? (
+          <div className="rounded-lg border border-amber-200 bg-amber-50/80 px-3 py-2 text-sm leading-6 text-amber-800">
+            {pendingDocumentCount === 1
+              ? "One document is still processing. Wait until it shows ready before investigating."
+              : `${pendingDocumentCount} documents are still processing. Wait until they show ready before investigating.`}
+          </div>
+        ) : null}
+
         <Button
           className="h-11 w-full rounded-xl"
           type="button"
-          disabled={!ticket.trim() || isInvestigating}
+          disabled={!ticket.trim() || isInvestigating || isSubmitBlockedByPendingDocs}
           onClick={() => onSubmit()}
         >
           {isInvestigating
