@@ -66,3 +66,31 @@ export type EvalSummary = {
   }>;
   expectation: string;
 };
+
+export type RetrievalEvalSlice = "code" | "natural_language" | "semantic";
+
+export type RetrievalGoldExpectation = {
+  filenameIncludes?: string;
+  sectionTitleIncludes?: string;
+  contentIncludes: string[];
+};
+
+export type RetrievalEvalCase = {
+  id: string;
+  slice: RetrievalEvalSlice;
+  query: string;
+  sessionId?: string;
+  expectedGold: RetrievalGoldExpectation;
+};
+
+export type RetrievalEvalSummary = {
+  id: string;
+  slice: RetrievalEvalSlice;
+  query: string;
+  inputRecallPassed: boolean;
+  outputRecallPassed: boolean;
+  rerankerInputCount: number;
+  finalCount: number;
+  matchedInputIds: string[];
+  matchedFinalIds: string[];
+};

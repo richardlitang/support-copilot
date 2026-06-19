@@ -1,0 +1,39 @@
+[
+  {
+    "id": "code_duplicate_payment_attempt",
+    "slice": "code",
+    "query": "duplicate_payment_attempt what does it mean",
+    "expectedGold": {
+      "filenameIncludes": "PayBridge API Support Guide",
+      "contentIncludes": [
+        "duplicate_payment_attempt",
+        "second payment attempt",
+        "already has a successful payment"
+      ]
+    }
+  },
+  {
+    "id": "code_webhook_signature_failed",
+    "slice": "code",
+    "query": "webhook_signature_failed",
+    "expectedGold": {
+      "contentIncludes": ["webhook_signature_failed"]
+    }
+  },
+  {
+    "id": "natural_language_ach_payment",
+    "slice": "natural_language",
+    "query": "what is ach payment",
+    "expectedGold": {
+      "contentIncludes": ["ACH", "payment"]
+    }
+  },
+  {
+    "id": "natural_language_duplicate_payment_meaning",
+    "slice": "natural_language",
+    "query": "what does a duplicate payment attempt mean",
+    "expectedGold": {
+      "contentIncludes": ["duplicate", "payment", "successful payment"]
+    }
+  }
+]
