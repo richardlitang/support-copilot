@@ -30,12 +30,13 @@ const QUESTION_STOPWORDS = new Set([
   "with",
 ]);
 
-const literalPatterns = [
+const exactCodePatterns = [
   /`([^`]+)`/g,
+  /\b[A-Z]{2,}[-_][A-Z0-9_-]+\b/g,
+  /\b[A-Z]+-\d+[A-Z0-9-]*\b/g,
   /\b[a-z]+_[a-z0-9_]+\b/g,
   /\b[a-z]+-[a-z0-9-]+\b/g,
   /\b[a-z0-9]+_id\b/gi,
-  /\b[a-z]{2,}_[A-Za-z0-9_]{6,}\b/g,
   /\b[A-Z][A-Z0-9_]{3,}\b/g,
 ];
 
@@ -43,10 +44,10 @@ function normalizeLiteral(value: string) {
   return value.trim().replace(/^['"`]+|['"`.,:;!?]+$/g, "");
 }
 
-export function extractLikelyLiterals(input: string) {
+export function extractExactCodeLiterals(input: string) {
   const literals = new Set<string>();
 
-  for (const pattern of literalPatterns) {
+  for (const pattern of exactCodePatterns) {
     for (const match of input.matchAll(pattern)) {
       const literal = normalizeLiteral(match[1] ?? match[0]);
 
@@ -58,6 +59,13 @@ export function extractLikelyLiterals(input: string) {
     }
   }
 
+  return Array.from(literals)
+    .sort((left, right) => input.indexOf(left) - input.indexOf(right))
+    .slice(0, 8);
+}
+
+export function extractLikelyLiterals(input: string) {
+  const literals = new Set(extractExactCodeLiterals(input));
   const words = input.match(/\b[A-Za-z][A-Za-z0-9]{2,}\b/g) ?? [];
   const shouldUseQuestionFallback = literals.size === 0 && words.length <= 12;
 
@@ -80,5 +88,7 @@ export function extractLikelyLiterals(input: string) {
     }
   }
 
-  return Array.from(literals).slice(0, 8);
+  return Array.from(literals)
+    .sort((left, right) => input.toLowerCase().indexOf(left.toLowerCase()) - input.toLowerCase().indexOf(right.toLowerCase()))
+    .slice(0, 8);
 }

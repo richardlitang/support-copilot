@@ -1,4 +1,5 @@
 import { extractLikelyLiterals } from "@/lib/literal-retrieval";
+import * as literalRetrieval from "@/lib/literal-retrieval";
 import { applyRerankScores, mergeRetrievalCandidates } from "@/lib/retrieval-candidates";
 import type { EvidenceChunk } from "@/lib/types";
 import { readFileSync } from "node:fs";
@@ -33,6 +34,20 @@ describe("extractLikelyLiterals", () => {
 
   it("extracts short acronyms and meaningful terms from brief natural-language questions", () => {
     expect(extractLikelyLiterals("what is ach payment")).toEqual(["ACH", "payment"]);
+  });
+});
+
+describe("extractExactCodeLiterals", () => {
+  const extractExactCodeLiterals = (literalRetrieval as typeof literalRetrieval & {
+    extractExactCodeLiterals: (input: string) => string[];
+  }).extractExactCodeLiterals;
+
+  it("extracts code-shaped support terms without treating natural language as exact", () => {
+    expect(extractExactCodeLiterals("duplicate_payment_attempt what does it mean")).toEqual([
+      "duplicate_payment_attempt",
+    ]);
+    expect(extractExactCodeLiterals("ERR-4021-X failed")).toEqual(["ERR-4021-X"]);
+    expect(extractExactCodeLiterals("what is ach payment")).toEqual([]);
   });
 });
 
