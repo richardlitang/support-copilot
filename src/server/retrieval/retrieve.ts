@@ -1,5 +1,6 @@
 import {
   matchDocumentChunksDb as matchDocumentChunks,
+  matchFtsDocumentChunksDb as matchFtsDocumentChunks,
   matchLiteralDocumentChunksDb as matchLiteralDocumentChunks,
 } from "@/src/server/db/retrieval";
 import { embedText } from "@/src/server/ai/embed";
@@ -8,7 +9,6 @@ import { rerankEvidenceCandidates } from "@/src/server/ai/rerank";
 import {
   applyRerankScores,
   fuseRetrievalCandidatesWithRrf,
-  mergeRetrievalCandidates,
   selectRerankerInputCandidates,
 } from "@/lib/retrieval-candidates";
 import type { RetrievalBoundaryTrace } from "@/lib/types";
@@ -19,6 +19,7 @@ const DEFAULT_CANDIDATE_TOP_K = 30;
 const DEFAULT_LITERAL_TOP_K = 20;
 const DEFAULT_RERANK_CANDIDATE_LIMIT = 50;
 const DEFAULT_PINNED_EXACT_CANDIDATE_LIMIT = 5;
+const DEFAULT_FTS_CANDIDATE_LIMIT = 30;
 
 export function getRetrievalLimit() {
   const rawTopK = process.env.SUPPORT_RETRIEVAL_TOP_K;
@@ -61,6 +62,15 @@ export function getPinnedExactCandidateLimit() {
   );
 }
 
+export function getFtsCandidateLimit() {
+  return getBoundedPositiveInteger(
+    "SUPPORT_FTS_CANDIDATE_LIMIT",
+    DEFAULT_FTS_CANDIDATE_LIMIT,
+    8,
+    50,
+  );
+}
+
 export function getMatchThreshold() {
   const rawThreshold = process.env.SUPPORT_MATCH_THRESHOLD;
   const parsed = rawThreshold ? Number(rawThreshold) : 0.46;
@@ -92,14 +102,11 @@ export async function retrieveEvidence(input: {
         matchCount: DEFAULT_LITERAL_TOP_K,
       })
     : [];
-  const candidates = mergeRetrievalCandidates([
-    ...literalCandidates,
-    ...vectorCandidates.map((candidate) => ({
-      ...candidate,
-      retrievalSource: "vector" as const,
-      vectorScore: candidate.score,
-    })),
-  ]);
+  const ftsCandidates = await matchFtsDocumentChunks({
+    sessionId: input.sessionId,
+    query: input.question,
+    matchCount: getFtsCandidateLimit(),
+  });
   const contestableCandidates = fuseRetrievalCandidatesWithRrf([
     {
       lane: "vector",
@@ -109,6 +116,7 @@ export async function retrieveEvidence(input: {
         vectorScore: candidate.score,
       })),
     },
+    { lane: "fts", candidates: ftsCandidates },
   ]);
   const rerankerInputCandidates = selectRerankerInputCandidates({
     exactCandidates: literalCandidates,
@@ -117,7 +125,7 @@ export async function retrieveEvidence(input: {
     pinnedExactLimit: getPinnedExactCandidateLimit(),
   });
 
-  let finalCandidates = candidates.slice(0, finalLimit).map((candidate, index) => ({
+  let finalCandidates = rerankerInputCandidates.slice(0, finalLimit).map((candidate, index) => ({
     ...candidate,
     rank: index + 1,
   }));
@@ -130,7 +138,10 @@ export async function retrieveEvidence(input: {
     });
 
     if (rerankScores.length) {
-      finalCandidates = applyRerankScores(candidates, rerankScores).slice(0, finalLimit);
+      finalCandidates = applyRerankScores(rerankerInputCandidates, rerankScores).slice(
+        0,
+        finalLimit,
+      );
     }
   } catch (error) {
     captureServerException(error, { tags: { route: "retrieval:rerank" } });
@@ -142,8 +153,10 @@ export async function retrieveEvidence(input: {
   input.onTrace?.({
     query: input.question,
     exactTerms: literals,
-    ftsQuery: "",
-    pinnedCandidateIds: [],
+    ftsQuery: input.question,
+    pinnedCandidateIds: rerankerInputCandidates
+      .filter((candidate) => candidate.exactPinned)
+      .map((candidate) => candidate.id),
     rerankerInputCandidateIds: rerankerInputCandidates.map((candidate) => candidate.id),
     finalCandidateIds: finalCandidates.map((candidate) => candidate.id),
     rerankerInputCandidates,
