@@ -37,6 +37,33 @@ describe("generateGroundedAnswer", () => {
     );
     expect(result.claims[0]?.citationIds).toEqual(["S1"]);
   });
+
+  it("turns a payment-method fact-sheet field into a direct customer answer", async () => {
+    const result = await generateGroundedAnswer({
+      ticket: "Does EPS have recurring Payments",
+      evidence: [
+        {
+          id: "chunk-eps",
+          documentId: "doc-1",
+          filename: "Payment-methods-guide.pdf",
+          sectionTitle: null,
+          content:
+            "PAYMENT METHOD TYPE Authenticated bank debit RECURRING PAYMENTS No EPS EPS is an Austrian online transfer payment method with approximately 18% market share.",
+          score: 0.91,
+          rank: 1,
+          chunkIndex: 36,
+        },
+      ],
+    });
+
+    expect(result.claims).toEqual([
+      {
+        text:
+          "No. EPS does not support recurring payments. EPS is an Austrian online transfer payment method with approximately 18% market share.",
+        citationIds: ["S1"],
+      },
+    ]);
+  });
 });
 
 describe("validateGroundedAnswer", () => {

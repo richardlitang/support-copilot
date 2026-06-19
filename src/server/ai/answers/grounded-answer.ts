@@ -60,8 +60,38 @@ function sentenceCase(text: string) {
   return `${trimmed.charAt(0).toLowerCase()}${trimmed.slice(1)}`;
 }
 
-function buildMockClaimText(excerpt: string) {
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function buildMockRecurringPaymentAnswer(ticket: string, cleanedEvidence: string) {
+  const paymentMethod = ticket.match(
+    /\bdoes\s+(.+?)\s+(?:have|support|allow)\s+recurring payments?\b/i,
+  )?.[1];
+  const recurringPaymentSupport = cleanedEvidence.match(/RECURRING PAYMENTS\s+(Yes|No)\b/i)?.[1];
+
+  if (!paymentMethod || !recurringPaymentSupport) {
+    return null;
+  }
+
+  const method = paymentMethod.trim();
+  const description = cleanedEvidence.match(
+    new RegExp(`\\b${escapeRegExp(method)}\\s+is\\s+(.+?\\.)`, "i"),
+  )?.[1];
+  const answer = recurringPaymentSupport.toLowerCase() === "yes"
+    ? `Yes. ${method} supports recurring payments.`
+    : `No. ${method} does not support recurring payments.`;
+
+  return description ? `${answer} ${method} is ${description.trim()}` : answer;
+}
+
+function buildMockClaimText(ticket: string, excerpt: string) {
   const cleaned = cleanEvidenceText(excerpt);
+  const recurringPaymentAnswer = buildMockRecurringPaymentAnswer(ticket, cleaned);
+
+  if (recurringPaymentAnswer) {
+    return recurringPaymentAnswer;
+  }
   const meaning = cleaned.match(
     /\b([a-z]+_[a-z0-9_]+)\s+-?\s*Meaning:\s*(.+?)(?:\s+Likely causes:|\s+Customer action:|\s+Support action:|\s+Escalation rule:|$)/i,
   );
@@ -155,7 +185,7 @@ async function requestGroundedAnswer(input: {
       return buildInsufficientSupportAnswer();
     }
 
-    const claimText = buildMockClaimText(firstCitation.excerpt);
+    const claimText = buildMockClaimText(input.ticket, firstCitation.excerpt);
 
     return {
       answer: claimText,
