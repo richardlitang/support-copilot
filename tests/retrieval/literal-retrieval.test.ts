@@ -1,6 +1,8 @@
 import { extractLikelyLiterals } from "@/lib/literal-retrieval";
 import { applyRerankScores, mergeRetrievalCandidates } from "@/lib/retrieval-candidates";
 import type { EvidenceChunk } from "@/lib/types";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 
 function chunk(input: Partial<EvidenceChunk> & Pick<EvidenceChunk, "id" | "score">): EvidenceChunk {
   return {
@@ -31,6 +33,15 @@ describe("extractLikelyLiterals", () => {
 
   it("extracts short acronyms and meaningful terms from brief natural-language questions", () => {
     expect(extractLikelyLiterals("what is ach payment")).toEqual(["ACH", "payment"]);
+  });
+});
+
+describe("direct literal retrieval", () => {
+  it("searches section titles as well as content for literal matches", () => {
+    const chunksSource = readFileSync(resolve(import.meta.dirname, "../../src/server/db/chunks.ts"), "utf8");
+
+    expect(chunksSource).toContain("document_chunks.content ilike");
+    expect(chunksSource).toContain("document_chunks.section_title ilike");
   });
 });
 

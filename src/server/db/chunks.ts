@@ -2,6 +2,25 @@ import type { PoolClient } from "pg";
 import type { ChunkCandidate, EvidenceChunk } from "@/lib/types";
 import { toPgVector, withPgClient } from "@/src/server/db/client";
 
+export const DIRECT_LITERAL_DOCUMENT_CHUNKS_SQL = `
+  select
+    document_chunks.id,
+    document_chunks.document_id,
+    documents.filename,
+    document_chunks.section_title,
+    document_chunks.content,
+    document_chunks.chunk_index
+  from document_chunks
+  inner join documents on documents.id = document_chunks.document_id
+  where documents.session_id = $1
+    and documents.status = 'ready'
+    and (
+      document_chunks.content ilike $2
+      or document_chunks.section_title ilike $2
+    )
+  limit $3
+`;
+
 export async function replaceDocumentChunks(input: {
   documentId: string;
   chunks: Array<ChunkCandidate & { embedding: number[] }>;
@@ -117,21 +136,7 @@ export async function matchLiteralDocumentChunksDirect(input: {
         content: string;
         chunk_index: number;
       }>(
-        `
-          select
-            document_chunks.id,
-            document_chunks.document_id,
-            documents.filename,
-            document_chunks.section_title,
-            document_chunks.content,
-            document_chunks.chunk_index
-          from document_chunks
-          inner join documents on documents.id = document_chunks.document_id
-          where documents.session_id = $1
-            and documents.status = 'ready'
-            and document_chunks.content ilike $2
-          limit $3
-        `,
+        DIRECT_LITERAL_DOCUMENT_CHUNKS_SQL,
         [input.sessionId, `%${literal}%`, input.matchCount],
       );
 
