@@ -56,6 +56,15 @@ export interface EvidenceChunk {
   rerankScore?: number;
 }
 
+export type RetrievalBoundaryTrace = {
+  query: string;
+  exactTerms: string[];
+  ftsQuery: string;
+  pinnedCandidateIds: string[];
+  rerankerInputCandidateIds: string[];
+  finalCandidateIds: string[];
+};
+
 export interface CitationReference {
   label: string;
   filename: string;

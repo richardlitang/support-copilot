@@ -6,6 +6,7 @@ import { embedText } from "@/src/server/ai/embed";
 import { extractLikelyLiterals } from "@/lib/literal-retrieval";
 import { rerankEvidenceCandidates } from "@/src/server/ai/rerank";
 import { applyRerankScores, mergeRetrievalCandidates } from "@/lib/retrieval-candidates";
+import type { RetrievalBoundaryTrace } from "@/lib/types";
 import { captureServerException } from "@/src/server/observability/sentry";
 
 const DEFAULT_TOP_K = 8;
@@ -40,6 +41,7 @@ export async function retrieveEvidence(input: {
   question: string;
   sessionId: string;
   limit?: number;
+  onTrace?: (trace: RetrievalBoundaryTrace) => void;
 }) {
   const finalLimit = input.limit ?? getRetrievalLimit();
   const candidateLimit = Math.max(getRetrievalCandidateLimit(), finalLimit);
@@ -67,6 +69,11 @@ export async function retrieveEvidence(input: {
     })),
   ]);
 
+  let finalCandidates = candidates.slice(0, finalLimit).map((candidate, index) => ({
+    ...candidate,
+    rank: index + 1,
+  }));
+
   try {
     const rerankScores = await rerankEvidenceCandidates({
       query: input.question,
@@ -75,7 +82,7 @@ export async function retrieveEvidence(input: {
     });
 
     if (rerankScores.length) {
-      return applyRerankScores(candidates, rerankScores).slice(0, finalLimit);
+      finalCandidates = applyRerankScores(candidates, rerankScores).slice(0, finalLimit);
     }
   } catch (error) {
     captureServerException(error, { tags: { route: "retrieval:rerank" } });
@@ -84,8 +91,14 @@ export async function retrieveEvidence(input: {
     }
   }
 
-  return candidates.slice(0, finalLimit).map((candidate, index) => ({
-    ...candidate,
-    rank: index + 1,
-  }));
+  input.onTrace?.({
+    query: input.question,
+    exactTerms: literals,
+    ftsQuery: "",
+    pinnedCandidateIds: [],
+    rerankerInputCandidateIds: candidates.map((candidate) => candidate.id),
+    finalCandidateIds: finalCandidates.map((candidate) => candidate.id),
+  });
+
+  return finalCandidates;
 }
