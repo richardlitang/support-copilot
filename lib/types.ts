@@ -63,6 +63,8 @@ export type RetrievalBoundaryTrace = {
   pinnedCandidateIds: string[];
   rerankerInputCandidateIds: string[];
   finalCandidateIds: string[];
+  rerankerInputCandidates?: EvidenceChunk[];
+  finalCandidates?: EvidenceChunk[];
 };
 
 export interface CitationReference {

@@ -98,6 +98,8 @@ export async function retrieveEvidence(input: {
     pinnedCandidateIds: [],
     rerankerInputCandidateIds: candidates.map((candidate) => candidate.id),
     finalCandidateIds: finalCandidates.map((candidate) => candidate.id),
+    rerankerInputCandidates: candidates,
+    finalCandidates,
   });
 
   return finalCandidates;

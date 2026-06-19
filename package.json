@@ -22,6 +22,7 @@
     "eval:demo": "node --import tsx scripts/run-evals.ts",
     "eval:demo:offline": "node --import tsx scripts/run-evals.ts --offline",
     "eval:rag-contract": "npm run eval:demo:offline",
+    "eval:retrieval": "node --import tsx scripts/run-retrieval-evals.ts",
     "check:docker-runtime": "node scripts/check-docker-runtime.mjs",
     "check:k8s": "node scripts/check-k8s-manifests.mjs",
     "check:file-health": "node scripts/check-file-health.mjs",
