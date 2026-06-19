@@ -197,7 +197,7 @@ function EvidenceOnlySummary({
                   </span>
                   <Badge
                     variant={
-                      item.retrievalSource === "literal"
+                      item.retrievalSource === "exact"
                         ? "warn"
                         : item.retrievalSource === "hybrid"
                           ? "secondary"

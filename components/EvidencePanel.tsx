@@ -73,7 +73,7 @@ export function EvidencePanel({
                                 {cited ? <Badge variant="success">cited</Badge> : null}
                                 <Badge
                                   variant={
-                                    item.retrievalSource === "literal"
+                                    item.retrievalSource === "exact"
                                       ? "warn"
                                       : item.retrievalSource === "hybrid"
                                         ? "secondary"

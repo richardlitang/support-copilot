@@ -86,7 +86,7 @@ export function mergeRetrievalCandidates(candidates: EvidenceChunk[]) {
         retrievalSource: candidate.retrievalSource ?? "vector",
         vectorScore:
           candidate.vectorScore ??
-          (candidate.retrievalSource === "literal" ? undefined : candidate.score),
+          (candidate.retrievalSource === "exact" ? undefined : candidate.score),
         literalMatches: candidate.literalMatches ?? [],
       });
       continue;

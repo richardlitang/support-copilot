@@ -61,7 +61,7 @@ export interface DocEvidenceItem {
   excerpt: string;
   score: number;
   chunkIndex: number;
-  retrievalSource?: "exact" | "vector" | "fts" | "hybrid" | "literal";
+  retrievalSource?: "exact" | "vector" | "fts" | "hybrid";
   vectorScore?: number;
   literalMatches?: string[];
   rerankScore?: number;

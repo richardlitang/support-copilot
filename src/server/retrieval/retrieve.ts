@@ -4,7 +4,7 @@ import {
   matchLiteralDocumentChunksDb as matchLiteralDocumentChunks,
 } from "@/src/server/db/retrieval";
 import { embedText } from "@/src/server/ai/embed";
-import { extractLikelyLiterals } from "@/lib/literal-retrieval";
+import { extractExactCodeLiterals } from "@/lib/literal-retrieval";
 import { rerankEvidenceCandidates } from "@/src/server/ai/rerank";
 import {
   applyRerankScores,
@@ -16,7 +16,6 @@ import { captureServerException } from "@/src/server/observability/sentry";
 
 const DEFAULT_TOP_K = 8;
 const DEFAULT_CANDIDATE_TOP_K = 30;
-const DEFAULT_LITERAL_TOP_K = 20;
 const DEFAULT_RERANK_CANDIDATE_LIMIT = 50;
 const DEFAULT_PINNED_EXACT_CANDIDATE_LIMIT = 5;
 const DEFAULT_FTS_CANDIDATE_LIMIT = 30;
@@ -94,12 +93,12 @@ export async function retrieveEvidence(input: {
     matchCount: candidateLimit,
     matchThreshold: getMatchThreshold(),
   });
-  const literals = extractLikelyLiterals(input.question);
-  const literalCandidates = literals.length
+  const exactLiterals = extractExactCodeLiterals(input.question);
+  const literalCandidates = exactLiterals.length
     ? await matchLiteralDocumentChunks({
         sessionId: input.sessionId,
-        literals,
-        matchCount: DEFAULT_LITERAL_TOP_K,
+        literals: exactLiterals,
+        matchCount: getPinnedExactCandidateLimit(),
       })
     : [];
   const ftsCandidates = await matchFtsDocumentChunks({
@@ -152,7 +151,7 @@ export async function retrieveEvidence(input: {
 
   input.onTrace?.({
     query: input.question,
-    exactTerms: literals,
+    exactTerms: exactLiterals,
     ftsQuery: input.question,
     pinnedCandidateIds: rerankerInputCandidates
       .filter((candidate) => candidate.exactPinned)

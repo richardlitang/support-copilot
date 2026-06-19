@@ -40,7 +40,7 @@ describe("investigateTicket structured", () => {
             score: 0.62,
             rank: 1,
             chunkIndex: 0,
-            retrievalSource: "literal",
+            retrievalSource: "exact",
             literalMatches: ["ACH", "payment"],
           },
         ],

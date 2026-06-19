@@ -157,7 +157,7 @@ export async function matchLiteralDocumentChunksDirect(input: {
           score: 0.62,
           rank: rowsById.size + 1,
           chunkIndex: row.chunk_index,
-          retrievalSource: "literal",
+          retrievalSource: "exact",
           literalMatches: [literal],
         });
       }

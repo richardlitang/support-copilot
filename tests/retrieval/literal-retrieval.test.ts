@@ -69,13 +69,13 @@ describe("mergeRetrievalCandidates", () => {
       chunk({
         id: "chunk-1",
         score: 0.7,
-        retrievalSource: "literal",
+        retrievalSource: "exact",
         literalMatches: ["webhook_signature_failed"],
       }),
       chunk({
         id: "chunk-2",
         score: 0.62,
-        retrievalSource: "literal",
+        retrievalSource: "exact",
         literalMatches: ["request_id"],
       }),
     ]);

@@ -17,7 +17,7 @@ const docEvidence: DocEvidenceItem[] = [
     excerpt: "Rotate webhook secrets before validating new signatures.",
     score: 0.51,
     chunkIndex: 0,
-    retrievalSource: "literal",
+    retrievalSource: "exact",
     literalMatches: ["webhook_signature_failed"],
   },
 ];
