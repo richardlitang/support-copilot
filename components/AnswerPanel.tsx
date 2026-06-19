@@ -46,38 +46,38 @@ function AnswerSection({
   result: InvestigationResult;
 }) {
   return (
-    <section className="rounded-xl border border-zinc-200/80 bg-white/80 p-4">
+    <section className="rounded-xl border border-zinc-900 bg-zinc-950 p-5 shadow-[0_18px_40px_rgba(24,24,27,0.16)]">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <MessageSquareText className="h-4 w-4 text-zinc-500" />
-          <p className="eyebrow">Answer</p>
+          <MessageSquareText className="h-4 w-4 text-zinc-400" />
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-400">
+            Customer reply
+          </p>
         </div>
-        <Badge variant="outline">
+        <Badge className="border-zinc-700 bg-zinc-900 text-zinc-300">
           {claims.length} claim{claims.length === 1 ? "" : "s"}
         </Badge>
       </div>
 
       {claims.length ? (
-        <div className="mt-4 space-y-4">
-          <div className="space-y-3 rounded-lg bg-zinc-50/70 p-4">
-            {claims.map((claim, index) => (
-              <div key={`${claim.text}-${index}`} className="text-[15px] leading-7 text-zinc-900">
-                {claim.text}{" "}
-                <span className="inline-flex flex-wrap gap-1 align-baseline">
-                  {claim.citations.map((citation) => (
-                    <CitationMarker
-                      key={`${claim.text}-${citation}`}
-                      citation={citation}
-                      result={result}
-                    />
-                  ))}
-                </span>
-              </div>
-            ))}
-          </div>
+        <div className="mt-5 space-y-4">
+          {claims.map((claim, index) => (
+            <div key={`${claim.text}-${index}`} className="text-base leading-8 text-zinc-50">
+              {claim.text}{" "}
+              <span className="inline-flex flex-wrap gap-1 align-baseline">
+                {claim.citations.map((citation) => (
+                  <CitationMarker
+                    key={`${claim.text}-${citation}`}
+                    citation={citation}
+                    result={result}
+                  />
+                ))}
+              </span>
+            </div>
+          ))}
         </div>
       ) : (
-        <div className="mt-4 rounded-lg border border-dashed border-zinc-200 bg-zinc-50/70 p-4 text-sm text-zinc-500">
+        <div className="mt-4 rounded-lg border border-dashed border-zinc-700 bg-zinc-900/70 p-4 text-sm text-zinc-300">
           {emptyMessage}
         </div>
       )}
@@ -387,14 +387,14 @@ export function AnswerPanel({
             <EvidenceOnlySummary result={result} onDraftFromEvidence={onDraftFromEvidence} />
           ) : (
             <>
-              <QualityCheckCard result={result} showDebugDetails={showDebugDetails} />
-              {result.docsGapReport ? <DocsGapReportCard report={result.docsGapReport} /> : null}
-
               <AnswerSection
                 claims={result.customerReply.claims}
                 emptyMessage="No grounded answer was produced for this run."
                 result={result}
               />
+
+              <QualityCheckCard result={result} showDebugDetails={showDebugDetails} />
+              {result.docsGapReport ? <DocsGapReportCard report={result.docsGapReport} /> : null}
 
               <InternalFindings
                 claims={distinctInternalClaims}
