@@ -5,13 +5,19 @@ import {
 import { embedText } from "@/src/server/ai/embed";
 import { extractLikelyLiterals } from "@/lib/literal-retrieval";
 import { rerankEvidenceCandidates } from "@/src/server/ai/rerank";
-import { applyRerankScores, mergeRetrievalCandidates } from "@/lib/retrieval-candidates";
+import {
+  applyRerankScores,
+  mergeRetrievalCandidates,
+  selectRerankerInputCandidates,
+} from "@/lib/retrieval-candidates";
 import type { RetrievalBoundaryTrace } from "@/lib/types";
 import { captureServerException } from "@/src/server/observability/sentry";
 
 const DEFAULT_TOP_K = 8;
 const DEFAULT_CANDIDATE_TOP_K = 30;
 const DEFAULT_LITERAL_TOP_K = 20;
+const DEFAULT_RERANK_CANDIDATE_LIMIT = 50;
+const DEFAULT_PINNED_EXACT_CANDIDATE_LIMIT = 5;
 
 export function getRetrievalLimit() {
   const rawTopK = process.env.SUPPORT_RETRIEVAL_TOP_K;
@@ -27,6 +33,31 @@ export function getRetrievalCandidateLimit() {
   const normalized = Number.isFinite(parsed) ? parsed : DEFAULT_CANDIDATE_TOP_K;
 
   return Math.min(Math.max(Math.round(normalized), 8), 40);
+}
+
+function getBoundedPositiveInteger(key: string, fallback: number, min: number, max: number) {
+  const parsed = Number(process.env[key]);
+  const normalized = Number.isFinite(parsed) ? parsed : fallback;
+
+  return Math.min(Math.max(Math.round(normalized), min), max);
+}
+
+export function getRerankCandidateLimit() {
+  return getBoundedPositiveInteger(
+    "SUPPORT_RERANK_CANDIDATE_LIMIT",
+    DEFAULT_RERANK_CANDIDATE_LIMIT,
+    8,
+    100,
+  );
+}
+
+export function getPinnedExactCandidateLimit() {
+  return getBoundedPositiveInteger(
+    "SUPPORT_PINNED_EXACT_CANDIDATE_LIMIT",
+    DEFAULT_PINNED_EXACT_CANDIDATE_LIMIT,
+    1,
+    20,
+  );
 }
 
 export function getMatchThreshold() {
@@ -68,6 +99,12 @@ export async function retrieveEvidence(input: {
       vectorScore: candidate.score,
     })),
   ]);
+  const rerankerInputCandidates = selectRerankerInputCandidates({
+    exactCandidates: literalCandidates,
+    contestableCandidates: candidates,
+    limit: getRerankCandidateLimit(),
+    pinnedExactLimit: getPinnedExactCandidateLimit(),
+  });
 
   let finalCandidates = candidates.slice(0, finalLimit).map((candidate, index) => ({
     ...candidate,
@@ -77,7 +114,7 @@ export async function retrieveEvidence(input: {
   try {
     const rerankScores = await rerankEvidenceCandidates({
       query: input.question,
-      candidates,
+      candidates: rerankerInputCandidates,
       topN: finalLimit,
     });
 
@@ -96,9 +133,9 @@ export async function retrieveEvidence(input: {
     exactTerms: literals,
     ftsQuery: "",
     pinnedCandidateIds: [],
-    rerankerInputCandidateIds: candidates.map((candidate) => candidate.id),
+    rerankerInputCandidateIds: rerankerInputCandidates.map((candidate) => candidate.id),
     finalCandidateIds: finalCandidates.map((candidate) => candidate.id),
-    rerankerInputCandidates: candidates,
+    rerankerInputCandidates,
     finalCandidates,
   });
 

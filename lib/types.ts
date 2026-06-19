@@ -50,9 +50,11 @@ export interface EvidenceChunk {
   score: number;
   rank: number;
   chunkIndex: number;
-  retrievalSource?: "vector" | "literal" | "hybrid";
+  retrievalSource?: "exact" | "vector" | "fts" | "hybrid" | "literal";
   vectorScore?: number;
   literalMatches?: string[];
+  exactPinned?: boolean;
+  ftsScore?: number;
   rerankScore?: number;
 }
 

@@ -1,5 +1,38 @@
 import type { EvidenceChunk } from "@/lib/types";
 
+export function selectRerankerInputCandidates(input: {
+  exactCandidates: EvidenceChunk[];
+  contestableCandidates: EvidenceChunk[];
+  limit: number;
+  pinnedExactLimit: number;
+}) {
+  const selected = new Map<string, EvidenceChunk>();
+  const pinned = input.exactCandidates.slice(0, Math.min(input.pinnedExactLimit, input.limit));
+
+  for (const candidate of pinned) {
+    selected.set(candidate.id, {
+      ...candidate,
+      exactPinned: true,
+      retrievalSource: candidate.retrievalSource ?? "exact",
+    });
+  }
+
+  for (const candidate of input.contestableCandidates) {
+    if (selected.size >= input.limit) {
+      break;
+    }
+
+    if (!selected.has(candidate.id)) {
+      selected.set(candidate.id, candidate);
+    }
+  }
+
+  return Array.from(selected.values()).map((candidate, index) => ({
+    ...candidate,
+    rank: index + 1,
+  }));
+}
+
 export function mergeRetrievalCandidates(candidates: EvidenceChunk[]) {
   const byChunk = new Map<string, EvidenceChunk>();
 

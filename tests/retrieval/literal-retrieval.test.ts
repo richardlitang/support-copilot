@@ -1,6 +1,8 @@
 import { extractLikelyLiterals } from "@/lib/literal-retrieval";
 import * as literalRetrieval from "@/lib/literal-retrieval";
+import * as retrievalCandidates from "@/lib/retrieval-candidates";
 import { applyRerankScores, mergeRetrievalCandidates } from "@/lib/retrieval-candidates";
+import * as retrieve from "@/src/server/retrieval/retrieve";
 import type { EvidenceChunk } from "@/lib/types";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -101,5 +103,47 @@ describe("applyRerankScores", () => {
 
     expect(reranked.map((item) => item.id)).toEqual(["chunk-2", "chunk-1"]);
     expect(reranked[0]).toMatchObject({ rank: 1, rerankScore: 0.99, score: 0.99 });
+  });
+});
+
+describe("reranker input selection", () => {
+  const getRerankCandidateLimit = (retrieve as typeof retrieve & {
+    getRerankCandidateLimit: () => number;
+  }).getRerankCandidateLimit;
+  const getPinnedExactCandidateLimit = (retrieve as typeof retrieve & {
+    getPinnedExactCandidateLimit: () => number;
+  }).getPinnedExactCandidateLimit;
+  const selectRerankerInputCandidates = (retrievalCandidates as typeof retrievalCandidates & {
+    selectRerankerInputCandidates: (input: {
+      exactCandidates: EvidenceChunk[];
+      contestableCandidates: EvidenceChunk[];
+      limit: number;
+      pinnedExactLimit: number;
+    }) => EvidenceChunk[];
+  }).selectRerankerInputCandidates;
+
+  it("uses bounded defaults for reranker and pinned exact candidates", () => {
+    expect(getRerankCandidateLimit()).toBe(50);
+    expect(getPinnedExactCandidateLimit()).toBe(5);
+  });
+
+  it("keeps exact hits ahead of capped contestable candidates", () => {
+    const exactCandidates = [
+      chunk({ id: "exact-1", score: 0.62 }),
+      chunk({ id: "exact-2", score: 0.62 }),
+    ];
+    const contestableCandidates = Array.from({ length: 60 }, (_, index) =>
+      chunk({ id: `contestable-${index + 1}`, score: 0.9 - index / 100 }),
+    );
+
+    const selected = selectRerankerInputCandidates({
+      exactCandidates,
+      contestableCandidates,
+      limit: 10,
+      pinnedExactLimit: 5,
+    });
+
+    expect(selected.slice(0, 2).map((candidate) => candidate.id)).toEqual(["exact-1", "exact-2"]);
+    expect(selected).toHaveLength(10);
   });
 });
