@@ -7,6 +7,7 @@ import { extractLikelyLiterals } from "@/lib/literal-retrieval";
 import { rerankEvidenceCandidates } from "@/src/server/ai/rerank";
 import {
   applyRerankScores,
+  fuseRetrievalCandidatesWithRrf,
   mergeRetrievalCandidates,
   selectRerankerInputCandidates,
 } from "@/lib/retrieval-candidates";
@@ -99,9 +100,19 @@ export async function retrieveEvidence(input: {
       vectorScore: candidate.score,
     })),
   ]);
+  const contestableCandidates = fuseRetrievalCandidatesWithRrf([
+    {
+      lane: "vector",
+      candidates: vectorCandidates.map((candidate) => ({
+        ...candidate,
+        retrievalSource: "vector" as const,
+        vectorScore: candidate.score,
+      })),
+    },
+  ]);
   const rerankerInputCandidates = selectRerankerInputCandidates({
     exactCandidates: literalCandidates,
-    contestableCandidates: candidates,
+    contestableCandidates,
     limit: getRerankCandidateLimit(),
     pinnedExactLimit: getPinnedExactCandidateLimit(),
   });

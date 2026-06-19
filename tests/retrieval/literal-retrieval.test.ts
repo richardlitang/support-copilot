@@ -147,3 +147,25 @@ describe("reranker input selection", () => {
     expect(selected).toHaveLength(10);
   });
 });
+
+describe("fuseRetrievalCandidatesWithRrf", () => {
+  const fuseRetrievalCandidatesWithRrf = (retrievalCandidates as typeof retrievalCandidates & {
+    fuseRetrievalCandidatesWithRrf: (
+      lanes: Array<{ lane: "vector" | "fts"; candidates: EvidenceChunk[] }>,
+      rrfK?: number,
+    ) => EvidenceChunk[];
+  }).fuseRetrievalCandidatesWithRrf;
+
+  it("promotes chunks found by multiple contestable lanes", () => {
+    const fused = fuseRetrievalCandidatesWithRrf(
+      [
+        { lane: "vector", candidates: [chunk({ id: "shared", score: 0.9 }), chunk({ id: "vector-only", score: 0.8 })] },
+        { lane: "fts", candidates: [chunk({ id: "fts-only", score: 0.9 }), chunk({ id: "shared", score: 0.8 })] },
+      ],
+      60,
+    );
+
+    expect(fused[0]?.id).toBe("shared");
+    expect(fused[0]?.retrievalSource).toBe("hybrid");
+  });
+});

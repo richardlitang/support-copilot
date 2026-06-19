@@ -33,6 +33,47 @@ export function selectRerankerInputCandidates(input: {
   }));
 }
 
+export function fuseRetrievalCandidatesWithRrf(
+  lanes: Array<{ lane: "vector" | "fts"; candidates: EvidenceChunk[] }>,
+  rrfK = 60,
+): EvidenceChunk[] {
+  const byId = new Map<
+    string,
+    EvidenceChunk & { rrfScore: number; laneNames: Set<"vector" | "fts"> }
+  >();
+
+  for (const lane of lanes) {
+    lane.candidates.forEach((candidate, index) => {
+      const contribution = 1 / (rrfK + index + 1);
+      const existing = byId.get(candidate.id);
+
+      if (existing) {
+        existing.rrfScore += contribution;
+        existing.laneNames.add(lane.lane);
+        return;
+      }
+
+      byId.set(candidate.id, {
+        ...candidate,
+        rrfScore: contribution,
+        laneNames: new Set([lane.lane]),
+      });
+    });
+  }
+
+  return Array.from(byId.values())
+    .sort((left, right) => right.rrfScore - left.rrfScore)
+    .map((candidate, index): EvidenceChunk => ({
+      ...candidate,
+      score: candidate.rrfScore,
+      retrievalSource:
+        candidate.laneNames.size > 1
+          ? "hybrid"
+          : (Array.from(candidate.laneNames)[0] as "vector" | "fts"),
+      rank: index + 1,
+    }));
+}
+
 export function mergeRetrievalCandidates(candidates: EvidenceChunk[]) {
   const byChunk = new Map<string, EvidenceChunk>();
 
