@@ -6,6 +6,16 @@ function normalizeText(text: string) {
   return text
     .replace(/\r\n/g, "\n")
     .replace(/\u0000/g, "")
+    .replace(/\bPage\s+\d+\s*(?=[A-Z])/g, "")
+    .replace(
+      /(^|\n)?[A-Z][A-Za-z0-9&()/:.,' -]{8,120}\s+-\s+[A-Z][A-Za-z0-9&()/:.,' -]{4,80}\s+(?=`?[a-z]+_[a-z0-9_]+`?\b)/g,
+      "$1",
+    )
+    .replace(/\b([a-z]+_[a-z0-9_]+)\s+Meaning:/gi, "`$1` - **Meaning:**")
+    .replace(
+      /\s+(Likely causes|Customer action|Support action|Escalation rule):/gi,
+      "\n\n**$1:**",
+    )
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 }

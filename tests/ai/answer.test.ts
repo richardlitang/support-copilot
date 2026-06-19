@@ -13,6 +13,30 @@ describe("generateGroundedAnswer", () => {
 
     expect(result).toEqual(buildInsufficientSupportAnswer());
   });
+
+  it("formats mock answers from support-guide meaning entries", async () => {
+    const result = await generateGroundedAnswer({
+      ticket: "duplicate_payment_attempt what does it mean",
+      evidence: [
+        {
+          id: "chunk-1",
+          documentId: "doc-1",
+          filename: "paybridge-api-support-guide.pdf",
+          sectionTitle: null,
+          content:
+            "`duplicate_payment_attempt` - **Meaning:** The platform detected a second payment attempt for an order that already has a successful payment.",
+          score: 0.62,
+          rank: 1,
+          chunkIndex: 0,
+        },
+      ],
+    });
+
+    expect(result.claims[0]?.text).toBe(
+      "duplicate_payment_attempt means the platform detected a second payment attempt for an order that already has a successful payment.",
+    );
+    expect(result.claims[0]?.citationIds).toEqual(["S1"]);
+  });
 });
 
 describe("validateGroundedAnswer", () => {

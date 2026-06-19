@@ -42,6 +42,39 @@ function buildAnswerFromClaims(claims: GroundedClaim[]) {
   return claims.map((claim) => `${claim.text} [${claim.citationIds.join("][")}]`).join("\n\n");
 }
 
+function cleanEvidenceText(text: string) {
+  return text
+    .replace(/`/g, "")
+    .replace(/\*\*/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function sentenceCase(text: string) {
+  const trimmed = text.trim();
+
+  if (!trimmed) {
+    return trimmed;
+  }
+
+  return `${trimmed.charAt(0).toLowerCase()}${trimmed.slice(1)}`;
+}
+
+function buildMockClaimText(excerpt: string) {
+  const cleaned = cleanEvidenceText(excerpt);
+  const meaning = cleaned.match(
+    /\b([a-z]+_[a-z0-9_]+)\s+-?\s*Meaning:\s*(.+?)(?:\s+Likely causes:|\s+Customer action:|\s+Support action:|\s+Escalation rule:|$)/i,
+  );
+
+  if (meaning) {
+    const code = meaning[1];
+    const description = sentenceCase(meaning[2].replace(/[.。]\s*$/, ""));
+    return `${code} means ${description}.`;
+  }
+
+  return cleaned.slice(0, 180);
+}
+
 export function validateGroundedAnswer(input: {
   answer: StructuredAnswer;
   evidence: EvidenceChunk[];
@@ -122,7 +155,7 @@ async function requestGroundedAnswer(input: {
       return buildInsufficientSupportAnswer();
     }
 
-    const claimText = firstCitation.excerpt.slice(0, 180);
+    const claimText = buildMockClaimText(firstCitation.excerpt);
 
     return {
       answer: claimText,
