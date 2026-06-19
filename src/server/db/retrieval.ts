@@ -2,6 +2,7 @@ import { hasDirectDatabaseConfig } from "@/src/server/config/env";
 import type { EvidenceChunk } from "@/lib/types";
 import {
   matchDocumentChunksDirect,
+  matchFtsDocumentChunksDirect,
   matchLiteralDocumentChunksDirect,
 } from "@/src/server/db/chunks";
 import { getSupabaseAdminClient } from "@/src/server/db/supabaseAdmin";
@@ -143,4 +144,40 @@ export async function matchLiteralDocumentChunksDb(input: {
       ...row,
       rank: index + 1,
     }));
+}
+
+export async function matchFtsDocumentChunksDb(input: {
+  sessionId: string;
+  query: string;
+  matchCount: number;
+}): Promise<EvidenceChunk[]> {
+  if (hasDirectDatabaseConfig()) {
+    return matchFtsDocumentChunksDirect(input);
+  }
+
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase.rpc("match_fts_document_chunks", {
+    session_id_filter: input.sessionId,
+    query_text: input.query,
+    match_count: input.matchCount,
+  });
+
+  if (error) {
+    throw new Error(`Failed to retrieve FTS document chunks: ${error.message}`);
+  }
+
+  return (data ?? []).map(
+    (row: MatchRow, index: number): EvidenceChunk => ({
+      id: row.id,
+      documentId: row.document_id,
+      filename: row.filename,
+      sectionTitle: row.section_title,
+      content: row.content,
+      score: row.score,
+      rank: index + 1,
+      chunkIndex: row.chunk_index,
+      retrievalSource: "fts",
+      ftsScore: row.score,
+    }),
+  );
 }

@@ -166,3 +166,39 @@ export async function matchLiteralDocumentChunksDirect(input: {
     return Array.from(rowsById.values()).slice(0, input.matchCount);
   });
 }
+
+export async function matchFtsDocumentChunksDirect(input: {
+  sessionId: string;
+  query: string;
+  matchCount: number;
+}): Promise<EvidenceChunk[]> {
+  return withPgClient(async (client) => {
+    const result = await client.query<{
+      id: string;
+      document_id: string;
+      filename: string;
+      section_title: string | null;
+      content: string;
+      score: number;
+      chunk_index: number;
+    }>(
+      "select * from match_fts_document_chunks($1, $2, $3)",
+      [input.sessionId, input.query, input.matchCount],
+    );
+
+    return result.rows.map(
+      (row, index): EvidenceChunk => ({
+        id: row.id,
+        documentId: row.document_id,
+        filename: row.filename,
+        sectionTitle: row.section_title,
+        content: row.content,
+        score: row.score,
+        rank: index + 1,
+        chunkIndex: row.chunk_index,
+        retrievalSource: "fts",
+        ftsScore: row.score,
+      }),
+    );
+  });
+}
