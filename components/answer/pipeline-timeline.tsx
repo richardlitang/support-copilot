@@ -42,7 +42,7 @@ export function PipelineTimeline({ result }: { result: InvestigationResult }) {
       <motion.ol
         className="mt-4 grid gap-2"
         variants={staggerParent}
-        initial="hidden"
+        initial={reduce ? false : "hidden"}
         animate="show"
       >
         {steps.map((step, index) => {
