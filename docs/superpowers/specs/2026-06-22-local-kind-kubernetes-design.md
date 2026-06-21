@@ -123,7 +123,27 @@ This keeps base honest: it states the requirement without shipping a single-node
   - The seeded sample document is present and an investigation against a demo ticket returns a grounded (mock) answer — proving Postgres (pgvector), redis, worker ingestion (shared uploads), and the mock AI path all work end-to-end in-cluster.
 - `make local-down` removes the cluster cleanly.
 
-## 9. Out of scope (YAGNI / deferred)
+## 9. Alignment with the remote deployment (Terraform + Argo)
+
+This local setup is deliberately the **same kustomize substrate** the remote deployment will use — it is not a throwaway.
+
+- **Packaging is kustomize, single source of truth.** Decision: standardize on `infra/k8s` kustomize (base + overlays). The Helm chart on the `deployment-handover-kind` branch is a learning artifact, **not** maintained and **not** merged to `main` (so there is no packaging drift on `main`).
+- **Division of labor:**
+  - **Terraform** owns *infrastructure*: the managed Kubernetes cluster, a managed Postgres (with pgvector), the image registry, DNS/TLS, and the secret store. It does not template app manifests.
+  - **Argo CD** owns the *workload*: an Argo `Application` points at a kustomize overlay path in git and syncs it. `infra/k8s/local` (this spec) is the laptop overlay; a future `infra/k8s/prod` is the overlay Argo syncs to the remote cluster. Same `base`, different overlay.
+  - **kind + `local` overlay** is the laptop mirror of that exact flow (`kubectl apply -k` locally ≈ Argo applying the prod overlay remotely).
+- **Why local stays aligned, not divergent:** every local-only mechanism is confined to the `local/` overlay precisely so a future `prod/` overlay can substitute the production equivalents **without touching base**:
+  | Concern | `local/` overlay (this spec) | future `prod/` overlay |
+  | --- | --- | --- |
+  | Postgres | in-cluster `pgvector` + PVC | managed DB (Terraform), `DATABASE_URL` via external secret |
+  | Uploads | shared RWO PVC (single-node crutch) | object storage behind the `localObjectStorage` seam |
+  | AI provider | `mock` | `openai` + key from secret store |
+  | Access | NodePort + kind port-map | Ingress + TLS |
+  | Secrets | none (non-sensitive configmap) | external-secrets / sealed-secrets |
+  | Scale | single replicas | replicas + resource limits/HPA |
+- **Net:** Terraform and Argo slot in around this design with no rework to `base` or the `local` overlay. The remote effort adds a `prod` overlay + an Argo `Application` + Terraform infra modules — it does not re-do what this spec builds.
+
+## 10. Out of scope (YAGNI / deferred)
 
 - Cloud/production overlay: image registry, ingress + TLS, managed Postgres, Argo CD application, production secret management, HPA/replicas, resource requests/limits tuning.
 - Object-storage backend for `localObjectStorage` (the real multi-node uploads fix) — an app change for the prod effort.
