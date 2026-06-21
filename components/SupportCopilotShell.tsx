@@ -325,7 +325,7 @@ export function SupportCopilotShell({
 
         <section
           className={
-            hasRunState && showDebugToggle
+            hasRunState
               ? "workbench-layout workbench-layout--with-evidence"
               : "workbench-layout"
           }
@@ -410,8 +410,12 @@ export function SupportCopilotShell({
             ) : null}
           </div>
 
-          {hasRunState && showDebugToggle ? (
-            <EvidencePanel result={result} isInvestigating={isInvestigating} />
+          {hasRunState ? (
+            <EvidencePanel
+              result={result}
+              isInvestigating={isInvestigating}
+              showDebugDetails={showDebugToggle}
+            />
           ) : null}
         </section>
       </div>
