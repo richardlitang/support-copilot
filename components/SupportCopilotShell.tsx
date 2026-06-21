@@ -1,12 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Sparkles } from "lucide-react";
 import { AnswerPanel } from "@/components/AnswerPanel";
 import { EvidencePanel } from "@/components/EvidencePanel";
-import { RecentInvestigations } from "@/components/RecentInvestigations";
 import { ActiveCitationProvider } from "@/components/answer/active-citation-context";
 import { CaseSpine } from "@/components/support-shell/case-spine";
+import { HistoryDrawer } from "@/components/support-shell/history-drawer";
 import { NextAction } from "@/components/support-shell/next-action";
 import {
   clearDocuments,
@@ -294,12 +293,11 @@ export function SupportCopilotShell({
           <CardContent className="p-3 lg:p-4">
             <div className="flex min-w-0 flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
               <div className="min-w-0">
-                <Badge variant="secondary" className="gap-1.5 rounded-md px-2 py-0.5">
-                  <Sparkles className="h-3 w-3" />
-                  Support workbench
-                </Badge>
-                <h1 className="mt-2 text-xl font-semibold text-zinc-950">Support Copilot</h1>
-                <p className="mt-1 max-w-2xl text-xs leading-5 text-zinc-600">
+                <p className="eyebrow">Support Copilot</p>
+                <h1 className="font-display mt-1 text-3xl tracking-[-0.02em] text-graphite">
+                  Every claim cited, or it goes to a human.
+                </h1>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600">
                   Investigate support tickets with retrieved docs, tool context, and cited answers.
                 </p>
               </div>
@@ -317,6 +315,13 @@ export function SupportCopilotShell({
             </div>
           </CardContent>
         </Card>
+
+        <HistoryDrawer
+          currentInvestigationId={result?.investigationId}
+          items={historyItems}
+          onClear={handleClearHistory}
+          onSelect={handleLoadHistoryItem}
+        />
 
         {error ? (
           <Card className="border-red-200 bg-red-50 text-red-700">
@@ -342,12 +347,6 @@ export function SupportCopilotShell({
                 ticketText={ticket}
                 isInvestigating={isInvestigating}
                 onRun={() => void handleInvestigate()}
-              />
-              <RecentInvestigations
-                currentInvestigationId={result?.investigationId}
-                items={historyItems}
-                onClear={handleClearHistory}
-                onSelect={handleLoadHistoryItem}
               />
               <UploadPanel
                 documents={documents}

@@ -100,7 +100,7 @@ function InternalFindings({
   }
 
   return (
-    <section className="rounded-xl border border-zinc-200/80 bg-white/80 p-4">
+    <section className="surface p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Stethoscope className="h-4 w-4 text-zinc-500" />
@@ -143,7 +143,7 @@ function EvidenceOnlySummary({
   const sourceCount = result.docEvidence.length + result.toolEvidence.length;
 
   return (
-    <section className="rounded-xl border border-zinc-200/80 bg-white/80 p-4">
+    <section className="surface p-4">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
