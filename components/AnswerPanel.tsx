@@ -13,7 +13,8 @@ import { motion, useReducedMotion } from "motion/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { fadeRise, staggerParent } from "@/lib/motion";
+import { fadeRise, springSoft, staggerParent } from "@/lib/motion";
+import { reviewTone } from "@/lib/review-presentation";
 import { DocsGapReportCard } from "@/components/answer/docs-gap-report-card";
 import { PipelineTimeline } from "@/components/answer/pipeline-timeline";
 import { QualityCheckCard } from "@/components/answer/quality-check-card";
@@ -318,6 +319,10 @@ export function AnswerPanel({
   }
 
   const reviewAction = getReviewAction(result);
+  const reviewToneStyles = reviewTone({
+    reviewStatus: result.reviewStatus,
+    acknowledged: isReviewAcknowledged,
+  });
   const showOpenQuestions = result.internalDiagnosis.openQuestions.length > 0;
   const showRoutingReason = showDebugDetails || result.reviewStatus === "needs_human_review";
   const distinctInternalClaims = getDistinctInternalClaims(
@@ -422,29 +427,22 @@ export function AnswerPanel({
 
       {reviewAction && result.executionMode !== "evidence_only" ? (
         <motion.div variants={fadeRise}>
-          <Card
-            className={
-              isReviewAcknowledged
-                ? "border-emerald-200 bg-emerald-50/80"
-                : "border-red-200 bg-red-50/80"
-            }
-          >
+          <Card className={reviewToneStyles.surface}>
             <CardContent className="p-4">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="flex min-w-0 gap-3">
-                  <div
-                    className={
-                      isReviewAcknowledged
-                        ? "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-emerald-200 bg-white text-emerald-700"
-                        : "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-red-200 bg-white text-red-700"
-                    }
+                  <motion.span
+                    initial={reduce ? false : { scale: 0.6, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={springSoft}
+                    className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border ${reviewToneStyles.icon}`}
                   >
                     {isReviewAcknowledged ? (
                       <CheckCircle2 className="h-4 w-4" />
                     ) : (
                       <AlertTriangle className="h-4 w-4" />
                     )}
-                  </div>
+                  </motion.span>
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="eyebrow">
@@ -462,7 +460,9 @@ export function AnswerPanel({
                             : "Reply blocked"}
                       </Badge>
                     </div>
-                    <h3 className="mt-2 text-lg font-semibold tracking-[-0.03em] text-zinc-950">
+                    <h3
+                      className={`font-display mt-2 text-2xl tracking-[-0.02em] ${reviewToneStyles.accent}`}
+                    >
                       {reviewAction.title}
                     </h3>
                     <p className="mt-2 max-w-3xl text-sm leading-6 text-zinc-700">
