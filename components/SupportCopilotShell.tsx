@@ -289,7 +289,7 @@ export function SupportCopilotShell({
   return (
     <main className="min-h-screen py-3 text-zinc-950">
       <div className="app-frame space-y-3">
-        <Card className="surface-shell overflow-hidden border-zinc-200/80">
+        <Card className="surface-shell overflow-hidden">
           <CardContent className="p-3 lg:p-4">
             <div className="flex min-w-0 flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
               <div className="min-w-0">
