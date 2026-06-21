@@ -22,8 +22,8 @@ const config: Config = {
         panel: "28px",
       },
       fontFamily: {
-        sans: ["Avenir Next", "Segoe UI", "sans-serif"],
-        serif: ["Iowan Old Style", "Georgia", "serif"],
+        sans: ["var(--font-sans)", "Avenir Next", "Segoe UI", "sans-serif"],
+        serif: ["var(--font-display)", "Iowan Old Style", "Georgia", "serif"],
       },
     },
   },
