@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DocsGapReportCard } from "@/components/answer/docs-gap-report-card";
-import { PipelineTrace } from "@/components/answer/pipeline-trace";
+import { PipelineTimeline } from "@/components/answer/pipeline-timeline";
 import { QualityCheckCard } from "@/components/answer/quality-check-card";
 import {
   CitationMarker,
@@ -404,7 +404,7 @@ export function AnswerPanel({
           )}
 
           <SourceLedger result={result} showDebugDetails={showDebugDetails} />
-          <PipelineTrace result={result} />
+          <PipelineTimeline result={result} />
         </CardContent>
       </Card>
 
