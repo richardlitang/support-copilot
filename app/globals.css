@@ -49,8 +49,7 @@
     font-family: var(--font-sans), "Segoe UI", sans-serif;
     background:
       radial-gradient(circle at top left, rgba(154, 106, 60, 0.08), transparent 30%),
-      radial-gradient(circle at top right, rgba(63, 111, 143, 0.07), transparent 28%),
-      var(--paper);
+      radial-gradient(circle at top right, rgba(63, 111, 143, 0.07), transparent 28%), var(--paper);
   }
 
   button,

@@ -70,9 +70,9 @@ export function EvidencePanel({
 
                       return (
                         <div
-                        key={item.id}
-                        className={`surface-muted p-4 transition${active === item.id ? " bg-signal/5 ring-2 ring-signal/40" : ""}`}
-                      >
+                          key={item.id}
+                          className={`surface-muted p-4 transition${active === item.id ? " bg-signal/5 ring-2 ring-signal/40" : ""}`}
+                        >
                           <div className="flex items-start justify-between gap-3">
                             <div>
                               <div className="flex flex-wrap items-center gap-2">
@@ -146,9 +146,9 @@ export function EvidencePanel({
 
                       return (
                         <div
-                        key={item.id}
-                        className={`surface-muted p-4 transition${active === item.id ? " bg-signal/5 ring-2 ring-signal/40" : ""}`}
-                      >
+                          key={item.id}
+                          className={`surface-muted p-4 transition${active === item.id ? " bg-signal/5 ring-2 ring-signal/40" : ""}`}
+                        >
                           <div className="flex items-start justify-between gap-3">
                             <div>
                               <div className="flex flex-wrap items-center gap-2">
