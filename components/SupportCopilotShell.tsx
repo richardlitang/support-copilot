@@ -5,6 +5,7 @@ import { Sparkles } from "lucide-react";
 import { AnswerPanel } from "@/components/AnswerPanel";
 import { EvidencePanel } from "@/components/EvidencePanel";
 import { RecentInvestigations } from "@/components/RecentInvestigations";
+import { ActiveCitationProvider } from "@/components/answer/active-citation-context";
 import { CaseSpine } from "@/components/support-shell/case-spine";
 import { NextAction } from "@/components/support-shell/next-action";
 import {
@@ -323,13 +324,14 @@ export function SupportCopilotShell({
           </Card>
         ) : null}
 
-        <section
-          className={
-            hasRunState
-              ? "workbench-layout workbench-layout--with-evidence"
-              : "workbench-layout"
-          }
-        >
+        <ActiveCitationProvider>
+          <section
+            className={
+              hasRunState
+                ? "workbench-layout workbench-layout--with-evidence"
+                : "workbench-layout"
+            }
+          >
           <div className="left-stack">
             <CaseSpine
               documentCount={documents.length}
@@ -417,7 +419,8 @@ export function SupportCopilotShell({
               showDebugDetails={showDebugToggle}
             />
           ) : null}
-        </section>
+          </section>
+        </ActiveCitationProvider>
       </div>
     </main>
   );

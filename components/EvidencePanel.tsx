@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { useActiveCitation } from "@/components/answer/active-citation-context";
 import type { InvestigationResult } from "@/lib/types/investigation";
 
 export function EvidencePanel({
@@ -16,6 +17,7 @@ export function EvidencePanel({
   isInvestigating: boolean;
   showDebugDetails?: boolean;
 }) {
+  const { active } = useActiveCitation();
   const citations = new Set(
     result
       ? [...result.customerReply.claims, ...result.internalDiagnosis.claims].flatMap(
@@ -67,7 +69,10 @@ export function EvidencePanel({
                       const cited = citations.has(item.id);
 
                       return (
-                        <div key={item.id} className="surface-muted p-4">
+                        <div
+                        key={item.id}
+                        className={`surface-muted p-4 transition${active === item.id ? " bg-signal/5 ring-2 ring-signal/40" : ""}`}
+                      >
                           <div className="flex items-start justify-between gap-3">
                             <div>
                               <div className="flex flex-wrap items-center gap-2">
@@ -140,7 +145,10 @@ export function EvidencePanel({
                       const cited = citations.has(item.id);
 
                       return (
-                        <div key={item.id} className="surface-muted p-4">
+                        <div
+                        key={item.id}
+                        className={`surface-muted p-4 transition${active === item.id ? " bg-signal/5 ring-2 ring-signal/40" : ""}`}
+                      >
                           <div className="flex items-start justify-between gap-3">
                             <div>
                               <div className="flex flex-wrap items-center gap-2">
