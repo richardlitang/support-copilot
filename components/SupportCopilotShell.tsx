@@ -5,6 +5,8 @@ import { Sparkles } from "lucide-react";
 import { AnswerPanel } from "@/components/AnswerPanel";
 import { EvidencePanel } from "@/components/EvidencePanel";
 import { RecentInvestigations } from "@/components/RecentInvestigations";
+import { CaseSpine } from "@/components/support-shell/case-spine";
+import { NextAction } from "@/components/support-shell/next-action";
 import {
   clearDocuments,
   deleteDocument,
@@ -329,6 +331,18 @@ export function SupportCopilotShell({
           }
         >
           <div className="left-stack">
+            <CaseSpine
+              documentCount={documents.length}
+              ticketText={ticket}
+              result={result}
+              isInvestigating={isInvestigating}
+            />
+            <NextAction
+              documentCount={documents.length}
+              ticketText={ticket}
+              isInvestigating={isInvestigating}
+              onRun={() => void handleInvestigate()}
+            />
             <RecentInvestigations
               currentInvestigationId={result?.investigationId}
               items={historyItems}
