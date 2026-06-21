@@ -9,11 +9,14 @@ import {
   RotateCcw,
   Stethoscope,
 } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { fadeRise, springSoft, staggerParent } from "@/lib/motion";
+import { reviewTone } from "@/lib/review-presentation";
 import { DocsGapReportCard } from "@/components/answer/docs-gap-report-card";
-import { PipelineTrace } from "@/components/answer/pipeline-trace";
+import { PipelineTimeline } from "@/components/answer/pipeline-timeline";
 import { QualityCheckCard } from "@/components/answer/quality-check-card";
 import {
   CitationMarker,
@@ -97,7 +100,7 @@ function InternalFindings({
   }
 
   return (
-    <section className="rounded-xl border border-zinc-200/80 bg-white/80 p-4">
+    <section className="surface p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Stethoscope className="h-4 w-4 text-zinc-500" />
@@ -140,7 +143,7 @@ function EvidenceOnlySummary({
   const sourceCount = result.docEvidence.length + result.toolEvidence.length;
 
   return (
-    <section className="rounded-xl border border-zinc-200/80 bg-white/80 p-4">
+    <section className="surface p-4">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
@@ -257,6 +260,8 @@ export function AnswerPanel({
   result: InvestigationResult | null;
   showDebugDetails: boolean;
 }) {
+  const reduce = useReducedMotion();
+
   if (isInvestigating) {
     return (
       <Card className="surface-shell">
@@ -314,6 +319,10 @@ export function AnswerPanel({
   }
 
   const reviewAction = getReviewAction(result);
+  const reviewToneStyles = reviewTone({
+    reviewStatus: result.reviewStatus,
+    acknowledged: isReviewAcknowledged,
+  });
   const showOpenQuestions = result.internalDiagnosis.openQuestions.length > 0;
   const showRoutingReason = showDebugDetails || result.reviewStatus === "needs_human_review";
   const distinctInternalClaims = getDistinctInternalClaims(
@@ -322,191 +331,198 @@ export function AnswerPanel({
   );
 
   return (
-    <div className="space-y-4">
-      <Card className="surface-shell">
-        <CardHeader className="border-b border-zinc-100 pb-4">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="eyebrow">Case brief</p>
-              <CardTitle className="mt-2 text-2xl tracking-[-0.04em]">
-                {result.executionMode === "evidence_only"
-                  ? "Evidence ready"
-                  : result.reviewStatus === "needs_human_review"
-                    ? "Review needed before replying"
-                    : "Answer ready"}
-              </CardTitle>
-              {showRoutingReason ? (
-                <CardDescription className="mt-2 max-w-2xl text-sm leading-6">
-                  {result.routingReason}
-                </CardDescription>
-              ) : null}
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {result.executionMode === "evidence_only" ? (
-                <Badge variant="secondary">
-                  {result.docEvidence.length + result.toolEvidence.length} source
-                  {result.docEvidence.length + result.toolEvidence.length === 1 ? "" : "s"}
-                </Badge>
-              ) : (
-                <Badge variant={supportVariant[result.supportLevel]}>
-                  {supportLabel[result.supportLevel]}
-                </Badge>
-              )}
-              <Badge
-                variant={
-                  result.executionMode === "evidence_only"
-                    ? "outline"
+    <motion.div
+      key={result.investigationId}
+      className="space-y-4"
+      variants={staggerParent}
+      initial={reduce ? false : "hidden"}
+      animate="show"
+    >
+      <motion.div variants={fadeRise}>
+        <Card className="surface-shell">
+          <CardHeader className="border-b border-zinc-100 pb-4">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="eyebrow">Case brief</p>
+                <CardTitle className="mt-2 text-2xl tracking-[-0.04em]">
+                  {result.executionMode === "evidence_only"
+                    ? "Evidence ready"
                     : result.reviewStatus === "needs_human_review"
-                      ? "danger"
-                      : "secondary"
-                }
-              >
-                {result.executionMode === "evidence_only"
-                  ? "Evidence only"
-                  : isReviewAcknowledged
-                    ? "Reviewed"
-                    : result.reviewStatus === "needs_human_review"
-                      ? "Needs human review"
-                      : "Ready"}
-              </Badge>
-              <Badge variant="outline">{result.mode.replaceAll("_", " ")}</Badge>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4 p-4">
-          {showDebugDetails && investigationContext.trim() ? (
-            <div className="rounded-lg border border-amber-200/80 bg-amber-50/70 p-3">
-              <p className="eyebrow">Provided context</p>
-              <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-zinc-700">
-                {investigationContext}
-              </p>
-            </div>
-          ) : null}
-
-          {result.executionMode === "evidence_only" ? (
-            <EvidenceOnlySummary result={result} onDraftFromEvidence={onDraftFromEvidence} />
-          ) : (
-            <>
-              <AnswerSection
-                claims={result.customerReply.claims}
-                emptyMessage="No grounded answer was produced for this run."
-                result={result}
-              />
-
-              <QualityCheckCard result={result} showDebugDetails={showDebugDetails} />
-              {result.docsGapReport ? <DocsGapReportCard report={result.docsGapReport} /> : null}
-
-              <InternalFindings
-                claims={distinctInternalClaims}
-                emptyMessage="No grounded internal diagnosis claims were produced for this run."
-              />
-            </>
-          )}
-
-          <SourceLedger result={result} showDebugDetails={showDebugDetails} />
-          <PipelineTrace result={result} />
-        </CardContent>
-      </Card>
-
-      {reviewAction && result.executionMode !== "evidence_only" ? (
-        <Card
-          className={
-            isReviewAcknowledged
-              ? "border-emerald-200 bg-emerald-50/80"
-              : "border-red-200 bg-red-50/80"
-          }
-        >
-          <CardContent className="p-4">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-              <div className="flex min-w-0 gap-3">
-                <div
-                  className={
-                    isReviewAcknowledged
-                      ? "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-emerald-200 bg-white text-emerald-700"
-                      : "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-red-200 bg-white text-red-700"
+                      ? "Review needed before replying"
+                      : "Answer ready"}
+                </CardTitle>
+                {showRoutingReason ? (
+                  <CardDescription className="mt-2 max-w-2xl text-sm leading-6">
+                    {result.routingReason}
+                  </CardDescription>
+                ) : null}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {result.executionMode === "evidence_only" ? (
+                  <Badge variant="secondary">
+                    {result.docEvidence.length + result.toolEvidence.length} source
+                    {result.docEvidence.length + result.toolEvidence.length === 1 ? "" : "s"}
+                  </Badge>
+                ) : (
+                  <Badge variant={supportVariant[result.supportLevel]}>
+                    {supportLabel[result.supportLevel]}
+                  </Badge>
+                )}
+                <Badge
+                  variant={
+                    result.executionMode === "evidence_only"
+                      ? "outline"
+                      : result.reviewStatus === "needs_human_review"
+                        ? "danger"
+                        : "secondary"
                   }
                 >
-                  {isReviewAcknowledged ? (
-                    <CheckCircle2 className="h-4 w-4" />
-                  ) : (
-                    <AlertTriangle className="h-4 w-4" />
-                  )}
-                </div>
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="eyebrow">
-                      {isReviewAcknowledged
-                        ? "Review acknowledged"
-                        : isReviewRetryActive
-                          ? "Retry staged"
-                          : "Human-review queue"}
-                    </p>
-                    <Badge variant={isReviewAcknowledged ? "success" : "danger"}>
-                      {isReviewAcknowledged
-                        ? "Marked reviewed"
-                        : isReviewRetryActive
-                          ? "Awaiting rerun"
-                          : "Reply blocked"}
-                    </Badge>
-                  </div>
-                  <h3 className="mt-2 text-lg font-semibold tracking-[-0.03em] text-zinc-950">
-                    {reviewAction.title}
-                  </h3>
-                  <p className="mt-2 max-w-3xl text-sm leading-6 text-zinc-700">
-                    {reviewAction.description}
-                  </p>
-                  {result.internalDiagnosis.openQuestions.length ? (
-                    <div className="mt-3 grid gap-2">
-                      {result.internalDiagnosis.openQuestions.slice(0, 2).map((question) => (
-                        <div
-                          key={question}
-                          className="rounded-lg border border-white/80 bg-white/65 px-3 py-2 text-sm leading-6 text-zinc-700"
-                        >
-                          {question}
-                        </div>
-                      ))}
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-              <div className="flex shrink-0 flex-wrap gap-2 lg:justify-end">
-                <Button type="button" variant="outline" onClick={onRetryWithContext}>
-                  <RotateCcw className="h-4 w-4" />
-                  {isReviewRetryActive ? "Retry staged" : reviewAction.primaryActionLabel}
-                </Button>
-                <Button
-                  type="button"
-                  variant={isReviewAcknowledged ? "secondary" : "default"}
-                  onClick={onMarkReviewed}
-                >
-                  <ClipboardCheck className="h-4 w-4" />
-                  {isReviewAcknowledged ? "Reviewed" : "Mark reviewed"}
-                </Button>
+                  {result.executionMode === "evidence_only"
+                    ? "Evidence only"
+                    : isReviewAcknowledged
+                      ? "Reviewed"
+                      : result.reviewStatus === "needs_human_review"
+                        ? "Needs human review"
+                        : "Ready"}
+                </Badge>
+                <Badge variant="outline">{result.mode.replaceAll("_", " ")}</Badge>
               </div>
             </div>
+          </CardHeader>
+          <CardContent className="space-y-4 p-4">
+            {showDebugDetails && investigationContext.trim() ? (
+              <div className="rounded-lg border border-amber-200/80 bg-amber-50/70 p-3">
+                <p className="eyebrow">Provided context</p>
+                <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-zinc-700">
+                  {investigationContext}
+                </p>
+              </div>
+            ) : null}
+
+            {result.executionMode === "evidence_only" ? (
+              <EvidenceOnlySummary result={result} onDraftFromEvidence={onDraftFromEvidence} />
+            ) : (
+              <>
+                <AnswerSection
+                  claims={result.customerReply.claims}
+                  emptyMessage="No grounded answer was produced for this run."
+                  result={result}
+                />
+
+                <QualityCheckCard result={result} showDebugDetails={showDebugDetails} />
+                {result.docsGapReport ? <DocsGapReportCard report={result.docsGapReport} /> : null}
+
+                <InternalFindings
+                  claims={distinctInternalClaims}
+                  emptyMessage="No grounded internal diagnosis claims were produced for this run."
+                />
+              </>
+            )}
+
+            <SourceLedger result={result} showDebugDetails={showDebugDetails} />
+            <PipelineTimeline result={result} />
           </CardContent>
         </Card>
+      </motion.div>
+
+      {reviewAction && result.executionMode !== "evidence_only" ? (
+        <motion.div variants={fadeRise}>
+          <Card className={reviewToneStyles.surface}>
+            <CardContent className="p-4">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div className="flex min-w-0 gap-3">
+                  <motion.span
+                    initial={reduce ? false : { scale: 0.6, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={springSoft}
+                    className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border ${reviewToneStyles.icon}`}
+                  >
+                    {isReviewAcknowledged ? (
+                      <CheckCircle2 className="h-4 w-4" />
+                    ) : (
+                      <AlertTriangle className="h-4 w-4" />
+                    )}
+                  </motion.span>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="eyebrow">
+                        {isReviewAcknowledged
+                          ? "Review acknowledged"
+                          : isReviewRetryActive
+                            ? "Retry staged"
+                            : "Human-review queue"}
+                      </p>
+                      <Badge variant={isReviewAcknowledged ? "success" : "danger"}>
+                        {isReviewAcknowledged
+                          ? "Marked reviewed"
+                          : isReviewRetryActive
+                            ? "Awaiting rerun"
+                            : "Reply blocked"}
+                      </Badge>
+                    </div>
+                    <h3
+                      className={`font-display mt-2 text-2xl tracking-[-0.02em] ${reviewToneStyles.accent}`}
+                    >
+                      {reviewAction.title}
+                    </h3>
+                    <p className="mt-2 max-w-3xl text-sm leading-6 text-zinc-700">
+                      {reviewAction.description}
+                    </p>
+                    {result.internalDiagnosis.openQuestions.length ? (
+                      <div className="mt-3 grid gap-2">
+                        {result.internalDiagnosis.openQuestions.slice(0, 2).map((question) => (
+                          <div
+                            key={question}
+                            className="rounded-lg border border-white/80 bg-white/65 px-3 py-2 text-sm leading-6 text-zinc-700"
+                          >
+                            {question}
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+                <div className="flex shrink-0 flex-wrap gap-2 lg:justify-end">
+                  <Button type="button" variant="outline" onClick={onRetryWithContext}>
+                    <RotateCcw className="h-4 w-4" />
+                    {isReviewRetryActive ? "Retry staged" : reviewAction.primaryActionLabel}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={isReviewAcknowledged ? "secondary" : "default"}
+                    onClick={onMarkReviewed}
+                  >
+                    <ClipboardCheck className="h-4 w-4" />
+                    {isReviewAcknowledged ? "Reviewed" : "Mark reviewed"}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
       ) : null}
 
       {showOpenQuestions ? (
-        <Card className="surface-shell">
-          <CardHeader className="pb-4">
-            <div>
-              <p className="eyebrow">Open questions</p>
-              <CardDescription className="mt-2 text-sm leading-6">
-                These remain unresolved after the current docs and tool calls.
-              </CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {result.internalDiagnosis.openQuestions.map((question) => (
-              <div key={question} className="surface-muted p-4 text-sm leading-6 text-zinc-700">
-                {question}
+        <motion.div variants={fadeRise}>
+          <Card className="surface-shell">
+            <CardHeader className="pb-4">
+              <div>
+                <p className="eyebrow">Open questions</p>
+                <CardDescription className="mt-2 text-sm leading-6">
+                  These remain unresolved after the current docs and tool calls.
+                </CardDescription>
               </div>
-            ))}
-          </CardContent>
-        </Card>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {result.internalDiagnosis.openQuestions.map((question) => (
+                <div key={question} className="surface-muted p-4 text-sm leading-6 text-zinc-700">
+                  {question}
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </motion.div>
       ) : null}
-    </div>
+    </motion.div>
   );
 }

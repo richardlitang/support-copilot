@@ -23,6 +23,15 @@
     --input: 240 8% 88%;
     --ring: 240 8% 70%;
     --radius: 0.85rem;
+
+    --paper: #faf8f4;
+    --parchment: #f3efe7;
+    --ledger: #ffffff;
+    --graphite: #2b2a27;
+    --sage: #5e7466;
+    --copper: #9a6a3c;
+    --signal: #3f6f8f;
+    --ember: #b4452f;
   }
 
   * {
@@ -36,13 +45,11 @@
 
   body {
     min-height: 100vh;
-    color: hsl(var(--foreground));
-    font-family: "Avenir Next", "Segoe UI", sans-serif;
+    color: var(--graphite);
+    font-family: var(--font-sans), "Segoe UI", sans-serif;
     background:
-      radial-gradient(circle at top left, rgba(205, 175, 135, 0.16), transparent 28%),
-      radial-gradient(circle at top right, rgba(222, 228, 240, 0.24), transparent 26%),
-      linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.55)),
-      hsl(var(--background));
+      radial-gradient(circle at top left, rgba(154, 106, 60, 0.08), transparent 30%),
+      radial-gradient(circle at top right, rgba(63, 111, 143, 0.07), transparent 28%), var(--paper);
   }
 
   button,
@@ -53,6 +60,16 @@
 }
 
 @layer utilities {
+  .surface {
+    border-radius: 1rem;
+    border: 1px solid rgba(43, 42, 39, 0.08);
+    background: var(--ledger);
+    box-shadow: 0 18px 42px rgba(19, 21, 20, 0.06);
+  }
+  .font-display {
+    font-family: var(--font-display), Georgia, serif;
+  }
+
   @keyframes case-progress {
     0% {
       transform: translateX(-115%);
@@ -67,16 +84,15 @@
 
   .surface-shell {
     border-radius: 0.75rem;
-    border: 1px solid hsl(var(--border));
-    background: rgba(255, 255, 255, 0.88);
-    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.055);
-    backdrop-filter: blur(8px);
+    border: 1px solid rgba(43, 42, 39, 0.08);
+    background: var(--ledger);
+    box-shadow: 0 18px 42px rgba(19, 21, 20, 0.06);
   }
 
   .surface-muted {
     border-radius: 0.625rem;
-    border: 1px solid hsl(var(--border));
-    background: rgba(248, 248, 247, 0.84);
+    border: 1px solid rgba(43, 42, 39, 0.08);
+    background: var(--parchment);
   }
 
   .eyebrow {

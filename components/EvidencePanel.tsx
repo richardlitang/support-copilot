@@ -5,15 +5,19 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { useActiveCitation } from "@/components/answer/active-citation-context";
 import type { InvestigationResult } from "@/lib/types/investigation";
 
 export function EvidencePanel({
   result,
   isInvestigating,
+  showDebugDetails = false,
 }: {
   result: InvestigationResult | null;
   isInvestigating: boolean;
+  showDebugDetails?: boolean;
 }) {
+  const { active } = useActiveCitation();
   const citations = new Set(
     result
       ? [...result.customerReply.claims, ...result.internalDiagnosis.claims].flatMap(
@@ -27,12 +31,12 @@ export function EvidencePanel({
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="eyebrow">Evidence rail</p>
-            <CardTitle className="mt-2 text-lg">Documentation and context</CardTitle>
+            <p className="eyebrow">Exhibits</p>
+            <CardTitle className="mt-2 text-lg">Retrieved evidence</CardTitle>
             <CardDescription className="mt-2 text-xs leading-5">
               {result || isInvestigating
-                ? "Retrieved docs, context, and tool-call records stay visible while you review."
-                : "This stays quiet until an investigation runs."}
+                ? "Every claim in the answer links back to these exhibits."
+                : "Retrieved evidence will appear here. Every claim in the answer links back to it."}
             </CardDescription>
           </div>
           <span className="text-xs font-medium text-zinc-500">
@@ -65,7 +69,10 @@ export function EvidencePanel({
                       const cited = citations.has(item.id);
 
                       return (
-                        <div key={item.id} className="surface-muted p-4">
+                        <div
+                          key={item.id}
+                          className={`surface-muted p-4 transition${active === item.id ? " bg-signal/5 ring-2 ring-signal/40" : ""}`}
+                        >
                           <div className="flex items-start justify-between gap-3">
                             <div>
                               <div className="flex flex-wrap items-center gap-2">
@@ -95,16 +102,18 @@ export function EvidencePanel({
                                 </p>
                               ) : null}
                             </div>
-                            <div className="flex shrink-0 flex-col items-end gap-1">
-                              <Badge variant="secondary">
-                                {Math.round(item.score * 100)}% match
-                              </Badge>
-                              {item.rerankScore !== undefined ? (
-                                <span className="text-[11px] font-medium text-zinc-500">
-                                  reranked
-                                </span>
-                              ) : null}
-                            </div>
+                            {showDebugDetails ? (
+                              <div className="flex shrink-0 flex-col items-end gap-1">
+                                <Badge variant="secondary">
+                                  {Math.round(item.score * 100)}% match
+                                </Badge>
+                                {item.rerankScore !== undefined ? (
+                                  <span className="text-[11px] font-medium text-zinc-500">
+                                    reranked
+                                  </span>
+                                ) : null}
+                              </div>
+                            ) : null}
                           </div>
                           <p className="mt-4 text-sm leading-6 text-zinc-700">{item.excerpt}</p>
                         </div>
@@ -136,7 +145,10 @@ export function EvidencePanel({
                       const cited = citations.has(item.id);
 
                       return (
-                        <div key={item.id} className="surface-muted p-4">
+                        <div
+                          key={item.id}
+                          className={`surface-muted p-4 transition${active === item.id ? " bg-signal/5 ring-2 ring-signal/40" : ""}`}
+                        >
                           <div className="flex items-start justify-between gap-3">
                             <div>
                               <div className="flex flex-wrap items-center gap-2">

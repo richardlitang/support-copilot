@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { useActiveCitation } from "@/components/answer/active-citation-context";
 import type { CitationId, InvestigationResult, StructuredClaim } from "@/lib/types/investigation";
 
 function findSource(result: InvestigationResult, citation: string) {
@@ -126,16 +127,22 @@ export function CitationMarker({
 }) {
   const title = getSourceTitle(result, citation);
   const excerpt = getSourceExcerpt(result, citation);
+  const { active, setActive } = useActiveCitation();
 
   return (
     <span className="group/source relative inline-flex align-baseline">
       <button
         type="button"
+        onPointerEnter={() => setActive(citation)}
+        onPointerLeave={() => setActive(null)}
+        onFocus={() => setActive(citation)}
+        onBlur={() => setActive(null)}
+        data-active={active === citation || undefined}
         className={`rounded-md border px-1.5 py-0.5 text-[11px] font-semibold leading-none transition focus:outline-none focus:ring-2 focus:ring-zinc-300 ${
           citation.startsWith("S")
             ? "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-400"
             : "border-amber-200 bg-amber-50 text-amber-800 hover:border-amber-300"
-        }`}
+        }${active === citation ? " ring-2 ring-signal/50" : ""}`}
         aria-label={`Show source ${citation}`}
       >
         {citation}

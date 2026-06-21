@@ -1,10 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Sparkles } from "lucide-react";
 import { AnswerPanel } from "@/components/AnswerPanel";
 import { EvidencePanel } from "@/components/EvidencePanel";
-import { RecentInvestigations } from "@/components/RecentInvestigations";
+import { ActiveCitationProvider } from "@/components/answer/active-citation-context";
+import { CaseSpine } from "@/components/support-shell/case-spine";
+import { HistoryDrawer } from "@/components/support-shell/history-drawer";
+import { NextAction } from "@/components/support-shell/next-action";
 import {
   clearDocuments,
   deleteDocument,
@@ -287,16 +289,15 @@ export function SupportCopilotShell({
   return (
     <main className="min-h-screen py-3 text-zinc-950">
       <div className="app-frame space-y-3">
-        <Card className="surface-shell overflow-hidden border-zinc-200/80">
+        <Card className="surface-shell overflow-hidden">
           <CardContent className="p-3 lg:p-4">
             <div className="flex min-w-0 flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
               <div className="min-w-0">
-                <Badge variant="secondary" className="gap-1.5 rounded-md px-2 py-0.5">
-                  <Sparkles className="h-3 w-3" />
-                  Support workbench
-                </Badge>
-                <h1 className="mt-2 text-xl font-semibold text-zinc-950">Support Copilot</h1>
-                <p className="mt-1 max-w-2xl text-xs leading-5 text-zinc-600">
+                <p className="eyebrow">Support Copilot</p>
+                <h1 className="font-display mt-1 text-3xl tracking-[-0.02em] text-graphite">
+                  Every claim cited, or it goes to a human.
+                </h1>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600">
                   Investigate support tickets with retrieved docs, tool context, and cited answers.
                 </p>
               </div>
@@ -315,91 +316,108 @@ export function SupportCopilotShell({
           </CardContent>
         </Card>
 
+        <HistoryDrawer
+          currentInvestigationId={result?.investigationId}
+          items={historyItems}
+          onClear={handleClearHistory}
+          onSelect={handleLoadHistoryItem}
+        />
+
         {error ? (
           <Card className="border-red-200 bg-red-50 text-red-700">
             <CardContent className="p-4 text-sm">{error}</CardContent>
           </Card>
         ) : null}
 
-        <section
-          className={
-            hasRunState && showDebugToggle
-              ? "workbench-layout workbench-layout--with-evidence"
-              : "workbench-layout"
-          }
-        >
-          <div className="left-stack">
-            <RecentInvestigations
-              currentInvestigationId={result?.investigationId}
-              items={historyItems}
-              onClear={handleClearHistory}
-              onSelect={handleLoadHistoryItem}
-            />
-            <UploadPanel
-              documents={documents}
-              uploadOutcomes={uploadOutcomes}
-              isUploading={isUploading}
-              isActiveStep={activeStep === "docs" && !hasRunState}
-              onFilesSelected={handleUpload}
-              onDeleteDocument={handleDeleteDocument}
-              onClearDocuments={handleClearDocuments}
-            />
-          </div>
+        <ActiveCitationProvider>
+          <section
+            className={
+              hasRunState ? "workbench-layout workbench-layout--with-evidence" : "workbench-layout"
+            }
+          >
+            <div className="left-stack">
+              <CaseSpine
+                documentCount={documents.length}
+                ticketText={ticket}
+                result={result}
+                isInvestigating={isInvestigating}
+              />
+              <NextAction
+                documentCount={documents.length}
+                ticketText={ticket}
+                isInvestigating={isInvestigating}
+                onRun={() => void handleInvestigate()}
+              />
+              <UploadPanel
+                documents={documents}
+                uploadOutcomes={uploadOutcomes}
+                isUploading={isUploading}
+                isActiveStep={activeStep === "docs" && !hasRunState}
+                onFilesSelected={handleUpload}
+                onDeleteDocument={handleDeleteDocument}
+                onClearDocuments={handleClearDocuments}
+              />
+            </div>
 
-          <div className="center-stack">
-            <TicketForm
-              accounts={accounts}
-              demoScenarios={demoScenarios}
-              selectedAccountId={selectedAccountId}
-              investigationContext={investigationContext}
-              ticket={ticket}
-              isInvestigating={isInvestigating}
-              isActiveStep={activeStep !== "docs" && !hasRunState}
-              ragEnabled={ragEnabled}
-              executionMode={executionMode}
-              showDebugToggle={showDebugToggle}
-              focusContextToken={focusContextToken}
-              isReviewRetryActive={isReviewRetryActive}
-              isCollapsed={hasRunState && !isComposerExpandedAfterRun && !isReviewRetryActive}
-              pendingDocumentCount={pendingDocumentCount}
-              accountHint={
-                result?.reviewDecision.action === "add_context"
-                  ? "Paste plan, feature, or recent error context to unlock a deeper investigation path."
-                  : null
-              }
-              onSelectAccount={setSelectedAccountId}
-              onInvestigationContextChange={setInvestigationContext}
-              onExecutionModeChange={setExecutionMode}
-              onToggleRag={setRagEnabled}
-              onTicketChange={setTicket}
-              onLoadScenario={handleLoadScenario}
-              onEdit={() => setIsComposerExpandedAfterRun(true)}
-              onNewTicket={handleNewTicket}
-              onSubmit={handleInvestigate}
-            />
+            <div className="center-stack">
+              <TicketForm
+                accounts={accounts}
+                demoScenarios={demoScenarios}
+                selectedAccountId={selectedAccountId}
+                investigationContext={investigationContext}
+                ticket={ticket}
+                isInvestigating={isInvestigating}
+                isActiveStep={activeStep !== "docs" && !hasRunState}
+                ragEnabled={ragEnabled}
+                executionMode={executionMode}
+                showDebugToggle={showDebugToggle}
+                focusContextToken={focusContextToken}
+                isReviewRetryActive={isReviewRetryActive}
+                isCollapsed={hasRunState && !isComposerExpandedAfterRun && !isReviewRetryActive}
+                pendingDocumentCount={pendingDocumentCount}
+                accountHint={
+                  result?.reviewDecision.action === "add_context"
+                    ? "Paste plan, feature, or recent error context to unlock a deeper investigation path."
+                    : null
+                }
+                onSelectAccount={setSelectedAccountId}
+                onInvestigationContextChange={setInvestigationContext}
+                onExecutionModeChange={setExecutionMode}
+                onToggleRag={setRagEnabled}
+                onTicketChange={setTicket}
+                onLoadScenario={handleLoadScenario}
+                onEdit={() => setIsComposerExpandedAfterRun(true)}
+                onNewTicket={handleNewTicket}
+                onSubmit={handleInvestigate}
+              />
+
+              {hasRunState ? (
+                <AnswerPanel
+                  executionMode={executionMode}
+                  isInvestigating={isInvestigating}
+                  investigationContext={investigationContext}
+                  result={result}
+                  isReviewAcknowledged={Boolean(
+                    result && reviewedInvestigationId === result.investigationId,
+                  )}
+                  isReviewRetryActive={isReviewRetryActive}
+                  onMarkReviewed={handleMarkReviewed}
+                  onDraftFromEvidence={() => void handleInvestigate("draft_answer")}
+                  onRetryWithContext={handleRetryWithContext}
+                  showDebugDetails={showDebugToggle}
+                />
+              ) : null}
+            </div>
 
             {hasRunState ? (
-              <AnswerPanel
-                executionMode={executionMode}
-                isInvestigating={isInvestigating}
-                investigationContext={investigationContext}
+              <EvidencePanel
                 result={result}
-                isReviewAcknowledged={Boolean(
-                  result && reviewedInvestigationId === result.investigationId,
-                )}
-                isReviewRetryActive={isReviewRetryActive}
-                onMarkReviewed={handleMarkReviewed}
-                onDraftFromEvidence={() => void handleInvestigate("draft_answer")}
-                onRetryWithContext={handleRetryWithContext}
+                isInvestigating={isInvestigating}
                 showDebugDetails={showDebugToggle}
               />
             ) : null}
-          </div>
-
-          {hasRunState && showDebugToggle ? (
-            <EvidencePanel result={result} isInvestigating={isInvestigating} />
-          ) : null}
-        </section>
+          </section>
+        </ActiveCitationProvider>
       </div>
     </main>
   );
