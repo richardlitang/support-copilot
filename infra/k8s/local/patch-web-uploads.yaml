@@ -1,0 +1,18 @@
+# Web: mount the shared uploads PVC (local single-node only).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: support-copilot-web
+  namespace: support-copilot
+spec:
+  template:
+    spec:
+      containers:
+        - name: web
+          volumeMounts:
+            - name: uploads
+              mountPath: /app/uploads
+      volumes:
+        - name: uploads
+          persistentVolumeClaim:
+            claimName: uploads

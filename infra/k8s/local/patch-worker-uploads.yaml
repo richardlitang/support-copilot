@@ -1,0 +1,18 @@
+# Worker: mount the same shared uploads PVC so ingestion can read web's writes.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: support-copilot-worker
+  namespace: support-copilot
+spec:
+  template:
+    spec:
+      containers:
+        - name: worker
+          volumeMounts:
+            - name: uploads
+              mountPath: /app/uploads
+      volumes:
+        - name: uploads
+          persistentVolumeClaim:
+            claimName: uploads

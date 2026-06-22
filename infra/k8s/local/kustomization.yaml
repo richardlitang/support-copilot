@@ -8,7 +8,10 @@ resources:
   - postgres-pvc.yaml
   - postgres-service.yaml
   - postgres-deployment.yaml
+  - uploads-pvc.yaml
 
 patches:
   - path: patch-config.yaml
   - path: patch-web-service.yaml
+  - path: patch-web-uploads.yaml
+  - path: patch-worker-uploads.yaml
