@@ -9,6 +9,7 @@ resources:
   - postgres-service.yaml
   - postgres-deployment.yaml
   - uploads-pvc.yaml
+  - migrate-job.yaml
 
 patches:
   - path: patch-config.yaml
