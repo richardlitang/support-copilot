@@ -20,6 +20,21 @@ describe("runtime config", () => {
     expect(hasDirectDatabaseConfig()).toBe(true);
   });
 
+  it("strips surrounding quotes from a Postgres SUPABASE_URL injected externally", async () => {
+    // kubectl `create secret --from-env-file` preserves the literal quotes
+    // around values in .env.local, so the pod sees a leading/trailing `"`.
+    delete process.env.DATABASE_URL;
+    process.env.SUPABASE_URL =
+      '"postgresql://postgres:secret@db.example.supabase.co:5432/postgres"';
+
+    const { getRuntimeConfig, hasDirectDatabaseConfig } = await import("@/src/server/config/env");
+
+    expect(getRuntimeConfig().databaseUrl).toBe(
+      "postgresql://postgres:secret@db.example.supabase.co:5432/postgres",
+    );
+    expect(hasDirectDatabaseConfig()).toBe(true);
+  });
+
   it("does not treat an HTTP Supabase URL as a direct database URL", async () => {
     delete process.env.DATABASE_URL;
     process.env.SUPABASE_URL = "https://example.supabase.co";
