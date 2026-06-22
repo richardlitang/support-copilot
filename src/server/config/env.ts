@@ -94,13 +94,16 @@ function readNumber(key: string, fallback: number) {
 let cachedConfig: ReturnType<typeof buildRuntimeConfig> | null = null;
 
 function readDatabaseUrl() {
-  const databaseUrl = readOptionalString("DATABASE_URL");
+  // Externally injected vars (e.g. a k8s Secret built via `kubectl
+  // --from-env-file`) keep the literal quotes from .env.local, so strip them
+  // before use — mirrors getSupabaseUrl() in supabaseAdmin.ts.
+  const databaseUrl = stripQuotes(readOptionalString("DATABASE_URL"));
 
   if (databaseUrl) {
     return databaseUrl;
   }
 
-  const supabaseUrl = readOptionalString("SUPABASE_URL");
+  const supabaseUrl = stripQuotes(readOptionalString("SUPABASE_URL"));
 
   if (supabaseUrl.startsWith("postgresql://") || supabaseUrl.startsWith("postgres://")) {
     return supabaseUrl;
