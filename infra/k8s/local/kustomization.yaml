@@ -2,14 +2,13 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 # Local kind overlay. Layers local-only concerns onto the deployable base.
-# Do not duplicate base resources here — only add local-specific ones.
+# The app's data layer is hosted Supabase (REST + service key) — there is no
+# in-cluster database. The runner creates the `support-copilot-secrets` Secret
+# from .env.local (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, etc.); the base
+# secretRef is optional and picks it up. Do not commit any Secret.
 resources:
   - ../base
-  - postgres-pvc.yaml
-  - postgres-service.yaml
-  - postgres-deployment.yaml
   - uploads-pvc.yaml
-  - migrate-job.yaml
 
 patches:
   - path: patch-config.yaml

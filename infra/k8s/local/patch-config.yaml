@@ -1,11 +1,12 @@
-# Local-only, non-sensitive env. No Secret is created for local.
+# Local non-sensitive env. Sensitive values (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY,
+# DATABASE_URL, OPENAI_API_KEY, ...) come from the support-copilot-secrets Secret the
+# runner builds from .env.local — they are never committed here.
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: support-copilot-config
   namespace: support-copilot
 data:
-  DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/support_copilot"
   AI_PROVIDER: "mock"
   DEBUG_MODE: "true"
   APP_URL: "http://localhost:8080"
