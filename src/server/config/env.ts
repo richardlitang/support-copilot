@@ -132,6 +132,8 @@ function buildRuntimeConfig() {
     redisUrl: readOptionalString("REDIS_URL") || "redis://localhost:6379",
     aiProvider,
     uploadDir: readOptionalString("UPLOAD_DIR") || "uploads",
+    storageProvider: readOptionalString("STORAGE_PROVIDER") || "local",
+    supabaseStorageBucket: readOptionalString("SUPABASE_STORAGE_BUCKET") || "support-uploads",
     maxUploadMb: readNumber("MAX_UPLOAD_MB", 10),
     logLevel: readOptionalString("LOG_LEVEL") || "info",
     debugMode: readOptionalString("DEBUG_MODE") === "true",
