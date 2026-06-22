@@ -1,0 +1,11 @@
+# Local-only, non-sensitive env. No Secret is created for local.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: support-copilot-config
+  namespace: support-copilot
+data:
+  DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/support_copilot"
+  AI_PROVIDER: "mock"
+  DEBUG_MODE: "true"
+  APP_URL: "http://localhost:8080"
