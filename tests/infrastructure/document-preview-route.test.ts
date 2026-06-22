@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   ensureSessionId: vi.fn(),
   getDocumentByIdForSession: vi.fn(),
-  getLocalObject: vi.fn(),
+  getObject: vi.fn(),
   captureServerException: vi.fn(),
   createRequestLogger: vi.fn(),
 }));
@@ -12,8 +12,8 @@ vi.mock("@/src/server/session", () => ({ ensureSessionId: mocks.ensureSessionId 
 vi.mock("@/src/server/db/documentRecords", () => ({
   getDocumentByIdForSessionRecord: mocks.getDocumentByIdForSession,
 }));
-vi.mock("@/src/server/storage/localObjectStorage", () => ({
-  getLocalObject: mocks.getLocalObject,
+vi.mock("@/src/server/storage/objectStorage", () => ({
+  getObject: mocks.getObject,
 }));
 vi.mock("@/src/server/observability/sentry", () => ({
   captureServerException: mocks.captureServerException,
@@ -56,13 +56,13 @@ describe("GET /api/documents/[documentId]/preview", () => {
 
   it("returns the stored PDF inline when it belongs to the current session", async () => {
     mocks.getDocumentByIdForSession.mockResolvedValue(pdfDocument);
-    mocks.getLocalObject.mockResolvedValue(Buffer.from("%PDF-1.7 test"));
+    mocks.getObject.mockResolvedValue(Buffer.from("%PDF-1.7 test"));
 
     const response = await GET(makeRequest(), makeParams());
 
     expect(response.status).toBe(200);
     expect(mocks.getDocumentByIdForSession).toHaveBeenCalledWith("doc-1", "session-1");
-    expect(mocks.getLocalObject).toHaveBeenCalledWith("doc-1/original.pdf");
+    expect(mocks.getObject).toHaveBeenCalledWith("doc-1/original.pdf");
     expect(response.headers.get("content-type")).toBe("application/pdf");
     expect(response.headers.get("content-disposition")).toBe('inline; filename="guide.pdf"');
     expect(Buffer.from(await response.arrayBuffer()).toString("utf8")).toBe("%PDF-1.7 test");
@@ -76,7 +76,7 @@ describe("GET /api/documents/[documentId]/preview", () => {
     expect(response.status).toBe(404);
     const json = await response.json();
     expect(json.error).toContain("Document not found");
-    expect(mocks.getLocalObject).not.toHaveBeenCalled();
+    expect(mocks.getObject).not.toHaveBeenCalled();
   });
 
   it("returns 415 when the session document is not a PDF", async () => {
@@ -92,6 +92,6 @@ describe("GET /api/documents/[documentId]/preview", () => {
     expect(response.status).toBe(415);
     const json = await response.json();
     expect(json.error).toContain("PDF preview");
-    expect(mocks.getLocalObject).not.toHaveBeenCalled();
+    expect(mocks.getObject).not.toHaveBeenCalled();
   });
 });

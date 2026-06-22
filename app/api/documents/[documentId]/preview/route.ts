@@ -3,7 +3,7 @@ import { getDocumentByIdForSessionRecord as getDocumentByIdForSession } from "@/
 import { createRequestLogger } from "@/src/server/observability/log";
 import { captureServerException } from "@/src/server/observability/sentry";
 import { ensureSessionId } from "@/src/server/session";
-import { getLocalObject } from "@/src/server/storage/localObjectStorage";
+import { getObject } from "@/src/server/storage/objectStorage";
 
 type RouteContext = {
   params: Promise<{
@@ -59,7 +59,7 @@ export async function GET(_request: Request, context: RouteContext) {
       return response;
     }
 
-    const buffer = await getLocalObject(document.storagePath);
+    const buffer = await getObject(document.storagePath);
     logger.finish({
       outcome: "success",
       sessionId,
@@ -67,7 +67,7 @@ export async function GET(_request: Request, context: RouteContext) {
       sizeBytes: buffer.byteLength,
     });
 
-    return new Response(buffer, {
+    return new Response(new Uint8Array(buffer), {
       headers: {
         "content-type": "application/pdf",
         "content-disposition": `inline; filename="${contentDispositionFilename(document.filename)}"`,

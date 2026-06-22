@@ -6,7 +6,7 @@ const mocks = vi.hoisted(() => ({
   updateDocumentStatusWithClient: vi.fn(),
   updateDocumentStatusDirect: vi.fn(),
   replaceDocumentChunksWithClient: vi.fn(),
-  getLocalObject: vi.fn(),
+  getObject: vi.fn(),
   parseUploadedBuffer: vi.fn(),
   chunkParsedDocument: vi.fn(),
   embedTexts: vi.fn(),
@@ -28,8 +28,8 @@ vi.mock("@/src/server/db/documents", () => ({
 vi.mock("@/src/server/db/chunks", () => ({
   replaceDocumentChunksWithClient: mocks.replaceDocumentChunksWithClient,
 }));
-vi.mock("@/src/server/storage/localObjectStorage", () => ({
-  getLocalObject: mocks.getLocalObject,
+vi.mock("@/src/server/storage/objectStorage", () => ({
+  getObject: mocks.getObject,
 }));
 vi.mock("@/src/server/ingestion/parse", () => ({
   parseUploadedBuffer: mocks.parseUploadedBuffer,
@@ -103,7 +103,7 @@ describe("processDocumentIngestion", () => {
       .mockImplementationOnce(async (fn: (c: typeof client2) => Promise<unknown>) => fn(client2));
 
     const fileBuffer = Buffer.from("pdf-content");
-    mocks.getLocalObject.mockResolvedValue(fileBuffer);
+    mocks.getObject.mockResolvedValue(fileBuffer);
     mocks.parseUploadedBuffer.mockResolvedValue({ sections: [{ title: "Intro", text: "Hello." }] });
     const chunks = [
       { content: "Hello.", sectionTitle: "Intro", chunkIndex: 0, tokenCount: 2, metadata: {} },
@@ -114,7 +114,7 @@ describe("processDocumentIngestion", () => {
 
     await processDocumentIngestion(jobData, meta);
 
-    expect(mocks.getLocalObject).toHaveBeenCalledWith(pendingDoc.storagePath);
+    expect(mocks.getObject).toHaveBeenCalledWith(pendingDoc.storagePath);
     expect(mocks.embedTexts).toHaveBeenCalledWith(["Hello."]);
     expect(mocks.replaceDocumentChunksWithClient).toHaveBeenCalled();
     expect(mocks.updateDocumentStatusWithClient).toHaveBeenCalledWith(
@@ -133,7 +133,7 @@ describe("processDocumentIngestion", () => {
 
     await processDocumentIngestion(jobData, meta);
 
-    expect(mocks.getLocalObject).not.toHaveBeenCalled();
+    expect(mocks.getObject).not.toHaveBeenCalled();
     expect(mocks.markDocumentIngestionJobCompleted).toHaveBeenCalled();
   });
 

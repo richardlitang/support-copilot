@@ -16,7 +16,7 @@ import {
 } from "@/src/server/db/documentIngestionJobs";
 import { captureServerException } from "@/src/server/observability/sentry";
 import { enqueueDocumentIngestionJob } from "@/src/server/queue/client";
-import { putLocalObject } from "@/src/server/storage/localObjectStorage";
+import { putObject } from "@/src/server/storage/objectStorage";
 
 const MAX_FILES = 10;
 export const runtime = "nodejs";
@@ -109,7 +109,7 @@ export async function POST(request: Request) {
           continue;
         }
 
-        const stored = await putLocalObject({
+        const stored = await putObject({
           buffer,
           filename: file.name,
           contentType: file.type || "application/octet-stream",
