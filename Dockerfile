@@ -19,6 +19,9 @@ COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/src ./src
 COPY --from=builder /app/lib ./lib
+# demo/ holds the bundled sample doc the app ingests at runtime
+# (src/server/ingestion/sampleDocument.ts reads demo/docs/...).
+COPY --from=builder /app/demo ./demo
 COPY --from=builder /app/tsconfig.json ./tsconfig.json
 COPY package.json ./
 EXPOSE 3000

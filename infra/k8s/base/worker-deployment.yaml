@@ -1,3 +1,9 @@
+# NOTE: web and worker must share upload artifacts — web writes uploads via
+# src/server/storage/localObjectStorage.ts and the ingestion worker reads them
+# by storagePath. The local kind overlay (infra/k8s/local) solves this with a
+# shared ReadWriteOnce PVC, which only works on a single node. Production must
+# back localObjectStorage with object storage (S3/GCS) or an RWX volume — do
+# not rely on a shared filesystem on a multi-node cluster.
 apiVersion: apps/v1
 kind: Deployment
 metadata:

@@ -6,6 +6,21 @@
 
 ---
 
+## ⚠️ Revision 2026-06-22 — database approach pivoted (implementation supersedes §4 Postgres/migrations)
+
+Execution surfaced that this is a **hosted-Supabase app**, not a plain-Postgres app: the core data layer (`investigations`, `tickets`, `retrieval`, `documentRecords`, `documentChunkWrites`, `supportContext`) goes through `getSupabaseAdminClient` (Supabase REST + `SUPABASE_SERVICE_ROLE_KEY`). Plain in-cluster pgvector cannot serve that, so the original "in-cluster Postgres is the database" premise was wrong.
+
+**What actually shipped (validated on kind):**
+- **No in-cluster Postgres, no migrate Job.** Those manifests were removed.
+- web/worker point at **hosted Supabase** via a `support-copilot-secrets` Secret the runner builds from `.env.local` (`--from-env-file`), gitignored and never committed. The base `secretRef` (optional) picks it up.
+- **Redis stays in-cluster**, **mock AI** stays, the **shared-uploads PVC** stays (web/worker still share raw upload bytes on disk).
+- The runner image now also copies **`demo/`** (the app ingests the bundled sample doc from `demo/docs/` at runtime).
+- **`DATABASE_URL` caveat:** `.env.local` has no `DATABASE_URL`; the validated flows (home, `/api/documents`, `/api/investigate`) work over Supabase REST without it. The small direct-`pg` subset (`src/server/db/{chunks,documents,documentIngestionJobs,client}.ts`) needs `DATABASE_URL` = the Supabase Postgres connection string — add it to `.env.local` for those paths.
+
+**Remote alignment is unchanged/better:** §9's "managed DB via external secret" row now matches local exactly — local points at Supabase via a Secret; prod points at managed Supabase via External Secrets. Sections §4 (Postgres, migrations) and the `postgres-*`/`migrate-job` entries in §3 are historical; the rest of the spec (overlay structure, redis, uploads, mock AI, NodePort access, runner shape) stands.
+
+---
+
 ## 1. Goal
 
 Let a developer run the full Support Copilot stack on a local single-node **kind** cluster with **one command** (`make local-up`), reaching it at `http://localhost:8080`. The local setup must reuse the existing `infra/k8s/base` manifests (deploy-parity, since the real goal is deploying to an actual cluster) and add only local-specific concerns in a `local/` overlay. The base must stay genuinely deployable and must not absorb local-only mechanisms.

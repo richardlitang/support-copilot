@@ -6,7 +6,9 @@
 
 **Architecture:** A `local/` kustomize overlay layers local-only concerns onto the deployable base: in-cluster `pgvector` Postgres, a shared-uploads PVC (single-node crutch), `mock` AI, a migrate+seed Job, and NodePort access. A `Makefile` → `scripts/k8s-local.sh` runner creates the kind cluster, builds + loads the image, applies the overlay, and waits for readiness. Base stays functionally unchanged (one documenting comment). Validation is `kubectl kustomize` rendering + a real `make local-up` smoke test (curl health → 200).
 
-**Tech Stack:** kind v0.32, kubectl v1.34 (`kubectl kustomize` built-in — no standalone kustomize), Docker, the existing multi-stage Dockerfile (`support-copilot:local`), pgvector/pgvector:pg16, redis:7-alpine, bash + GNU make.
+**Tech Stack:** kind v0.32, kubectl v1.34 (`kubectl kustomize` built-in — no standalone kustomize), Docker, the existing multi-stage Dockerfile (`support-copilot:local`), redis:7-alpine, hosted Supabase, bash + GNU make.
+
+> ⚠️ **Revision 2026-06-22 (implementation outcome):** Tasks 2 & 4 (in-cluster pgvector Postgres + migrate Job) were **removed during execution** — the app is a hosted-Supabase app (REST + service key), so plain in-cluster Postgres can't serve its data layer. What shipped: web/worker point at hosted Supabase via a `support-copilot-secrets` Secret the runner builds from `.env.local` (gitignored); redis/mock-AI/shared-uploads stay; the runner image also copies `demo/`. `DATABASE_URL` (Supabase Postgres conn string) is optional for the validated flows but needed for the small direct-`pg` subset — add it to `.env.local`. See the spec's "Revision 2026-06-22" banner. Tasks 1, 3, 5, 6, 8 stand (with postgres/migrate waits dropped from the runner).
 
 ## Global Constraints
 
