@@ -5,6 +5,9 @@ kind: Kustomization
 # Do not duplicate base resources here — only add local-specific ones.
 resources:
   - ../base
+  - postgres-pvc.yaml
+  - postgres-service.yaml
+  - postgres-deployment.yaml
 
 patches:
   - path: patch-config.yaml
