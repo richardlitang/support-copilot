@@ -18,7 +18,7 @@ import {
 } from "@/src/server/db/documentIngestionJobs";
 import { recordPipelineEvent, sanitizeError } from "@/src/server/db/pipelineEvents";
 import { captureServerException } from "@/src/server/observability/sentry";
-import { getLocalObject } from "@/src/server/storage/localObjectStorage";
+import { getObject } from "@/src/server/storage/objectStorage";
 import { getRedisConnection } from "@/src/server/queue/client";
 import type { DocumentIngestionJob } from "@/src/server/queue/jobs";
 import { JOB_NAMES, QUEUE_NAMES } from "@/src/server/queue/names";
@@ -125,7 +125,7 @@ export async function processDocumentIngestion(
     if (!document.storagePath) {
       throw new Error("Document storage path is missing.");
     }
-    const buffer = await getLocalObject(document.storagePath);
+    const buffer = await getObject(document.storagePath);
     const parsed = await parseUploadedBuffer({
       buffer,
       filename: document.filename,

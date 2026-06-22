@@ -1,12 +1,7 @@
-import { randomUUID } from "node:crypto";
 import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { getRuntimeConfig } from "@/src/server/config/env";
-
-function extensionFromFilename(filename: string) {
-  const extension = path.extname(filename).toLowerCase();
-  return extension && extension.length <= 12 ? extension : "";
-}
+import { buildStoragePath } from "@/src/server/storage/storagePath";
 
 function resolveUploadRoot() {
   const configured = getRuntimeConfig().uploadDir;
@@ -29,8 +24,7 @@ export async function putLocalObject(input: {
   contentType: string;
   documentId?: string;
 }) {
-  const documentId = input.documentId ?? randomUUID();
-  const storagePath = path.join(documentId, `original${extensionFromFilename(input.filename)}`);
+  const storagePath = buildStoragePath({ filename: input.filename, documentId: input.documentId });
   const fullPath = resolveStoragePath(storagePath);
 
   await mkdir(path.dirname(fullPath), { recursive: true });
@@ -45,4 +39,12 @@ export async function getLocalObject(storagePath: string) {
 
 export async function deleteLocalObject(storagePath: string) {
   await unlink(resolveStoragePath(storagePath));
+}
+
+export function createLocalObjectStorage() {
+  return {
+    putObject: putLocalObject,
+    getObject: getLocalObject,
+    deleteObject: deleteLocalObject,
+  };
 }
