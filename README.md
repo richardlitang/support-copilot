@@ -225,6 +225,8 @@ The upload path is asynchronous in this mode:
 
 `/api/health` verifies the app process is alive. `/api/ready` checks required dependencies without exposing secrets.
 
+For the raw Kubernetes learning workflow with kind, see [`docs/deployment.md`](docs/deployment.md).
+
 ## Safe Observability
 
 Logs and pipeline events may include IDs, statuses, counts, durations, provider names, and sanitized error codes/messages. They must not include raw uploaded files, extracted text, full prompts, full model responses, embeddings, secrets, headers, cookies, or request bodies.

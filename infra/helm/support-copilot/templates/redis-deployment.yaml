@@ -1,0 +1,37 @@
+{{- if .Values.redis.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.redis.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.redis.name }}
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: {{ .Values.redis.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Values.redis.name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ .Values.redis.name }}
+    spec:
+      containers:
+        - name: redis
+          image: {{ include "support-copilot.redisImage" . }}
+          imagePullPolicy: {{ .Values.redis.image.pullPolicy }}
+          ports:
+            - name: {{ .Values.redis.port.name }}
+              containerPort: {{ .Values.redis.port.containerPort }}
+          readinessProbe:
+            tcpSocket:
+              port: {{ .Values.redis.port.name }}
+            initialDelaySeconds: {{ .Values.redis.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.redis.readinessProbe.periodSeconds }}
+          livenessProbe:
+            tcpSocket:
+              port: {{ .Values.redis.port.name }}
+            initialDelaySeconds: {{ .Values.redis.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.redis.livenessProbe.periodSeconds }}
+{{- end }}

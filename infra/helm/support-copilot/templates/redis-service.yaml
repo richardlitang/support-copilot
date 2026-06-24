@@ -1,0 +1,17 @@
+{{- if .Values.redis.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.redis.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.redis.name }}
+    app.kubernetes.io/managed-by: Helm
+spec:
+  selector:
+    app.kubernetes.io/name: {{ .Values.redis.name }}
+  ports:
+    - name: {{ .Values.redis.port.name }}
+      port: {{ .Values.redis.port.servicePort }}
+      targetPort: {{ .Values.redis.port.name }}
+{{- end }}
