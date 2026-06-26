@@ -158,14 +158,15 @@ npm install
 
 2. Copy `.env.example` to `.env.local`.
 
-For local-first Milestone 1 development, the required values are:
+For local development with real answer quality, the required values are:
 
 - `DATABASE_URL=postgresql://postgres:postgres@localhost:5432/support_copilot`
 - `REDIS_URL=redis://localhost:6379`
-- `AI_PROVIDER=mock`
+- `AI_PROVIDER=openai`
+- `OPENAI_API_KEY=<your key>`
 - `UPLOAD_DIR=uploads`
 
-`AI_PROVIDER=mock` uses deterministic 1536-dimensional embeddings and local structured-answer fixtures so tests and local verification do not require paid APIs. Set `AI_PROVIDER=openai` only when you want live model quality, then provide one `OPENAI_API_KEY` for both embeddings and structured answer generation.
+`AI_PROVIDER=openai` uses one `OPENAI_API_KEY` for both embeddings and structured answer generation. Use `AI_PROVIDER=mock` only for deterministic regression checks that should not call paid APIs; mock mode uses deterministic embeddings and fixture-like structured answers, so it is not representative of real answer quality.
 
 Hosted Supabase mode remains optional. If using hosted Supabase instead of local Docker Postgres, fill in:
 
@@ -192,6 +193,57 @@ npm run dev
 
 ```bash
 npm run seed:demo
+```
+
+## Run Locally with Make
+
+The local deployment path uses the `Makefile` and a kind Kubernetes cluster. Make sure Docker
+Desktop is running first; `kind` depends on the Docker API.
+
+Your `.env.local` must contain the hosted Supabase credentials and OpenAI key used to build the
+cluster Secret:
+
+- `SUPABASE_URL`
+- either `SUPABASE_SERVICE_ROLE_KEY` or `SUPABASE_SECRET_KEY`
+- `OPENAI_API_KEY`
+- optional `DATABASE_URL`
+- optional `COHERE_API_KEY`
+
+Start the local cluster, build and load the image, and deploy the web app, worker, and Redis:
+
+```bash
+make local-up
+```
+
+When startup finishes, the app is available at:
+
+```text
+http://localhost:8080
+```
+
+Check health:
+
+```bash
+curl -s http://localhost:8080/api/health
+```
+
+After code or config changes, rebuild and restart the web and worker deployments without recreating
+the cluster:
+
+```bash
+make local-redeploy
+```
+
+Tail local app and worker logs:
+
+```bash
+make local-logs
+```
+
+Delete the local kind cluster:
+
+```bash
+make local-down
 ```
 
 ## Run Locally with Docker
