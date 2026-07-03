@@ -4,6 +4,7 @@ import { createDocEvidence } from "@/lib/evidence-builder";
 import { determineReviewDecision } from "@/lib/review-decision";
 import { determineReviewStatus, shouldEscalateToHumanReview } from "@/lib/review-policy";
 import { determineSupportLevel } from "@/lib/support-level";
+import { calibratedRelevance } from "@/lib/retrieval-strength";
 import { collectToolArtifacts, createSyntheticToolEvidence } from "@/lib/tool-runner";
 import type { ToolRunnerDependencies } from "@/lib/tool-runner";
 import type { EvidenceChunk } from "@/lib/types";
@@ -204,8 +205,8 @@ export function decideInvestigationReview(input: {
   blocker: InvestigationBlocker;
 }) {
   const supportLevel = determineSupportLevel({
-    topDocScore: input.docEvidence[0]?.score ?? 0,
-    secondDocScore: input.docEvidence[1]?.score ?? 0,
+    topDocScore: input.docEvidence[0] ? calibratedRelevance(input.docEvidence[0]) : 0,
+    secondDocScore: input.docEvidence[1] ? calibratedRelevance(input.docEvidence[1]) : 0,
     docEvidenceCount: input.docEvidence.length,
     toolEvidenceCount: input.toolArtifacts.toolEvidence.length,
     customerClaimCount: input.generated.customerReply.claims.length,

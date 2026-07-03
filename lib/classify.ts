@@ -1,5 +1,6 @@
 import type { EvidenceChunk } from "@/lib/types";
 import type { InvestigationMode, ToolName } from "@/lib/types/investigation";
+import { calibratedRelevance } from "@/lib/retrieval-strength";
 
 export interface RoutingDecision {
   mode: InvestigationMode;
@@ -20,8 +21,8 @@ const ACCESS_PATTERN =
 const PLAN_PATTERN = /\b(plan|tier|limit|limits|starter|basic|pro|enterprise)\b/i;
 
 export function summarizeRetrievalStrength(evidence: EvidenceChunk[]) {
-  const topScore = evidence[0]?.score ?? 0;
-  const secondScore = evidence[1]?.score ?? 0;
+  const topScore = evidence[0] ? calibratedRelevance(evidence[0]) : 0;
+  const secondScore = evidence[1] ? calibratedRelevance(evidence[1]) : 0;
   const strong =
     evidence.length > 0 && topScore >= 0.72 && (evidence.length === 1 || secondScore >= 0.58);
   const weak = !evidence.length || topScore < 0.5;
