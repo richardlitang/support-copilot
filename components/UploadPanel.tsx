@@ -76,14 +76,13 @@ export function UploadPanel({
   return (
     <Card
       className={`surface-shell sidebar-scroll overflow-hidden xl:sticky xl:top-4 ${
-        isActiveStep ? "border-zinc-950/40 shadow-[0_18px_42px_rgba(15,23,42,0.11)]" : ""
+        isActiveStep ? "border-zinc-950/30 shadow-[0_8px_24px_rgba(15,23,42,0.08)]" : ""
       }`}
     >
       <CardHeader className={showIntake ? "relative pb-3 pr-14" : "relative p-3 pr-14"}>
         <div>
           <div className="min-w-0">
-            <p className="eyebrow">Case intake</p>
-            <CardTitle className="mt-2 text-lg">Docs for this case</CardTitle>
+            <CardTitle className="text-lg">Docs for this case</CardTitle>
             <CardDescription className="mt-2 text-xs leading-5">
               Start with the PayBridge sample doc, remove it, or add your own focused docs.
             </CardDescription>

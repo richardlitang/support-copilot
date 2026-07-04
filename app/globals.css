@@ -57,6 +57,13 @@
   textarea {
     font: inherit;
   }
+
+  summary:focus-visible,
+  a:focus-visible {
+    outline: 2px solid var(--signal);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
 }
 
 @layer utilities {
@@ -64,7 +71,7 @@
     border-radius: 1rem;
     border: 1px solid rgba(43, 42, 39, 0.08);
     background: var(--ledger);
-    box-shadow: 0 18px 42px rgba(19, 21, 20, 0.06);
+    box-shadow: 0 6px 20px rgba(19, 21, 20, 0.04);
   }
   .font-display {
     font-family: var(--font-display), Georgia, serif;
@@ -86,7 +93,7 @@
     border-radius: 0.75rem;
     border: 1px solid rgba(43, 42, 39, 0.08);
     background: var(--ledger);
-    box-shadow: 0 18px 42px rgba(19, 21, 20, 0.06);
+    box-shadow: 0 8px 24px rgba(19, 21, 20, 0.05);
   }
 
   .surface-muted {
@@ -126,15 +133,23 @@
     grid-template-columns: 1fr;
   }
 
+  /* On small screens the composer and answer come first, evidence second,
+     and setup cards last; desktop restores the three-column DOM order. */
   .center-stack {
     display: grid;
     gap: 0.875rem;
+    order: 1;
+  }
+
+  .evidence-rail {
+    order: 2;
   }
 
   .left-stack {
     display: grid;
     gap: 0.875rem;
     align-content: start;
+    order: 3;
   }
 
   .sidebar-scroll {
@@ -154,6 +169,12 @@
 
     .workbench-layout--with-evidence {
       grid-template-columns: 280px minmax(0, 1fr) 300px;
+    }
+
+    .center-stack,
+    .evidence-rail,
+    .left-stack {
+      order: 0;
     }
 
     .stats-layout {

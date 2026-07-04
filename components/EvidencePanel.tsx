@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { useActiveCitation } from "@/components/answer/active-citation-context";
+import { FormattedExcerpt } from "@/components/answer/formatted-excerpt";
 import type { InvestigationResult } from "@/lib/types/investigation";
 
 export function EvidencePanel({
@@ -27,19 +28,18 @@ export function EvidencePanel({
   );
 
   return (
-    <Card className="surface-shell sidebar-scroll xl:sticky xl:top-4">
+    <Card className="surface-shell sidebar-scroll evidence-rail xl:sticky xl:top-4">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="eyebrow">Exhibits</p>
-            <CardTitle className="mt-2 text-lg">Retrieved evidence</CardTitle>
+            <CardTitle className="text-lg">Exhibits</CardTitle>
             <CardDescription className="mt-2 text-xs leading-5">
               {result || isInvestigating
                 ? "Every claim in the answer links back to these exhibits."
                 : "Retrieved evidence will appear here. Every claim in the answer links back to it."}
             </CardDescription>
           </div>
-          <span className="text-xs font-medium text-zinc-500">
+          <span className="shrink-0 font-mono text-xs font-medium text-zinc-500">
             {(result?.docEvidence.length ?? 0) + (result?.toolEvidence.length ?? 0)} sources
           </span>
         </div>
@@ -115,7 +115,7 @@ export function EvidencePanel({
                               </div>
                             ) : null}
                           </div>
-                          <p className="mt-4 text-sm leading-6 text-zinc-700">{item.excerpt}</p>
+                          <FormattedExcerpt excerpt={item.excerpt} />
                         </div>
                       );
                     })
@@ -163,7 +163,7 @@ export function EvidencePanel({
                               </p>
                             </div>
                           </div>
-                          <p className="mt-4 text-sm leading-6 text-zinc-700">{item.excerpt}</p>
+                          <FormattedExcerpt excerpt={item.excerpt} />
                           <details className="mt-4">
                             <summary className="cursor-pointer text-xs font-medium uppercase tracking-[0.18em] text-zinc-500">
                               View raw tool output

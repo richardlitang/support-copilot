@@ -117,14 +117,13 @@ export function TicketForm({
   return (
     <Card
       className={`surface-shell ${
-        isActiveStep ? "border-zinc-950/40 shadow-[0_18px_42px_rgba(15,23,42,0.11)]" : ""
+        isActiveStep ? "border-zinc-950/30 shadow-[0_8px_24px_rgba(15,23,42,0.08)]" : ""
       }`}
     >
       <CardHeader className="pb-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
-            <p className="eyebrow">Investigation composer</p>
-            <CardTitle className="mt-2 text-2xl tracking-[-0.04em]">New support ticket</CardTitle>
+            <CardTitle className="text-2xl tracking-[-0.04em]">New support ticket</CardTitle>
             <CardDescription className="mt-2 text-xs leading-5">
               Paste the customer issue. Add context only when the case depends on plan, feature, or
               error state.
@@ -163,7 +162,7 @@ export function TicketForm({
           <div className="surface-muted p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="eyebrow">Required</p>
+                <p className="eyebrow">Customer ticket</p>
                 <p className="mt-1.5 text-xs text-zinc-600">Use the customer’s wording.</p>
               </div>
               <div className="flex items-center gap-2">
@@ -217,7 +216,7 @@ export function TicketForm({
             <div className="rounded-lg border border-amber-200 bg-amber-50/70 p-3">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="eyebrow">2 · Investigation context</p>
+                  <p className="eyebrow">Investigation context</p>
                   <p className="mt-1.5 text-xs text-zinc-600">
                     Add plan, feature, error, or support-note details when they matter.
                   </p>
@@ -306,12 +305,7 @@ export function TicketForm({
         <Separator />
         <div className="rounded-lg border border-zinc-200 bg-white/70 p-3">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="eyebrow">Investigation mode</p>
-              <p className="mt-2 text-sm leading-6 text-zinc-600">
-                Start with inspectable evidence, or draft a cited reply from that evidence.
-              </p>
-            </div>
+            <p className="eyebrow">Mode</p>
             <div className="grid shrink-0 grid-cols-2 gap-1 rounded-lg border border-zinc-200 bg-zinc-50 p-1">
               <Button
                 type="button"

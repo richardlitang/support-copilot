@@ -1,10 +1,12 @@
-import type { SupportLevel } from "@/lib/types";
+"use client";
+
+import { useEffect, useState } from "react";
 import type { InvestigationResult, StructuredClaim } from "@/lib/types/investigation";
 import {
   AlertTriangle,
   CheckCircle2,
   ClipboardCheck,
-  FileSearch,
+  Copy,
   MessageSquareText,
   RotateCcw,
   Stethoscope,
@@ -12,12 +14,13 @@ import {
 import { motion, useReducedMotion } from "motion/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import { fadeRise, springSoft, staggerParent } from "@/lib/motion";
 import { reviewTone } from "@/lib/review-presentation";
 import { DocsGapReportCard } from "@/components/answer/docs-gap-report-card";
 import { PipelineTimeline } from "@/components/answer/pipeline-timeline";
 import { QualityCheckCard } from "@/components/answer/quality-check-card";
+import { VerdictStrip } from "@/components/answer/verdict-strip";
 import {
   CitationMarker,
   SourceLedger,
@@ -25,19 +28,37 @@ import {
 } from "@/components/answer/source-citations";
 import { getReviewAction } from "@/lib/review-actions";
 
-const supportVariant: Record<SupportLevel, "success" | "warn" | "danger"> = {
-  high: "success",
-  medium: "warn",
-  low: "warn",
-  insufficient_support: "danger",
-};
+function CopyReplyButton({ claims }: { claims: StructuredClaim[] }) {
+  const [copied, setCopied] = useState(false);
 
-const supportLabel: Record<SupportLevel, string> = {
-  high: "High support",
-  medium: "Medium support",
-  low: "Low support",
-  insufficient_support: "Insufficient support",
-};
+  useEffect(() => {
+    if (!copied) {
+      return;
+    }
+    const timer = window.setTimeout(() => setCopied(false), 2000);
+    return () => window.clearTimeout(timer);
+  }, [copied]);
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(claims.map((claim) => claim.text).join("\n\n"));
+      setCopied(true);
+    } catch {
+      // Clipboard access denied; leave the button in its default state.
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => void handleCopy()}
+      className="inline-flex items-center gap-1.5 rounded-md border border-zinc-700 bg-zinc-900 px-2.5 py-1 text-xs font-medium text-zinc-300 transition hover:border-zinc-500 hover:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
+    >
+      {copied ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+      {copied ? "Copied" : "Copy reply"}
+    </button>
+  );
+}
 
 function AnswerSection({
   claims,
@@ -49,7 +70,7 @@ function AnswerSection({
   result: InvestigationResult;
 }) {
   return (
-    <section className="rounded-xl border border-zinc-900 bg-zinc-950 p-5 shadow-[0_18px_40px_rgba(24,24,27,0.16)]">
+    <section className="rounded-xl border border-zinc-900 bg-zinc-950 p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <MessageSquareText className="h-4 w-4 text-zinc-400" />
@@ -57,9 +78,7 @@ function AnswerSection({
             Customer reply
           </p>
         </div>
-        <Badge className="border-zinc-700 bg-zinc-900 text-zinc-300">
-          {claims.length} claim{claims.length === 1 ? "" : "s"}
-        </Badge>
+        {claims.length ? <CopyReplyButton claims={claims} /> : null}
       </div>
 
       {claims.length ? (
@@ -133,105 +152,22 @@ function InternalFindings({
   );
 }
 
-function EvidenceOnlySummary({
-  onDraftFromEvidence,
-  result,
-}: {
-  onDraftFromEvidence: () => void;
-  result: InvestigationResult;
-}) {
-  const sourceCount = result.docEvidence.length + result.toolEvidence.length;
-
+function EvidenceOnlySummary({ onDraftFromEvidence }: { onDraftFromEvidence: () => void }) {
   return (
     <section className="surface p-4">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <FileSearch className="h-4 w-4 text-zinc-500" />
-            <p className="eyebrow">Evidence found</p>
-          </div>
-          <h3 className="mt-2 text-xl font-semibold tracking-[-0.03em] text-zinc-950">
-            Drafting skipped for this run.
+          <h3 className="text-lg font-semibold tracking-[-0.02em] text-zinc-950">
+            Review the exhibits, then draft.
           </h3>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600">
-            The app retrieved and organized sources without calling the answer model. Review the
-            evidence below, then draft only when the sources look strong enough.
+          <p className="mt-1.5 max-w-2xl text-sm leading-6 text-zinc-600">
+            The retrieved sources are in the evidence rail. Draft a cited reply when they look
+            strong enough.
           </p>
         </div>
         <Button type="button" className="shrink-0" onClick={onDraftFromEvidence}>
           Draft answer from evidence
         </Button>
-      </div>
-
-      <div className="mt-4 grid gap-3 md:grid-cols-3">
-        <div className="surface-muted p-3">
-          <p className="eyebrow">Sources</p>
-          <p className="mt-2 text-2xl font-semibold text-zinc-950">{sourceCount}</p>
-          <p className="mt-1 text-xs leading-5 text-zinc-500">
-            {result.docEvidence.length} docs, {result.toolEvidence.length} context
-          </p>
-        </div>
-        <div className="surface-muted p-3">
-          <p className="eyebrow">Route</p>
-          <p className="mt-2 text-sm font-semibold text-zinc-950">
-            {result.mode.replaceAll("_", " ")}
-          </p>
-          <p className="mt-1 line-clamp-2 text-xs leading-5 text-zinc-500">
-            {result.routingReason}
-          </p>
-        </div>
-        <div className="surface-muted p-3">
-          <p className="eyebrow">Answer model</p>
-          <p className="mt-2 text-sm font-semibold text-zinc-950">Skipped</p>
-          <p className="mt-1 text-xs leading-5 text-zinc-500">No customer reply was generated.</p>
-        </div>
-      </div>
-
-      <div className="mt-4 grid gap-3">
-        {result.docEvidence.slice(0, 5).map((item) => (
-          <div key={item.id} className="surface-muted p-3">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="outline">{item.id}</Badge>
-                  <span className="text-xs font-medium text-zinc-500">
-                    {Math.round(item.score * 100)}%{" "}
-                    {item.rerankScore !== undefined ? "rerank" : "match"}
-                  </span>
-                  <Badge
-                    variant={
-                      item.retrievalSource === "exact"
-                        ? "warn"
-                        : item.retrievalSource === "hybrid"
-                          ? "secondary"
-                          : "outline"
-                    }
-                  >
-                    {item.retrievalSource ?? "vector"}
-                  </Badge>
-                </div>
-                <p className="mt-2 text-sm font-semibold text-zinc-950">{item.filename}</p>
-                {item.sectionTitle ? (
-                  <p className="mt-1 text-xs uppercase tracking-[0.14em] text-zinc-500">
-                    {item.sectionTitle}
-                  </p>
-                ) : null}
-              </div>
-            </div>
-            <p className="mt-3 line-clamp-4 text-sm leading-6 text-zinc-700">{item.excerpt}</p>
-          </div>
-        ))}
-
-        {result.toolEvidence.map((item) => (
-          <div key={item.id} className="surface-muted p-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="warn">{item.id}</Badge>
-              <span className="text-xs font-medium text-zinc-500">{item.toolName}</span>
-            </div>
-            <p className="mt-2 text-sm font-semibold text-zinc-950">{item.title}</p>
-            <p className="mt-3 line-clamp-4 text-sm leading-6 text-zinc-700">{item.excerpt}</p>
-          </div>
-        ))}
       </div>
     </section>
   );
@@ -262,7 +198,7 @@ export function AnswerPanel({
 }) {
   const reduce = useReducedMotion();
 
-  if (isInvestigating) {
+  if (isInvestigating || !result) {
     return (
       <Card className="surface-shell">
         <CardContent className="flex min-h-[260px] items-center justify-center p-8 text-center">
@@ -282,49 +218,12 @@ export function AnswerPanel({
     );
   }
 
-  if (!result) {
-    return (
-      <Card className="surface-shell">
-        <CardContent className="p-6">
-          <div className="mx-auto max-w-3xl text-center">
-            <p className="eyebrow">Answer</p>
-            <h2 className="mt-3 text-2xl font-semibold text-zinc-950">
-              Run a ticket to see the answer.
-            </h2>
-            <p className="mt-3 text-sm leading-6 text-zinc-600">
-              The result will show the customer reply, internal findings, citations, and any review
-              action.
-            </p>
-          </div>
-
-          <div className="mt-6 grid gap-3 md:grid-cols-3">
-            <div className="surface-muted p-4 text-left">
-              <p className="eyebrow">1 · Ingest</p>
-              <p className="mt-2 text-xs leading-5 text-zinc-700">Add focused docs.</p>
-            </div>
-            <div className="surface-muted p-4 text-left">
-              <p className="eyebrow">2 · Investigate</p>
-              <p className="mt-2 text-xs leading-5 text-zinc-700">Paste the ticket and run it.</p>
-            </div>
-            <div className="surface-muted p-4 text-left">
-              <p className="eyebrow">3 · Validate</p>
-              <p className="mt-2 text-xs leading-5 text-zinc-700">
-                Check citations before replying.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   const reviewAction = getReviewAction(result);
   const reviewToneStyles = reviewTone({
     reviewStatus: result.reviewStatus,
     acknowledged: isReviewAcknowledged,
   });
   const showOpenQuestions = result.internalDiagnosis.openQuestions.length > 0;
-  const showRoutingReason = showDebugDetails || result.reviewStatus === "needs_human_review";
   const distinctInternalClaims = getDistinctInternalClaims(
     result.customerReply.claims,
     result.internalDiagnosis.claims,
@@ -340,56 +239,9 @@ export function AnswerPanel({
     >
       <motion.div variants={fadeRise}>
         <Card className="surface-shell">
-          <CardHeader className="border-b border-zinc-100 pb-4">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <p className="eyebrow">Case brief</p>
-                <CardTitle className="mt-2 text-2xl tracking-[-0.04em]">
-                  {result.executionMode === "evidence_only"
-                    ? "Evidence ready"
-                    : result.reviewStatus === "needs_human_review"
-                      ? "Review needed before replying"
-                      : "Answer ready"}
-                </CardTitle>
-                {showRoutingReason ? (
-                  <CardDescription className="mt-2 max-w-2xl text-sm leading-6">
-                    {result.routingReason}
-                  </CardDescription>
-                ) : null}
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {result.executionMode === "evidence_only" ? (
-                  <Badge variant="secondary">
-                    {result.docEvidence.length + result.toolEvidence.length} source
-                    {result.docEvidence.length + result.toolEvidence.length === 1 ? "" : "s"}
-                  </Badge>
-                ) : (
-                  <Badge variant={supportVariant[result.supportLevel]}>
-                    {supportLabel[result.supportLevel]}
-                  </Badge>
-                )}
-                <Badge
-                  variant={
-                    result.executionMode === "evidence_only"
-                      ? "outline"
-                      : result.reviewStatus === "needs_human_review"
-                        ? "danger"
-                        : "secondary"
-                  }
-                >
-                  {result.executionMode === "evidence_only"
-                    ? "Evidence only"
-                    : isReviewAcknowledged
-                      ? "Reviewed"
-                      : result.reviewStatus === "needs_human_review"
-                        ? "Needs human review"
-                        : "Ready"}
-                </Badge>
-                <Badge variant="outline">{result.mode.replaceAll("_", " ")}</Badge>
-              </div>
-            </div>
-          </CardHeader>
           <CardContent className="space-y-4 p-4">
+            <VerdictStrip result={result} isReviewAcknowledged={isReviewAcknowledged} />
+
             {showDebugDetails && investigationContext.trim() ? (
               <div className="rounded-lg border border-amber-200/80 bg-amber-50/70 p-3">
                 <p className="eyebrow">Provided context</p>
@@ -400,7 +252,7 @@ export function AnswerPanel({
             ) : null}
 
             {result.executionMode === "evidence_only" ? (
-              <EvidenceOnlySummary result={result} onDraftFromEvidence={onDraftFromEvidence} />
+              <EvidenceOnlySummary onDraftFromEvidence={onDraftFromEvidence} />
             ) : (
               <>
                 <AnswerSection

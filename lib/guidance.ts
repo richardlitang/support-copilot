@@ -1,4 +1,4 @@
-export type SetupStage = "docs" | "ticket" | "investigate";
+export type SetupStage = "docs" | "ticket" | "investigate" | "review";
 
 export interface NextAction {
   stage: SetupStage;
@@ -7,10 +7,14 @@ export interface NextAction {
   hint: string;
 }
 
-export function resolveNextAction(input: {
+export interface GuidanceInput {
   documentCount: number;
   ticketText: string;
-}): NextAction {
+  isInvestigating?: boolean;
+  hasResult?: boolean;
+}
+
+export function resolveNextAction(input: GuidanceInput): NextAction {
   if (input.documentCount === 0) {
     return {
       stage: "docs",
@@ -27,6 +31,16 @@ export function resolveNextAction(input: {
       hint: "Drop in the customer's message to investigate.",
     };
   }
+  if (input.isInvestigating || input.hasResult) {
+    return {
+      stage: "review",
+      index: 4,
+      label: input.isInvestigating ? "Investigation running" : "Review the answer",
+      hint: input.isInvestigating
+        ? "Retrieving evidence, routing, and drafting cited claims."
+        : "Check each citation against its exhibit, then copy the reply or start a new ticket.",
+    };
+  }
   return {
     stage: "investigate",
     index: 3,
@@ -35,15 +49,15 @@ export function resolveNextAction(input: {
   };
 }
 
-export function setupSteps(input: {
-  documentCount: number;
-  ticketText: string;
-}): Array<{ stage: SetupStage; label: string; state: "done" | "active" | "upcoming" }> {
+export function setupSteps(
+  input: GuidanceInput,
+): Array<{ stage: SetupStage; label: string; state: "done" | "active" | "upcoming" }> {
   const active = resolveNextAction(input).stage;
   const order: Array<{ stage: SetupStage; label: string }> = [
     { stage: "docs", label: "Docs" },
     { stage: "ticket", label: "Ticket" },
     { stage: "investigate", label: "Run" },
+    { stage: "review", label: "Review" },
   ];
   const activeIndex = order.findIndex((s) => s.stage === active);
   return order.map((s, i) => ({

@@ -4,9 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { AnswerPanel } from "@/components/AnswerPanel";
 import { EvidencePanel } from "@/components/EvidencePanel";
 import { ActiveCitationProvider } from "@/components/answer/active-citation-context";
-import { CaseSpine } from "@/components/support-shell/case-spine";
+import { CaseProgress } from "@/components/support-shell/case-progress";
 import { HistoryDrawer } from "@/components/support-shell/history-drawer";
-import { NextAction } from "@/components/support-shell/next-action";
 import {
   clearDocuments,
   deleteDocument,
@@ -289,32 +288,17 @@ export function SupportCopilotShell({
   return (
     <main className="min-h-screen py-3 text-zinc-950">
       <div className="app-frame space-y-3">
-        <Card className="surface-shell overflow-hidden">
-          <CardContent className="p-3 lg:p-4">
-            <div className="flex min-w-0 flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-              <div className="min-w-0">
-                <p className="eyebrow">Support Copilot</p>
-                <h1 className="font-display mt-1 text-3xl tracking-[-0.02em] text-graphite">
-                  Every claim cited, or it goes to a human.
-                </h1>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600">
-                  Investigate support tickets with retrieved docs, tool context, and cited answers.
-                </p>
-              </div>
-
-              <div className="flex min-w-0 flex-wrap items-center justify-start gap-2 xl:justify-end">
-                <Badge variant={executionMode === "evidence_only" ? "outline" : "default"}>
-                  {executionMode === "evidence_only" ? "Evidence only" : "Draft answer"}
-                </Badge>
-                {showDebugToggle ? (
-                  <Badge variant={ragEnabled ? "secondary" : "outline"}>
-                    {ragEnabled ? "Retrieval on" : "Retrieval off"}
-                  </Badge>
-                ) : null}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <header className="surface-shell flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1 px-4 py-3">
+          <h1 className="font-display text-xl tracking-[-0.02em] text-graphite">Support Copilot</h1>
+          <p className="min-w-0 text-sm leading-6 text-zinc-500">
+            Every claim cited, or it goes to a human.
+          </p>
+          {showDebugToggle ? (
+            <Badge className="ml-auto self-center" variant={ragEnabled ? "secondary" : "outline"}>
+              {ragEnabled ? "Retrieval on" : "Retrieval off"}
+            </Badge>
+          ) : null}
+        </header>
 
         <HistoryDrawer
           currentInvestigationId={result?.investigationId}
@@ -336,17 +320,11 @@ export function SupportCopilotShell({
             }
           >
             <div className="left-stack">
-              <CaseSpine
+              <CaseProgress
                 documentCount={documents.length}
                 ticketText={ticket}
                 result={result}
                 isInvestigating={isInvestigating}
-              />
-              <NextAction
-                documentCount={documents.length}
-                ticketText={ticket}
-                isInvestigating={isInvestigating}
-                onRun={() => void handleInvestigate()}
               />
               <UploadPanel
                 documents={documents}

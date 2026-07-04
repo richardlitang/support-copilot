@@ -1,17 +1,4 @@
-import { Badge } from "@/components/ui/badge";
 import type { InvestigationResult } from "@/lib/types/investigation";
-
-const readinessVariant = {
-  ready: "success",
-  needs_human_review: "danger",
-  blocked: "danger",
-} as const;
-
-const readinessLabel = {
-  ready: "Ready",
-  needs_human_review: "Needs human review",
-  blocked: "Blocked",
-} as const;
 
 function normalizeQualityCheck(result: InvestigationResult) {
   const quality = result.qualityCheck;
@@ -48,63 +35,49 @@ export function QualityCheckCard({
   showDebugDetails: boolean;
 }) {
   const quality = normalizeQualityCheck(result);
+  const weakOrUnsupported = quality.grounding.weakClaims + quality.grounding.unsupportedClaims;
+
+  const stats = [
+    { label: "Evidence sources", value: quality.retrieval.sourceCount, alert: false },
+    { label: "Claims checked", value: quality.grounding.totalClaims, alert: false },
+    { label: "Supported", value: quality.grounding.supportedClaims, alert: false },
+    { label: "Weak or unsupported", value: weakOrUnsupported, alert: weakOrUnsupported > 0 },
+  ];
 
   return (
     <section className="rounded-xl border border-zinc-200/80 bg-white/80 p-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="eyebrow">Answer quality</p>
-          <p className="mt-2 text-sm leading-6 text-zinc-600">
-            Grounding and review checks for this investigation run.
-          </p>
-        </div>
-        <Badge variant={readinessVariant[quality.readiness.status]}>
-          {readinessLabel[quality.readiness.status]}
-        </Badge>
-      </div>
+      <p className="eyebrow">Grounding checks</p>
 
-      <div className="mt-4 grid gap-3 md:grid-cols-4">
-        <div className="surface-muted p-3">
-          <p className="eyebrow">Evidence</p>
-          <p className="mt-2 text-xl font-semibold text-zinc-950">
-            {quality.retrieval.sourceCount}
-          </p>
-        </div>
-        <div className="surface-muted p-3">
-          <p className="eyebrow">Claims checked</p>
-          <p className="mt-2 text-xl font-semibold text-zinc-950">
-            {quality.grounding.totalClaims}
-          </p>
-        </div>
-        <div className="surface-muted p-3">
-          <p className="eyebrow">Supported</p>
-          <p className="mt-2 text-xl font-semibold text-zinc-950">
-            {quality.grounding.supportedClaims}
-          </p>
-        </div>
-        <div className="surface-muted p-3">
-          <p className="eyebrow">Weak/unsupported</p>
-          <p className="mt-2 text-xl font-semibold text-zinc-950">
-            {quality.grounding.weakClaims + quality.grounding.unsupportedClaims}
-          </p>
-        </div>
-      </div>
+      <dl className="mt-3 flex flex-wrap gap-x-8 gap-y-3">
+        {stats.map((stat) => (
+          <div key={stat.label} className="min-w-0">
+            <dt className="text-[11px] leading-4 text-zinc-500">{stat.label}</dt>
+            <dd
+              className={`mt-0.5 font-mono text-lg font-semibold ${
+                stat.alert ? "text-ember" : "text-zinc-950"
+              }`}
+            >
+              {stat.value}
+            </dd>
+          </div>
+        ))}
+      </dl>
 
-      <div className="mt-4 space-y-2">
+      <div className="mt-3 space-y-1.5 border-t border-zinc-100 pt-3">
         {quality.readiness.reasons.map((reason) => (
-          <p key={reason} className="text-sm leading-6 text-zinc-700">
+          <p key={reason} className="text-sm leading-6 text-zinc-600">
             {reason}
           </p>
         ))}
         {quality.missingInfo.hasDocsGap && quality.missingInfo.missingItems.length ? (
-          <p className="text-sm leading-6 text-zinc-700">
+          <p className="text-sm leading-6 text-zinc-600">
             Missing info: {quality.missingInfo.missingItems.slice(0, 2).join("; ")}
           </p>
         ) : null}
       </div>
 
       {showDebugDetails ? (
-        <details className="mt-4">
+        <details className="mt-3">
           <summary className="cursor-pointer text-xs font-medium uppercase tracking-[0.18em] text-zinc-500">
             Grounding details
           </summary>

@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { useActiveCitation } from "@/components/answer/active-citation-context";
+import { getFormattedExcerptLines } from "@/lib/format-excerpt";
 import type { CitationId, InvestigationResult, StructuredClaim } from "@/lib/types/investigation";
 
 function findSource(result: InvestigationResult, citation: string) {
@@ -31,16 +32,6 @@ function getSourceExcerpt(result: InvestigationResult, citation: string) {
   }
 
   return source.sourceType === "doc" ? source.excerpt : source.excerpt;
-}
-
-function getFormattedExcerptLines(excerpt: string) {
-  return excerpt
-    .replace(/\r/g, "")
-    .replace(/\*\*([^*]+):\*\*/g, "\n$1:\n")
-    .replace(/\s+-\s+/g, "\n- ")
-    .split(/\n+/)
-    .map((line) => line.trim().replace(/\*\*/g, ""))
-    .filter(Boolean);
 }
 
 function SourcePreview({
@@ -80,27 +71,24 @@ function SourcePreview({
       {lines.length ? (
         <span className="mt-2 block max-h-56 overflow-y-auto rounded-md border border-zinc-100 bg-zinc-50/70 p-2.5">
           {lines.slice(0, 8).map((line, index) => {
-            const isHeading = line.endsWith(":");
-            const isBullet = line.startsWith("- ");
-
-            if (isHeading) {
+            if (line.kind === "heading") {
               return (
                 <span
-                  key={`${line}-${index}`}
+                  key={`${line.text}-${index}`}
                   className="mt-2 first:mt-0 block text-[11px] font-semibold uppercase tracking-[0.08em] text-zinc-500"
                 >
-                  {line.slice(0, -1)}
+                  {line.text}
                 </span>
               );
             }
 
             return (
               <span
-                key={`${line}-${index}`}
+                key={`${line.text}-${index}`}
                 className="mt-1.5 block text-xs leading-5 text-zinc-700"
               >
-                {isBullet ? <span className="mr-1 text-zinc-400">-</span> : null}
-                {isBullet ? line.slice(2) : line}
+                {line.kind === "bullet" ? <span className="mr-1 text-zinc-400">-</span> : null}
+                {line.text}
               </span>
             );
           })}
